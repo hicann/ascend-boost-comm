@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "mki/ops.h"
-#include "mki/schedule/op_schedule.h"
+#include "mki/op_schedule.h"
 
 namespace Mki {
 Ops::Ops() : opSchedule_(std::make_unique<OpSchedule>()) {}

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "op_schedule.h"
+#include "mki/op_schedule.h"
 #include <fstream>
 #include <tuple>
 #include <type_traits>
@@ -57,9 +57,9 @@ void OpSchedule::AddAllOperations()
 {
     std::unordered_map<std::string, Operation *> ops;
     auto &loader = GetSingleton<Loader>();
-    // if (!loader.IsValid()) {
-    //     return;
-    // }
+    if (!loader.IsValid()) {
+        return;
+    }
     loader.GetAllOperations(ops);
     MKI_LOG(INFO) << "operation count:" << ops.size();
     for (const auto &[opName, op] : ops) {

@@ -17,8 +17,10 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/strings/str_split.h"
 
-constexpr int64_t MAX_USER_STRING_LENGTH = 10000;
 namespace Mki {
+
+constexpr int64_t MAX_USER_STRING_LENGTH = 10000;
+
 void StrSplit(const std::string &text, const char delimiter, std::vector<std::string> &result)
 {
     std::istringstream iss(text);

@@ -16,6 +16,8 @@
 
 #include "kernel_operator.h"
 
+namespace Mki {
+
 constexpr uint32_t TILING_LEN = 4 * 8; // 4 * 8 uint32 list
 
 class MemsetKernel {
@@ -85,3 +87,5 @@ extern "C" __global__ __aicore__ void memset(GM_ADDR tensor0, GM_ADDR tensor1, G
     kernel.CleanTensor(idx++, tensor7, tiling);
     pipe_barrier(PIPE_ALL);
 }
+
+} // Mki namespace

@@ -197,10 +197,10 @@ void KernelBase::UpdateKernelType()
 {
     int32_t coreType = GetSingleton<KernelBinaryLoader>().GetKernelCoreType(kernelName_);
     switch (coreType) {
-        case -1: MKI_LOG(ERROR) << "Failed to get core type!"; return;
-        case 0: kernelType_ = KernelType::KERNEL_TYPE_AI_CORE; return;
-        case 2: kernelType_ = KernelType::KERNEL_TYPE_AIV; return;
-        case 4: kernelType_ = KernelType::KERNEL_TYPE_MIX_AIC; return;
+        case -1: MKI_LOG(ERROR) << "Failed to get core type!"; return;  // -1 ERROR
+        case 0: kernelType_ = KernelType::KERNEL_TYPE_AI_CORE; return;  // 0 AI core
+        case 2: kernelType_ = KernelType::KERNEL_TYPE_AIV; return;      // 2 AIV core
+        case 4: kernelType_ = KernelType::KERNEL_TYPE_MIX_AIC; return;  // 4 MIX AIC core
         default:
             MKI_LOG(WARN) << "Unexpected core type, use AIC as default!";
             kernelType_ = KernelType::KERNEL_TYPE_MIX_AIC;
@@ -224,7 +224,7 @@ Status KernelBase::UpdateHwsyncArgs(void **args, uint64_t argsNum)
 }
 
 Status KernelBase::UpdateConstTensorArgs(void **args, uint64_t argsNum,
-                                        RtHostInputInfoT *info, uint64_t infoNum)
+                                         RtHostInputInfoT *info, uint64_t infoNum)
 {
     auto &kernelInfo = kInfo_;
     uint64_t offset = Utils::GetTensorAlignedSize(kernelInfo.GetTilingUsedSize()) + argsNum * sizeof(void *);

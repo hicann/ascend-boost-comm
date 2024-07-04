@@ -42,7 +42,7 @@ void Loader::Load()
 
     for (const auto &[opName, op] : ops_) {
         MKI_LOG(DEBUG) << "mki load operation: " << opName;
-        OperationBase *opBase = reinterpret_cast<OperationBase *>(op);  // TODO: 为什么dynamic_cast不行，什么原因？
+        OperationBase *opBase = reinterpret_cast<OperationBase *>(op);
         MKI_CHECK(opBase != nullptr, opName << ": opBase is nullptr", return);
         KernelMap nameKernelsMap;
         opLoader_->GetOpKernels(op->GetName(), nameKernelsMap);

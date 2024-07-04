@@ -116,13 +116,15 @@ void SetKernelSelfCreator(KernelBase &kernel, KernelBase::KernelSelfCreator func
     {                                                                                                                  \
         static HandleRegister handleRegister##kerName(#kerName);                                                       \
         static kerName ker##kerName(#kerName, handleRegister##kerName.GetHandle());                                    \
-        SetKernelSelfCreator(ker##kerName, [](){ return new kerName(#kerName, handleRegister##kerName.GetHandle()); });\
+        SetKernelSelfCreator(ker##kerName, []() \
+        { return new kerName(#kerName, handleRegister##kerName.GetHandle()); });                                       \
         return &ker##kerName;                                                                                          \
     }                                                                                                                  \
     static KernelRegister ker##kerName##register = KernelRegister(OperationPlaceHolder, #kerName, GetKernel##kerName)
 
 #define REG_KERNEL(soc, kerName, binary)                                                                               \
-    static KernelBinaryRegister bin##kerName##soc##register = KernelBinaryRegister(#soc, #kerName, binary, sizeof(binary))
+    static KernelBinaryRegister bin##kerName##soc##register = \
+        KernelBinaryRegister(#soc, #kerName, binary, sizeof(binary))
 } // namespace Mki
 
 #endif

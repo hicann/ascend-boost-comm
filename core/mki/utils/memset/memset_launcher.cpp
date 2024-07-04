@@ -85,6 +85,7 @@ public:
                 MKI_LOG(INFO) << "Memset tiling " << i << " single core, size " << size;
                 continue;
             }
+            MKI_CHECK(coreNum > 0, "coreNum is 0", return 0);
             uint64_t sizeBlock = (size + coreNum - 1) / coreNum;
             uint64_t sizeBlockAligned = (sizeBlock + BLOCK_BYTES - 1) / BLOCK_BYTES * BLOCK_BYTES;
             uint64_t usedCore = (size + sizeBlockAligned - 1) / sizeBlockAligned;
@@ -101,7 +102,8 @@ public:
         return blockDim;
     }
 
-    Status Run(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, KernelHandle handle, void *stream)
+    Status Run(void **args, uint64_t argsNum,
+               MiniVector<KernelInfo::MemsetInfo> &memsetInfo, KernelHandle handle, void *stream)
     {
         MemsetArgs memsetArgs;
         (void)memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));

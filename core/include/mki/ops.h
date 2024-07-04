@@ -22,9 +22,9 @@
 #include "mki/operation.h"
 #include "mki/tensor.h"
 #include "mki/run_info.h"
+#include "mki/op_schedule.h"
 
 namespace Mki {
-class OpSchedule;
 
 class Ops {
 public:

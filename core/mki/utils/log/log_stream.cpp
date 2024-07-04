@@ -67,8 +67,8 @@ void LogStream::Format(const char *format, ...)
 {
     useStream_ = false;
     std::string logHead = stream_.str();
-    const int logContentSize = 1024; // 1024 日志内容最大支持1024
-    const int logBufferSize = logHead.size() + logContentSize;
+    const size_t logContentSize = 1024; // 1024 日志内容最大支持1024
+    const size_t logBufferSize = logHead.size() + logContentSize;
     char logBuffer[logBufferSize + 1] = {0};
 
     int ret = memcpy_s(logBuffer, logBufferSize, logHead.c_str(), logHead.size());

@@ -23,7 +23,6 @@ struct Tensor {
     TensorDesc desc;
     void *data = nullptr;
     size_t dataSize = 0;
-    // size_t pos = 0;
     void *hostData = nullptr;
     int64_t Numel() const;
     void View(const Mki::SVector<int64_t> &newDims);
