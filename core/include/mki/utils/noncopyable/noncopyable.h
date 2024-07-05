@@ -23,8 +23,8 @@ protected:
     ~NonCopyable() = default;
 
 private:
-    NonCopyable(const NonCopyable &) = delete;
-    const NonCopyable &operator=(const NonCopyable &) = delete;
+    NonCopyable(const NonCopyable &obj) = delete;
+    const NonCopyable &operator=(const NonCopyable &obj) = delete;
 };
 } // namespace Mki
 #endif
