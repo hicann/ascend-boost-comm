@@ -56,7 +56,7 @@ LogStream::LogStream(const char *filePath, int line, const char *funcName, LogLe
     struct tm timeinfo;
     localtime_r(&tmpTime, &timeinfo);
     char timeStr[64] = {0}; // 64 日志buffer长度
-    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    (void)strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
 
     stream_.str("");
     stream_ << "[" << timeStr << "." << us << "] [" << LogLevelToString(logEntity_.level) << "] ["
