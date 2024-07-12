@@ -1,0 +1,231 @@
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <dlfcn.h>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include <securec.h>
+
+#include "mki/utils/assert/assert.h"
+#include "mki/utils/filesystem/filesystem.h"
+#include "mki/utils/log/log.h"
+#include "mki/utils/rt/backend/rtbackend.h"
+#include "mki/utils/rt/backend/help_macro.h"
+#include "mki/utils/rt/module/module.h"
+#include "mki/utils/rt/rt.h"
+
+namespace {
+const std::vector<uint32_t> MAGIC_LIST = {
+    0x43554245U,    // RT_DEV_BINARY_MAGIC_ELF
+    0x41415246U,    // RT_DEV_BINARY_MAGIC_ELF_AIVEC
+    0x41494343U     // RT_DEV_BINARY_MAGIC_ELF_AICUBE
+};
+}
+namespace Mki {
+struct MkiRtModuleProxy {
+    MkiRtModuleType type = MKIRT_MODULE_OBJECT;
+    uint32_t version = 0;
+    void *rtModule = nullptr;
+};
+
+int RtBackend::ModuleCreate(MkiRtModuleInfo *moduleInfo, MkiRtModule *module)
+{
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtDevBinaryRegister_);
+    if (moduleInfo == nullptr) {
+        MKI_LOG(ERROR) << "moduleInfo is nullptr";
+        return MKIRT_ERROR_NOT_INITIALIZED;
+    }
+    if (module == nullptr) {
+        MKI_LOG(ERROR) << "module is nullptr";
+        return MKIRT_ERROR_NOT_INITIALIZED;
+    }
+    MkiRtModuleProxy *moduleProxy = new MkiRtModuleProxy;
+    moduleProxy->type = moduleInfo->type;
+    moduleProxy->version = moduleInfo->version;
+    *module = moduleProxy;
+
+    const uint32_t maxLen = 100;
+    char getVersion[maxLen];
+    auto ret = MkiRtDeviceGetSocVersion(getVersion, maxLen);
+    if (ret != MKIRT_SUCCESS) {
+        MKI_LOG(ERROR) << "Failed to get soc version";
+        return ret;
+    }
+    std::string socVersion(getVersion);
+    MKI_LOG(DEBUG) << "Soc version: " << socVersion;
+
+    if (moduleInfo->type == MKIRT_MODULE_OBJECT) {
+        RtDevBinaryT devBin;
+        if (std::find(MAGIC_LIST.begin(), MAGIC_LIST.end(), moduleInfo->magic) == MAGIC_LIST.end()) {
+            MKI_LOG(ERROR) << "Invalid magic";
+            return MKIRT_ERROR_PARA_CHECK_FAIL;
+        }
+        devBin.magic = moduleInfo->magic;
+        devBin.version = moduleInfo->version;
+        devBin.data = moduleInfo->data;
+        devBin.length = moduleInfo->dataLen;
+        MKI_LOG(DEBUG) << "RtDev BinaryRegister start, len:" << moduleInfo->dataLen;
+        CHECK_STATUS_WITH_DESC_RETURN(rtDevBinaryRegister_(&devBin, &moduleProxy->rtModule), "RtDev BinaryRegister");
+    } else {
+        return MKIRT_ERROR_NOT_IMPLMENT;
+    }
+    return MKIRT_SUCCESS;
+}
+
+int RtBackend::ModuleCreateFromFile(const char *moduleFilePath, MkiRtModuleType type, int version, MkiRtModule *module)
+{
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtDevBinaryRegister_);
+    CHECK_FUN_PARA_RETURN(module);
+    std::string realPath = FileSystem::PathCheckAndRegular(moduleFilePath);
+    MKI_CHECK(!realPath.empty(), "moduleFilePath is null", return MKIRT_ERROR_PARA_CHECK_FAIL);
+    std::ifstream fd(realPath, std::ios::binary);
+    if (!fd.is_open()) {
+        return MKIRT_ERROR_OPEN_BIN_FILE_FAIL;
+    }
+
+    fd.seekg(0, std::ios::end);
+    size_t fileSize = static_cast<size_t>(fd.tellg());
+    if (fileSize > static_cast<size_t>(MAX_FILE_SIZE)) {
+        MKI_LOG(ERROR) << "max file size exceeded";
+        return MKIRT_ERROR_NOT_IMPLMENT;
+    }
+    fd.seekg(0, std::ios::beg);
+    std::vector<char> fileBuf(fileSize, 0);
+    fd.read(fileBuf.data(), fileSize);
+
+    MkiRtModuleInfo moduleInfo;
+    moduleInfo.type = type;
+    moduleInfo.version = static_cast<uint32_t>(version);
+    moduleInfo.data = fileBuf.data();
+    moduleInfo.dataLen = fileSize;
+
+    return ModuleCreate(&moduleInfo, module);
+}
+
+int RtBackend::ModuleDestory(MkiRtModule *module)
+{
+    int st = MKIRT_SUCCESS;
+    if (module == nullptr) {
+        return st;
+    }
+
+    MkiRtModuleProxy *moduleProxy = static_cast<MkiRtModuleProxy *>(*module);
+    if (moduleProxy != nullptr) {
+        if (moduleProxy->rtModule != nullptr) {
+            st = ModuleDestoryRtModule(moduleProxy->rtModule);
+        }
+
+        delete moduleProxy;
+        moduleProxy = nullptr;
+        *module = nullptr;
+    }
+
+    return st;
+}
+
+int RtBackend::ModuleBindFunction(MkiRtModule module, const char *funcName, void *func)
+{
+    CHECK_FUN_PARA_RETURN(module);
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtFunctionRegister_);
+    if (funcName == nullptr) {
+        MKI_LOG(ERROR) << "funcName is nullptr:";
+        return MKIRT_ERROR_NOT_INITIALIZED;
+    }
+    const char *stubName = funcName;
+    const void *kernelInfoExit = funcName;
+    uint32_t funcMode = 0;
+    MkiRtModuleProxy *moduleProxy = static_cast<MkiRtModuleProxy *>(module);
+    MKI_LOG(DEBUG) << "RtFunction Register start, module:" << moduleProxy->rtModule << ", stubFunc:" << func
+                  << ", subName:" << funcName;
+    CHECK_STATUS_WITH_DESC_RETURN(rtFunctionRegister_(moduleProxy->rtModule, func, stubName, kernelInfoExit, funcMode),
+        "RtFunction Register");
+}
+
+int RtBackend::RegisterAllFunction(MkiRtModuleInfo *moduleInfo, void **handle)
+{
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtRegisterAllKernel_);
+    CHECK_FUN_PARA_RETURN(moduleInfo);
+    RtDevBinaryT devBin;
+    devBin.magic = moduleInfo->magic;
+    devBin.version = moduleInfo->version;
+    devBin.data = moduleInfo->data;
+    devBin.length = moduleInfo->dataLen;
+    MKI_LOG(DEBUG) << "Rt Register AllKernel start, len: " << devBin.length << ", magic: " << devBin.magic;
+    CHECK_STATUS_WITH_DESC_RETURN(rtRegisterAllKernel_(&devBin, handle), "Rt Register AllKernel");
+}
+
+int RtBackend::FunctionLaunch(const void *func, const MkiRtKernelParam *param, MkiRtStream stream)
+{
+    CHECK_FUN_PARA_RETURN(param);
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtKernelLaunch_);
+    CHECK_STATUS_WITH_DESC_RETURN(rtKernelLaunch_(func, param->blockDim, param->args, param->argSize, nullptr, stream),
+        "rt KernelLaunch");
+}
+
+int RtBackend::FunctionLaunchWithHandle(void *handle, const MkiRtKernelParam *param, MkiRtStream stream,
+    const RtTaskCfgInfoT *cfgInfo)
+{
+    /* runtime允许cfgInfo为nullptr，此处不校验 */
+    CHECK_FUN_PARA_RETURN(param);
+    CHECK_FUN_PARA_RETURN(param->argsEx);
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtKernelLaunchWithHandle_);
+
+    CHECK_STATUS_WITH_DESC_RETURN(
+        rtKernelLaunchWithHandle_(handle, param->tilingId, param->blockDim, param->argsEx, nullptr, stream, cfgInfo),
+        "rt KernelLaunch With Handle");
+}
+
+int RtBackend::FunctionLaunchWithFlag(const void *func, const MkiRtKernelParam *param, MkiRtStream stream,
+    const RtTaskCfgInfoT *cfgInfo)
+{
+    /* runtime允许cfgInfo为nullptr，此处不校验 */
+    CHECK_FUN_PARA_RETURN(param);
+    CHECK_FUN_PARA_RETURN(param->argsEx);
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtKernelLaunchWithFlag_);
+    CHECK_STATUS_WITH_DESC_RETURN(
+        rtKernelLaunchWithFlag_(func, param->blockDim, param->argsEx, nullptr, stream, 0, cfgInfo),
+        "rt KernelLaunch With Flag");
+}
+
+int RtBackend::GetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
+{
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtGetC2cCtrlAddr_);
+    CHECK_STATUS_WITH_DESC_RETURN(rtGetC2cCtrlAddr_(addr, len), "rt Get C2cCtrl Addr");
+}
+
+int RtBackend::ModuleDestoryRtModule(void *rtModule)
+{
+    if (rtModule == nullptr) {
+        return MKIRT_SUCCESS;
+    }
+    CHECK_INITED_RETURN(initStatus_);
+    CHECK_FUNC_EIXST_RETURN(rtDevBinaryUnRegister_);
+    CHECK_STATUS_RETURN(rtDevBinaryUnRegister_(rtModule));
+}
+}
