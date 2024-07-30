@@ -1,0 +1,19 @@
+# IDE
+.vscode/
+.idea/
+# python
+__pycache__/
+# data bin
+**/data/*.bin
+# code gen
+op_desc_json.cpp
+# temp
+/tests/pythontest/cache
+/tests/pythontest/kernel_meta*
+# build
+build
+# output
+output
+# 3rdparty
+3rdparty/
+kernel_meta*
