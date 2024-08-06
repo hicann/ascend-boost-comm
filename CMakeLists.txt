@@ -13,8 +13,8 @@ include(${PROJECT_SOURCE_DIR}/cmake/host_config.cmake)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/include
+    $ENV{ASCEND_HOME_PATH}/include
     ${PROJECT_SOURCE_DIR}/3rdparty/metadef/inc/external # 指定部分依赖
-    /usr/local/Ascend/driver/kernel/libc_sec/include
 )
 
 link_directories(

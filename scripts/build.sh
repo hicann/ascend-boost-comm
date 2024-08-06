@@ -19,9 +19,6 @@ cd ..
 export CODE_ROOT=$(pwd)
 export CACHE_DIR=$CODE_ROOT/build
 export OUTPUT_DIR=$CODE_ROOT/output
-DEPENDENCY_DIR=2024-04-13
-
-MKI_SOURCE_DIR=/tmp/asdops_dependency/$DEPENDENCY_DIR
 
 export THIRD_PARTY_DIR=$CODE_ROOT/3rdparty
 BUILD_TEST_FRAMEWORK=OFF
@@ -33,9 +30,7 @@ USE_VERBOSE=OFF
 USE_CXX11_ABI=""
 IS_RELEASE=False
 SKIP_BUILD=OFF
-CMC_URL_COMMON=https://cmc-szver-artifactory.cmc.tools.huawei.com/artifactory/cmc-software-release/Baize%20C/AscendTransformerBoost/1.0.0/asdops_dependency/common
-CMC_URL=https://cmc-szver-artifactory.cmc.tools.huawei.com/artifactory/cmc-software-release/Baize%20C/AscendTransformerBoost/1.0.0/asdops_dependency/$DEPENDENCY_DIR
-BUILD_OPTION_LIST="testframework example unittest pythontest alltest all_test_run debug release help dev clean"
+BUILD_OPTION_LIST="testframework example debug release help dev clean"
 BUILD_CONFIGURE_LIST=("--output=.*" "--cache=.*" "--incremental" "--gcov" "--force_clean" "--use_cxx11_abi=0"
                       "--use_cxx11_abi=1" "--build_config=.*" "--skip_build" "--no_werror" "--namespace=.*")
 
@@ -68,11 +63,14 @@ function fn_build_nlohmann_json()
         return $?
     fi
     cd $CACHE_DIR
-    wget --no-check-certificate $CMC_URL_COMMON/nlohmannjson-v3.11.2.tar.gz
-    tar -xf nlohmannjson-v3.11.2.tar.gz
-    rm nlohmannjson-v3.11.2.tar.gz
-    rm -rf ./nlohmannJson/.git
-    mv ./nlohmannJson $THIRD_PARTY_DIR
+    rm -rf nlohmann
+    mkdir nlohmann
+    cd nlohmann
+    git clone -b v3.11.2 --depth 1 https://gitee.com/mirrors/json.git
+    mkdir -p $THIRD_PARTY_DIR/nlohmannJson
+    mv json/include $THIRD_PARTY_DIR/nlohmannJson
+    cd $CACHE_DIR
+    rm -rf nlohmann
 }
 
 function fn_build_huawei_secure_c()
@@ -81,10 +79,9 @@ function fn_build_huawei_secure_c()
         return $?
     fi
     cd $CACHE_DIR
-    wget --no-check-certificate $CMC_URL_COMMON/huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    tar -xf huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    rm huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    mv huawei_secure_c* securec
+    wget --no-check-certificate https://gitee.com/openeuler/libboundscheck/repository/archive/v1.1.10.tar.gz
+    tar -xf v1.1.10.tar.gz
+    mv libboundscheck-v1.1.10 securec
     mv securec $THIRD_PARTY_DIR
 }
 
@@ -95,28 +92,14 @@ function fn_build_dependency()
     CCEC_COMPILER_DIR=$THIRD_PARTY_DIR/compiler/ccec_compiler
     TIKCPP_DIR=$THIRD_PARTY_DIR/compiler/tikcpp
 
-    if [ "$IS_RELEASE" == "True" ];then
-        mkdir -p $THIRD_PARTY_DIR/compiler
-        ln -s $ASCEND_HOME_PATH/compiler/ccec_compiler $CCEC_COMPILER_DIR
-        ln -s $ASCEND_HOME_PATH/compiler/tikcpp $TIKCPP_DIR
-    fi
-
-    check_dependency_cache
     if [[ ! -d "$METADEF_DIR" ]]; then
         cp -r $MKI_SOURCE_DIR/metadef $METADEF_DIR
     fi
-    mkdir -p $THIRD_PARTY_DIR/compiler
-    if [ ! -d $CCEC_COMPILER_DIR ];then
-        if [ $ARCH = "aarch64" ];then
-            ln -s $MKI_SOURCE_DIR/ccec_compiler/aarch64-linux $CCEC_COMPILER_DIR
-        else
-            ln -s $MKI_SOURCE_DIR/ccec_compiler/x86_64-linux $CCEC_COMPILER_DIR
-        fi
-    fi
 
-    if [ ! -d $TIKCPP_DIR ];then
-        ln -s $MKI_SOURCE_DIR/tikcpp $TIKCPP_DIR
-    fi
+    [[ -d "$THIRD_PARTY_DIR/compiler" ]] && rm -rf $THIRD_PARTY_DIR/compiler
+    mkdir -p $THIRD_PARTY_DIR/compiler
+    ln -s $ASCEND_HOME_PATH/compiler/ccec_compiler $CCEC_COMPILER_DIR
+    ln -s $ASCEND_HOME_PATH/compiler/tikcpp $TIKCPP_DIR
 }
 
 function fn_build_release_3rdparty()
@@ -184,17 +167,15 @@ function fn_platform_configs_copy()
     done
 }
 
-function fn_tbe_info_copy()
+function fn_config_json_copy()
 {
-    INFO_DIR=$CODE_ROOT/configs
-    INFO_DEST_DIR=$OUTPUT_DIR/mki/configs
-    if [ -d "$INFO_DEST_DIR" ];then
-        rm -rf $INFO_DEST_DIR
+    CONFIG_JSON_DIR=$CODE_ROOT/configs
+    CONFIG_JSON_DEST=$OUTPUT_DIR/mki/configs
+    if [ -d "$CONFIG_JSON_DEST" ];then
+        rm -rf $CONFIG_JSON_DEST
     fi
-    mkdir -p $INFO_DEST_DIR
-    for info_name in $(ls $INFO_DIR);do
-        cp -r $INFO_DIR/$info_name $INFO_DEST_DIR/$info_name
-    done
+    mkdir -p $CONFIG_JSON_DEST
+    cp $CONFIG_JSON_DIR/build_config.json $CONFIG_JSON_DEST/build_config.json
 }
 
 function fn_cmake_configs_copy()
@@ -251,7 +232,7 @@ function fn_build()
 
     fn_platform_configs_copy
     fn_cmake_configs_copy
-    fn_tbe_info_copy
+    fn_config_json_copy
 }
 
 function fn_build_example()
@@ -265,36 +246,6 @@ function fn_make_tar_package()
     cd $OUTPUT_DIR
     tar -czf mki.tar.gz mki
     rm -rf mki
-}
-
-function check_dependency_cache()
-{
-    if [ "$IS_RELEASE" == "True" ];then
-        return
-    fi
-    if [ "$FORCE_CLEAN" == "ON" ];then
-        echo "CLEAN ALL DEPENDENCY CACHE !!!!!"
-        rm $MKI_SOURCE_DIR -rf
-        rm $OUTPUT_DIR -rf
-        rm $CACHE_DIR -rf
-    fi
-    [[ ! -d "$MKI_SOURCE_DIR" ]] && mkdir -p $MKI_SOURCE_DIR
-    cd $MKI_SOURCE_DIR
-    if [ ! -d "$MKI_SOURCE_DIR/ccec_compiler" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/ccec_compiler.tar.gz ]] && wget --no-check-certificate $CMC_URL/ccec_compiler.tar.gz
-        tar xf ccec_compiler.tar.gz
-        rm ccec_compiler.tar.gz
-    fi
-    if [ ! -d "$MKI_SOURCE_DIR/metadef" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/metadef.tar.gz ]] && wget --no-check-certificate $CMC_URL/metadef.tar.gz
-        tar xf metadef.tar.gz
-    fi
-    if [ ! -d "$MKI_SOURCE_DIR/tikcpp" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/tikcpp.tar.gz ]] && wget --no-check-certificate $CMC_URL/tikcpp.tar.gz
-        tar xf tikcpp.tar.gz
-        rm tikcpp.tar.gz
-    fi
-    echo "dependency_cache is ready"
 }
 
 function fn_main()
