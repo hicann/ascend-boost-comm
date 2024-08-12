@@ -86,6 +86,31 @@ void PlatFormInfos::SetCoreNumByCoreType(const std::string &core_type)
     }
 }
 
+uint32_t PlatFormInfos::GetCoreNumByType(const std::string &core_type)
+{
+    std::lock_guard<std::mutex> lockGuard(g_coreNumMutex);
+    std::string coreNumStr;
+    std::string coreTypeStr;
+    if (core_type == "VectorCore") {
+        coreTypeStr = "vector_core_cnt";
+    } else {
+        coreTypeStr = "ai_core_cnt";
+    }
+    (void)GetPlatformRes("SoCInfo", coreTypeStr, coreNumStr);
+    MKI_LOG(DEBUG) << "Get PlatFormInfos::core_num_ to " << coreTypeStr << ": " << coreNumStr;
+    if (coreNumStr.empty()) {
+        MKI_LOG(ERROR) << "CoreNumStr is empty!";
+        return 1;
+    } else {
+        uint32_t coreTypeNum = std::strtoul(coreNumStr.c_str(), nullptr, 10); // 10 进制
+        if (coreTypeNum > MAX_CORE_NUM) {
+            MKI_LOG(ERROR) << "core_num is out of range : " << coreTypeNum;
+            return 1;
+        }
+        return coreTypeNum;
+    }
+}
+
 uint32_t PlatFormInfos::GetCoreNum() const
 {
     MKI_LOG(DEBUG) << "Get PlatFormInfos::core_num_: " << core_num_;

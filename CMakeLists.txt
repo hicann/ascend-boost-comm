@@ -3,10 +3,10 @@ project("mki")
 set(CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TEST_FRAMEWORK "BUILD_TEST_FRAMEWORK" OFF)
-option(USE_PYTHON_TEST "USE_PYTHON_TEST" OFF)
+option(BUILD_SELF_TEST "BUILD_SELF_TEST" OFF)
 option(USE_CXX11_ABI "USE_CXX11_ABI" ON)
 message(STATUS "BUILD_TEST_FRAMEWORK:${BUILD_TEST_FRAMEWORK}")
-message(STATUS "USE_PYTHON_TEST:${USE_PYTHON_TEST}")
+message(STATUS "BUILD_SELF_TEST:${BUILD_SELF_TEST}")
 message(STATUS "USE_CXX11_ABI:${USE_CXX11_ABI}")
 
 include(${PROJECT_SOURCE_DIR}/cmake/host_config.cmake)
@@ -14,7 +14,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/host_config.cmake)
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/3rdparty/metadef/inc/external # 指定部分依赖
-    /usr/local/Ascend/driver/kernel/libc_sec/include
+    $ENV{ASCEND_HOME_PATH}/include
 )
 
 link_directories(
@@ -25,6 +25,10 @@ add_subdirectory(src)
 
 if(BUILD_TEST_FRAMEWORK)
     add_subdirectory(${PROJECT_SOURCE_DIR}/tests/framework)
+endif()
+
+if(BUILD_SELF_TEST)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/tests/selftest)
 endif()
 
 # cmake install stage

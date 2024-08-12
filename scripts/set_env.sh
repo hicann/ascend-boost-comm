@@ -12,10 +12,11 @@ path="${BASH_SOURCE[0]}"
 if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     mki_path=$(cd $(dirname $path); pwd )
     export MKI_HOME_PATH="${mki_path}"
-    export LD_LIBRARY_PATH=$MKI_HOME_PATH/lib:$MKI_HOME_PATH/ops_lib:$MKI_HOME_PATH/tests:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$MKI_HOME_PATH/lib:$MKI_HOME_PATH/tests:$LD_LIBRARY_PATH
     export PATH=$MKI_HOME_PATH/bin:$PATH
 
-    export PYTORCH_INSTALL_PATH="$(python3 -c 'import torch, os; print(os.path.dirname(os.path.abspath(torch.__file__)))')"
+    export PYTORCH_INSTALL_PATH="$(python3 -c 'import importlib.util; spec=importlib.util.find_spec("torch"); \
+                                               print(spec.submodule_search_locations[0])')"
     export LD_LIBRARY_PATH=$PYTORCH_INSTALL_PATH/lib:$LD_LIBRARY_PATH
     export MKI_LOG_TO_STDOUT=0
     export MKI_LOG_LEVEL=INFO
