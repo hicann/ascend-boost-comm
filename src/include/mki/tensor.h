@@ -27,7 +27,7 @@ struct TensorDesc {
 
 struct Tensor {
     TensorDesc desc;
-    void *deviceData = nullptr;
+    void *data = nullptr;
     size_t dataSize = 0;
     void *hostData = nullptr;
     int64_t Numel() const;
