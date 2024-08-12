@@ -1,0 +1,267 @@
+/*
+ * Copyright (c) 2024 Huawei Technologies Co., Ltd.
+ * MindKernelInfra is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+#include "mki/utils/log/log_sink_file.h"
+#include <string>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <syscall.h>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <regex>
+#include <fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/statvfs.h>
+#include <securec.h>
+#include "mki/utils/log/log_core.h"
+
+namespace Mki {
+constexpr size_t MAX_LOG_FILE_COUNT = 50;                               // 50 回滚管理50个日志文件
+constexpr size_t MAX_FILE_NAME_LEN = 128;                                  // 128: max file length
+constexpr uint64_t MAX_FILE_SIZE_THRESHOLD = 1073741824;                // 1073741824 当前单个日志文件最大1G
+constexpr uint64_t DISK_AVAILABEL_LIMIT = 10 * MAX_FILE_SIZE_THRESHOLD; // 磁盘剩余空间门限10G
+
+static bool IsValidFileName(const char *name)
+{
+    size_t len = strlen(name);
+    if (len == 0 || len > MAX_FILE_NAME_LEN) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; ++i) {
+        char c = name[i];
+        if (!isalnum(c) && c != '_' && c != '/') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool IsSymlink(const std::string &filePath)
+{
+    struct stat buf {};
+    if (lstat(filePath.c_str(), &buf) != 0) {
+        return false;
+    }
+    return S_ISLNK(buf.st_mode);
+}
+
+static std::string PathCheckAndRegular(const std::string &path)
+{
+    if (path.empty()) {
+        std::cout << "path string is NULL";
+        return "";
+    }
+
+    if (path.size() >= PATH_MAX) {
+        std::cout << "file path " << path.c_str() << " is too long!";
+        return "";
+    }
+
+    if (IsSymlink(path)) {
+        std::cout << "The 'filepath' " << path.c_str() << " is symbolic link";
+        return "";
+    }
+
+    char resolvedPath[PATH_MAX] = {0};
+    std::string res;
+
+    if (realpath(path.c_str(), resolvedPath) != nullptr) {
+        res = resolvedPath;
+    }
+    return res;
+}
+
+LogSinkFile::LogSinkFile() { Init(); }
+
+LogSinkFile::~LogSinkFile() { CloseFile(); }
+
+void LogSinkFile::Log(const char *log, uint64_t logLen)
+{
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (currentFileSize_ + logLen >= MAX_FILE_SIZE_THRESHOLD) {
+        CloseFile();
+    }
+
+    if (currentFd_ < 0) {
+        OpenFile();
+    }
+
+    if (currentFd_ < 0) {
+        return;
+    }
+
+    ssize_t writeSize = write(currentFd_, log, logLen);
+    if (writeSize != static_cast<ssize_t>(logLen)) {
+        std::cout << "mki_log write file fail, want to write size: " << logLen
+                  << ", success write size:" << writeSize;
+        CloseFile();
+        return;
+    }
+
+    currentFileSize_ += writeSize;
+}
+
+void LogSinkFile::Init()
+{
+    const char *env = std::getenv("MKI_LOG_TO_BOOST_TYPE");
+    boostType_ = env && IsValidFileName(env) ? std::string(env) : "mki";
+
+    env = std::getenv("MKI_LOG_PATH");
+    std::string logRootDir = env && IsValidFileName(env) ? std::string(env) : GetHomeDir();
+    logRootDir = PathCheckAndRegular(logRootDir);
+
+    logDir_ = logRootDir + "/" + boostType_ + "/log";
+
+    env = std::getenv("MKI_LOG_TO_FILE_FLUSH");
+    isFlush_ = env ? std::string(env) == "1" : false;
+}
+
+void LogSinkFile::DeleteOldestFile()
+{
+    std::string regStr = boostType_ + "_\\d+_(\\d+).log";
+    const std::regex reg(regStr);
+
+    std::vector<std::pair<std::string, std::string>> logFiles;
+    DIR *dir = opendir(logDir_.c_str());
+    if (!dir) {
+        return;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (ptr->d_name[0] != '.') {
+            std::string fileName = ptr->d_name;
+            std::smatch match;
+            if (std::regex_match(fileName, match, reg) && match.size() > 1) {
+                std::string createTime = match[1].str();
+                logFiles.emplace_back(logDir_ + "/" + fileName, createTime);
+            }
+        }
+    }
+    closedir(dir);
+
+    std::sort(logFiles.begin(), logFiles.end(),
+              [](std::pair<std::string, std::string> &a, std::pair<std::string, std::string> &b) {
+                  return a.second < b.second;
+              });
+
+    if (logFiles.size() > MAX_LOG_FILE_COUNT) {
+        size_t deleteCount = logFiles.size() - MAX_LOG_FILE_COUNT;
+        for (size_t i = 0; i < deleteCount; ++i) {
+            std::cout << "mki_log delete old file:" << logFiles[i].first << std::endl;
+            remove(logFiles[i].first.c_str());
+        }
+    }
+}
+
+void LogSinkFile::OpenFile()
+{
+    MakeLogDir();
+
+    DeleteOldestFile();
+
+    if (!IsDiskAvailable()) {
+        return;
+    }
+
+    std::string logFilePath = GetNewLogFilePath();
+    currentFd_ = open(logFilePath.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP);
+    if (currentFd_ < 0) {
+        std::cout << "mki_log open " << logFilePath << " fail" << std::endl;
+    }
+}
+
+std::string LogSinkFile::GetNewLogFilePath()
+{
+    std::time_t tmpTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    struct tm *nowTime = std::localtime(&tmpTime);
+
+    std::stringstream filePath;
+    filePath << logDir_ << "/" << boostType_ << "_" << std::to_string(syscall(SYS_getpid)) << "_"
+             << std::put_time(nowTime, "%Y%m%d%H%M%S") << ".log";
+    return filePath.str();
+}
+
+bool LogSinkFile::IsDiskAvailable()
+{
+    struct statvfs vfs;
+    if (statvfs(logDir_.c_str(), &vfs) == -1) {
+        std::cout << "mki_log get current disk stats fail" << std::endl;
+        return false;
+    }
+
+    uint64_t availableSize = vfs.f_bsize * vfs.f_bfree;
+    if (availableSize <= DISK_AVAILABEL_LIMIT) {
+        std::cout << "mki_log disk available space it too low, available size:" << availableSize
+                  << ", limit size:" << DISK_AVAILABEL_LIMIT << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+void LogSinkFile::MakeLogDir()
+{
+    struct stat st;
+    if (stat(logDir_.c_str(), &st) == 0) { // 目录已经存在，就不创建
+        std::cout << "mki_log log dir:" << logDir_ << " exist" << std::endl;
+        return;
+    }
+
+    mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+    uint32_t offset = 0;
+    uint32_t pathLen = logDir_.size();
+    do {
+        const char *str = strchr(logDir_.c_str() + offset, '/');
+        offset = (str == nullptr) ? pathLen : str - logDir_.c_str() + 1;
+        std::string childDir = logDir_.substr(0, offset);
+        if (stat(childDir.c_str(), &st) < 0) {
+            std::cout << "mki_log mkdir " << childDir << std::endl;
+            if (mkdir(childDir.c_str(), mode) < 0) {
+                return;
+            }
+        }
+    } while (offset != pathLen);
+}
+
+void LogSinkFile::CloseFile()
+{
+    if (currentFd_ > 0) {
+        (void)fchmod(currentFd_, S_IRUSR | S_IRGRP);
+        close(currentFd_);
+        currentFd_ = -1;
+        currentFileSize_ = 0;
+    }
+}
+
+std::string LogSinkFile::GetHomeDir()
+{
+    int bufsize;
+    if ((bufsize = sysconf(_SC_GETPW_R_SIZE_MAX)) == -1) {
+        return "";
+    }
+
+    char buffer[bufsize] = {0};
+    struct passwd pwd;
+    struct passwd *result = nullptr;
+    if (getpwuid_r(getuid(), &pwd, buffer, bufsize, &result) != 0 || !result) {
+        return "";
+    }
+
+    return std::string(pwd.pw_dir);
+}
+} // namespace Mki
