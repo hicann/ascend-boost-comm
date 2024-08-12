@@ -16,8 +16,7 @@
 #include "mki/utils/operationir/operation_ir.h"
 #include "mki/utils/operationir/operation_ir_cfg.h"
 
-namespace {
-using namespace Mki;
+namespace Mki {
 
 TEST(TestOperationIr, ParseIniSuccess)
 {
@@ -118,4 +117,4 @@ TEST(TestOperationIr, ParseIniInvalid)
 
     std::remove(fileName.c_str());
 }
-} // namespace
+} // namespace Mki

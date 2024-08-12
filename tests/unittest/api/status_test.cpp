@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/status/status.h"
 
-namespace {
+namespace Mki {
 TEST(StatusTest, Base)
 {
     Mki::Status st = Mki::Status::FailStatus(3, "dd");
@@ -41,4 +41,4 @@ TEST(StatusTest, Code)
     Mki::Status st = Mki::Status::FailStatus(3, "dd");
     EXPECT_EQ(st.Code(), 3);
 }
-} // namespace
+} // namespace Mki

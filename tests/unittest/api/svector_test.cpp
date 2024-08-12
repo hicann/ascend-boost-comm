@@ -14,7 +14,7 @@
 #include "mki/utils/SVector/SVector.h"
 #include "mki/utils/log/log.h"
 
-namespace {
+namespace Mki {
 TEST(SVectorTest, all)
 {
     Mki::SVector<int, 32> ints;
@@ -123,4 +123,4 @@ TEST(OperatorTest, AccessElementOutOfBounds)
     EXPECT_THROW(v1[3], std::out_of_range);
     EXPECT_THROW(v1[10], std::out_of_range);
 }
-} // namespace
+} // namespace Mki

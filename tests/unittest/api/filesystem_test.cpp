@@ -13,7 +13,7 @@
 #include "mki/utils/file_system/file_system.h"
 #include "mki/utils/log/log.h"
 
-namespace {
+namespace Mki {
 TEST(FileSystemTest, GetDirChildFiles)
 {
     const char *mkiHome = std::getenv("MKI_HOME_PATH");
@@ -124,4 +124,4 @@ TEST(FileSystemTest, PathCheckAndRegular)
     std::string longPath(10000, 'a');
     EXPECT_EQ(Mki::FileSystem::PathCheckAndRegular(longPath), "");
 }
-} // namespace
+} // namespace Mki

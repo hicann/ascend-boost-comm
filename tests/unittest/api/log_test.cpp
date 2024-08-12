@@ -18,7 +18,7 @@
 #include "mki/utils/log/log_sink_stdout.h"
 #include "mki/utils/log/log_core.h"
 
-namespace {
+namespace Mki {
 TEST(LogCore, InitTest1)
 {
     char envLogToStdout[] = "MKI_LOG_TO_STDOUT=0";
@@ -144,4 +144,4 @@ TEST(LogEntity, AddSink) {
     Mki::LogCore logCore;
     logCore.AddSink(std::make_shared<Mki::LogSinkStdout>());
 }
-} // namespace
+} // namespace Mki

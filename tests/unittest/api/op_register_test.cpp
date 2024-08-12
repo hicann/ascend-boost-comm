@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki_loader/op_register.h"
 
-namespace {
+namespace Mki {
 TEST(OpRegisterTest, Base)
 {
     std::vector<std::string> opList;
@@ -21,4 +21,4 @@ TEST(OpRegisterTest, Base)
     (void)operationCreators;
     (void)kernelCreators;
 }
-} // namespace
+} // namespace Mki

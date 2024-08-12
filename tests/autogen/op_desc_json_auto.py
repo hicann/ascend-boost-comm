@@ -33,7 +33,8 @@ HEAD = '''
 #include "params/params.h"
 #include "op_desc_json.h"
 
-namespace MkiAutoGen {
+namespace Mki {
+namespace AutoGen {
 '''
 
 
@@ -210,6 +211,7 @@ def run(param_dir, dest_file_path):
 Mki::Operation *GetOpByName(const std::string &operationName)
 {{
     return OpSpace::Ops::Instance().GetOperationByName(operationName);
+}}
 }}
 }}''')
     logging.info("generate %s", dest_file_path)

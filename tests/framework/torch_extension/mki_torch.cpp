@@ -30,13 +30,14 @@ static std::map<at::ScalarType, Mki::TensorDType> DTYPE_MAP = {
 namespace {
 TORCH_LIBRARY(MkiTorch, m)
 {
-    m.class_<MkiTest::MkiTorch>("MkiTorch")
+    m.class_<Mki::Test::MkiTorch>("MkiTorch")
         .def(torch::init<std::string>())
-        .def("execute", &MkiTest::MkiTorch::Execute);
+        .def("execute", &Mki::Test::MkiTorch::Execute);
 }
 }
 
-namespace MkiTest {
+namespace Mki {
+namespace Test {
 void *MkiTorch::GetCurrentStream() const
 {
     int32_t devId = 0;
@@ -126,7 +127,7 @@ std::string MkiTorch::GetTensorsFromBuf(Mki::SVector<Mki::Tensor> &mkiTensors)
 
 Mki::Kernel *MkiTorch::GetKernelInstance(Mki::LaunchParam &launchParam)
 {
-    Mki::Operation *op = MkiAutoGen::GetOpByName(opName_);
+    Mki::Operation *op = Mki::AutoGen::GetOpByName(opName_);
     if (op == nullptr) {
         MKI_LOG(ERROR) << "get operation by name fail, opName:" << opName_;
         return nullptr;
@@ -363,7 +364,7 @@ std::string MkiTorch::ExecuteImpl(std::vector<at::Tensor> &atInTensors, std::vec
         perfFlag = 1;
         runTimes = opDescJson["runTimes"];
     }
-    MkiAutoGen::JsonToOpParam(opDescJson, launchParam);
+    Mki::AutoGen::JsonToOpParam(opDescJson, launchParam);
 
     SetUpTensors(opDescJson, launchParam, atInTensors, atOutTensors);
 
@@ -379,4 +380,5 @@ std::string MkiTorch::Execute(std::vector<at::Tensor> atInTensors, std::vector<a
     std::string retStr = ExecuteImpl(atInTensors, atOutTensors);
     return retStr;
 }
-}
+} // namespace Test
+} // namespace Mki

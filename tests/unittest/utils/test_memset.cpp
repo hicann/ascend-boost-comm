@@ -17,9 +17,7 @@
 #include "mki/utils/memset/clear_tensors.h"
 #include "mki/utils/rt/rt.h"
 
-namespace {
-using namespace Mki;
-
+namespace Mki {
 constexpr float MEMSET_FACTOR = 0.7; // set 70% to zero
 constexpr uint64_t BLOCK_LEN = 32;
 constexpr int START = 1;

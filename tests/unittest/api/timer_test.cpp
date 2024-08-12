@@ -13,7 +13,7 @@
 #include <thread>
 #include "mki/utils/time/timer.h"
 
-namespace {
+namespace Mki {
 TEST(TimerTest, ElapsedMicroSecond)
 {
     Mki::Timer timer;
@@ -33,4 +33,4 @@ TEST(TimerTest, ElapsedMicroSecond)
     timer.Reset();
     std::cout << timer.ElapsedMicroSecond() << std::endl;
 }
-} // namespace
+} // namespace Mki

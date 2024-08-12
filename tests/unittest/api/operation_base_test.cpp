@@ -13,9 +13,7 @@
 #include "mki/base/operation_base.h"
 #include "mki/base/kernel_base.h"
 
-namespace {
-using namespace Mki;
-
+namespace Mki {
 class OperationBaseTest : public OperationBase {
 public:
     OperationBaseTest() : OperationBase("") {}
@@ -57,4 +55,4 @@ TEST(OperationBaseTest, all0)
     delete op;
     op = nullptr;
 }
-} // namespace
+} // namespace Mki

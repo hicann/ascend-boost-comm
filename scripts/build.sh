@@ -119,10 +119,6 @@ function fn_init_pytorch_env()
     echo "PYTHON_LIB_PATH=$PYTHON_LIB_PATH"
     echo "PYTORCH_INSTALL_PATH=$PYTORCH_INSTALL_PATH"
     echo "PYTORCH_NPU_INSTALL_PATH=$PYTORCH_NPU_INSTALL_PATH"
-    if [ ! -f $PYTORCH_NPU_INSTALL_PATH/include/torch_npu/csrc/core/npu/NPUFormat.h ]; then
-        echo "Not compatiable torch_npu version!"
-        exit 1
-    fi
 }
 
 function fn_init_use_cxx11_abi()

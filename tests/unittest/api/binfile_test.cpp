@@ -13,9 +13,7 @@
 #include "mki/utils/bin_file/bin_file.h"
 #include "mki/utils/file_system/file_system.h"
 
-namespace {
-using namespace Mki;
-
+namespace Mki {
 TEST(BinFileTest, all)
 {
     {
@@ -208,4 +206,4 @@ TEST(BinFileTest, exceedMaxLen)
         EXPECT_EQ(attrMap.size(), 0);
     }
 }
-} // namespace
+} // namespace Mki

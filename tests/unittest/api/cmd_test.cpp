@@ -12,9 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/cmd/cmd.h"
 
-namespace {
-using namespace Mki;
-
+namespace Mki {
 Status CmdPackage(const std::vector<std::string> &args) { return Status::OkStatus(); }
 
 Status CmdInspect(const std::vector<std::string> &args) { return Status::OkStatus(); }
@@ -47,4 +45,4 @@ TEST(StatusCmdTest, DoHelp)
     Status result = cmd.Run(4, argv1);
     EXPECT_TRUE(result.Ok());
 }
-} // namespace
+} // namespace Mki

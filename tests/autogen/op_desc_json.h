@@ -17,9 +17,11 @@
 #include "mki/launch_param.h"
 #include "mki/operation.h"
 
-namespace MkiAutoGen {
+namespace Mki {
+namespace AutoGen {
 void JsonToOpParam(const nlohmann::json &opDescJson, Mki::LaunchParam &launchParam);
 Mki::Operation *GetOpByName(const std::string &operationName);
-} // namespace MkiAutoGen
+} // namespace AutoGen
+} // namespace Mki
 
 #endif

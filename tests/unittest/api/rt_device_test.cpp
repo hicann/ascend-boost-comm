@@ -13,9 +13,7 @@
 #include "mki/utils/rt/device/device.h"
 #include "mki/utils/log/log.h"
 
-namespace {
-using namespace Mki;
-
+namespace Mki {
 TEST(RtDeviceTest, RtDeviceSetSocVersionTest)
 {
     const char *setVersion = "Ascend910A";
@@ -31,4 +29,4 @@ TEST(RtDeviceTest, RtDeviceGetSocVersionTest)
     EXPECT_EQ(status, MKIRT_SUCCESS);
     MKI_LOG(INFO) << "DeviceVersion: " << getVersion;
 }
-} // namespace
+} // namespace Mki

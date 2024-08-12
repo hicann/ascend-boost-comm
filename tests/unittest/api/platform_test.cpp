@@ -16,7 +16,7 @@
 #include "mki/utils/platform/platform_manager.h"
 #include "utils/platform/platform_infos_impl.h"
 
-namespace {
+namespace Mki {
 TEST(PlatformTest, platformTest1)
 {
     const uint32_t PLATFORM_SUCCESS = 0;
@@ -72,4 +72,4 @@ TEST(PlatformManagerTest, Finalize)
     Mki::PlatformManager &platformManager = Mki::PlatformManager::Instance();
     EXPECT_EQ(platformManager.Finalize(), 0);
 }
-} // namespace
+} // namespace Mki

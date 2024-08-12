@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/compare/compare.h"
 
-namespace {
+namespace Mki {
 TEST(CompareTest, IsEqual) {
     int a = 5;
     int b = 5;
@@ -24,4 +24,4 @@ TEST(CompareTest, IsEqual) {
     std::string f = "world";
     EXPECT_FALSE(Mki::Utils::Compare<std::string>::IsEqual(e, f));
 }
-} // namespace
+} // namespace Mki

@@ -12,10 +12,8 @@
 #include <gtest/gtest.h>
 #include "mki/utils/rt/rt.h"
 
-namespace {
+namespace Mki {
 constexpr int DEV_COUNT = 56;
-
-using namespace Mki;
 
 TEST(RtTest, Base)
 {
@@ -67,4 +65,4 @@ TEST(Rt, Stream)
     MkiRtStreamDestroy(stream);
     ASSERT_EQ(MkiRtDeviceResetCurrent(0), 0);
 }
-} // namespace
+} // namespace Mki

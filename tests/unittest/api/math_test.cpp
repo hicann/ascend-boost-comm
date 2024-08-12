@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/math/math.h"
 
-namespace {
+namespace Mki {
 TEST(MathTest, DividendIsZero) {
     int64_t dividend = 2147483648;
     int64_t divisor = 2147483648;
@@ -22,4 +22,4 @@ TEST(MathTest, DividendIsZero) {
     EXPECT_EQ(Mki::Utils::CeilDiv(dividend, divisor1), 2147483648);
     EXPECT_EQ(Mki::Utils::CeilDiv(dividend, divisor2), 0);
 }
-} // namespace
+} // namespace Mki

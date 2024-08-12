@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/strings/match.h"
 
-namespace {
+namespace Mki {
 TEST(StringTest, Match)
 {
     bool ret = Mki::EndsWith("dd.a", ".a");
@@ -20,4 +20,4 @@ TEST(StringTest, Match)
     ret = Mki::EndsWith("dd.a", ".b");
     EXPECT_NE(ret, true);
 }
-} // namespace
+} // namespace Mki

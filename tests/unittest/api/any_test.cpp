@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/any/any.h"
 
-namespace {
+namespace Mki {
 TEST(AnyTest, HasValue)
 {
     Mki::Any any;
@@ -20,4 +20,4 @@ TEST(AnyTest, HasValue)
     any = 4;
     EXPECT_EQ(any.HasValue(), true);
 }
-} // namespace
+} // namespace Mki

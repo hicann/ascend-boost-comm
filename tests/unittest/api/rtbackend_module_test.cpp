@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/rt/backend/rt_backend.h"
 
-namespace {
+namespace Mki {
 TEST(RtBackendTest, ModuleCreate) {
     Mki::RtBackend rtBackend;
     MkiRtModuleInfo moduleInfo;
@@ -25,4 +25,4 @@ TEST(RtBackendTest, ModuleCreate) {
     ASSERT_EQ(rtBackend.ModuleCreate(nullptr, &module), MKIRT_ERROR_NOT_INITIALIZED);
     ASSERT_EQ(rtBackend.ModuleCreate(&moduleInfo, nullptr), MKIRT_ERROR_NOT_INITIALIZED);
 }
-} // namespace
+} // namespace Mki

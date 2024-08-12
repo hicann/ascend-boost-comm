@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/dl/dl.h"
 
-namespace {
+namespace Mki {
 TEST(Dl, Base)
 {
     char data[1024];
@@ -28,4 +28,4 @@ TEST(Dl, GetSymbolReturnsNullptrWhenDlHandleIsNullptr) {
     Mki::Dl dl(data);
     EXPECT_EQ(nullptr, dl.GetSymbol("someSymbol"));
 }
-} // namespace
+} // namespace Mki
