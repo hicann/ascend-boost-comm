@@ -258,7 +258,7 @@ Status KernelBase::UpdateInOutWkspArgs(void **args, uint64_t argsNum,
             continue;
         }
         MKI_LOG(DEBUG) << "args info: input tensor " << idx;
-        args[idx] = launchParam.GetInTensor(i++).deviceData;
+        args[idx] = launchParam.GetInTensor(i++).data;
     }
     size_t outputNum = launchParam.GetOutTensorCount();
     for (size_t i = 0; i < outputNum && idx < argsNum; idx++) {
@@ -266,7 +266,7 @@ Status KernelBase::UpdateInOutWkspArgs(void **args, uint64_t argsNum,
             continue;
         }
         MKI_LOG(DEBUG) << "args info: output tensor " << idx;
-        args[idx] = launchParam.GetOutTensor(i++).deviceData;
+        args[idx] = launchParam.GetOutTensor(i++).data;
     }
     auto workspaceAddr = runInfo.GetScratchDeviceAddr();
     auto &workspaces = kernelInfo_.GetScratchSizes();

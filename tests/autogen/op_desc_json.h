@@ -9,31 +9,19 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-#ifndef MKI_TENSOR_H
-#define MKI_TENSOR_H
+#ifndef MKI_DESC_JSON_H
+#define MKI_DESC_JSON_H
+
 #include <string>
-#include "mki/types.h"
-#include "mki/utils/SVector/SVector.h"
+#include <nlohmann/json.hpp>
+#include "mki/launch_param.h"
+#include "mki/operation.h"
 
 namespace Mki {
-struct TensorDesc {
-    TensorDType dtype = TENSOR_DTYPE_UNDEFINED;
-    TensorFormat format = TENSOR_FORMAT_UNDEFINED;
-    Mki::SVector<int64_t> dims;
-    int64_t Numel() const;
-    void View(const Mki::SVector<int64_t> &newDims);
-    std::string ToString() const;
-};
-
-struct Tensor {
-    TensorDesc desc;
-    void *data = nullptr;
-    size_t dataSize = 0;
-    void *hostData = nullptr;
-    int64_t Numel() const;
-    void View(const Mki::SVector<int64_t> &newDims);
-    std::string ToString() const;
-};
+namespace AutoGen {
+void JsonToOpParam(const nlohmann::json &opDescJson, Mki::LaunchParam &launchParam);
+Mki::Operation *GetOpByName(const std::string &operationName);
+} // namespace AutoGen
 } // namespace Mki
 
 #endif

@@ -85,9 +85,9 @@ std::string Tensor::ToString() const
     std::stringstream ss;
     ss << desc.ToString() << ", dataSize:" << dataSize;
 #ifdef _DEBUG
-    ss << ", data:" << deviceData;
+    ss << ", data:" << data;
 #else
-    ss << ", data:" << (deviceData != nullptr);
+    ss << ", data:" << (data != nullptr);
 #endif
     return ss.str();
 }

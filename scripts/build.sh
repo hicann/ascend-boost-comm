@@ -19,25 +19,18 @@ cd ..
 export CODE_ROOT=$(pwd)
 export CACHE_DIR=$CODE_ROOT/build
 export OUTPUT_DIR=$CODE_ROOT/output
-DEPENDENCY_DIR=2024-04-13
-
-MKI_SOURCE_DIR=/tmp/asdops_dependency/$DEPENDENCY_DIR
 
 export THIRD_PARTY_DIR=$CODE_ROOT/3rdparty
 BUILD_TEST_FRAMEWORK=OFF
-FORCE_CLEAN=OFF
 COMPILE_OPTIONS=""
 INCREMENTAL_SWITCH=OFF
 DEVICE_CODE_PACK_SWITCH=ON
 USE_VERBOSE=OFF
 USE_CXX11_ABI=""
 IS_RELEASE=False
-SKIP_BUILD=OFF
-CMC_URL_COMMON=https://cmc-szver-artifactory.cmc.tools.huawei.com/artifactory/cmc-software-release/Baize%20C/AscendTransformerBoost/1.0.0/asdops_dependency/common
-CMC_URL=https://cmc-szver-artifactory.cmc.tools.huawei.com/artifactory/cmc-software-release/Baize%20C/AscendTransformerBoost/1.0.0/asdops_dependency/$DEPENDENCY_DIR
-BUILD_OPTION_LIST="testframework example unittest pythontest alltest all_test_run debug release help dev clean"
-BUILD_CONFIGURE_LIST=("--output=.*" "--cache=.*" "--incremental" "--gcov" "--force_clean" "--use_cxx11_abi=0"
-                      "--use_cxx11_abi=1" "--build_config=.*" "--skip_build" "--no_werror" "--namespace=.*")
+BUILD_OPTION_LIST="testframework release unittest clean help"
+BUILD_CONFIGURE_LIST=("--output=.*" "--use_cxx11_abi=0" "--use_cxx11_abi=1"
+                      "--verbose" "--no_werror" "--namespace=.*")
 
 # install cann
 function fn_install_cann_and_kernel()
@@ -62,30 +55,34 @@ function fn_install_cann_and_kernel()
     cd -
 }
 
+function fn_build_googletest()
+{
+    GTEST_DIR=$THIRD_PARTY_DIR/googletest
+    if [ -d "$GTEST_DIR" ]; then
+        return $?
+    fi
+    [[ ! -d "$THIRD_PARTY_DIR" ]] && mkdir -p $THIRD_PARTY_DIR
+    cd $THIRD_PARTY_DIR
+    wget --no-check-certificate https://github.com/google/googletest/archive/refs/tags/v1.13.0.tar.gz
+    tar -xf v1.13.0.tar.gz
+    mv googletest-1.13.0 googletest
+    rm v1.13.0.tar.gz
+}
+
 function fn_build_nlohmann_json()
 {
     if [ -d "$THIRD_PARTY_DIR/nlohmannJson" ]; then
         return $?
     fi
     cd $CACHE_DIR
-    wget --no-check-certificate $CMC_URL_COMMON/nlohmannjson-v3.11.2.tar.gz
-    tar -xf nlohmannjson-v3.11.2.tar.gz
-    rm nlohmannjson-v3.11.2.tar.gz
-    rm -rf ./nlohmannJson/.git
-    mv ./nlohmannJson $THIRD_PARTY_DIR
-}
-
-function fn_build_huawei_secure_c()
-{
-    if [ -d "$THIRD_PARTY_DIR/securec" ]; then
-        return $?
-    fi
+    rm -rf nlohmann
+    mkdir nlohmann
+    cd nlohmann
+    git clone -b v3.11.2 --depth 1 https://gitee.com/mirrors/json.git
+    mkdir -p $THIRD_PARTY_DIR/nlohmannJson
+    mv json/include $THIRD_PARTY_DIR/nlohmannJson
     cd $CACHE_DIR
-    wget --no-check-certificate $CMC_URL_COMMON/huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    tar -xf huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    rm huawei_secure_c-tag_Huawei_Secure_C_V100R001C01SPC012B002_00001.tar.gz
-    mv huawei_secure_c* securec
-    mv securec $THIRD_PARTY_DIR
+    rm -rf nlohmann
 }
 
 function fn_build_dependency()
@@ -95,34 +92,19 @@ function fn_build_dependency()
     CCEC_COMPILER_DIR=$THIRD_PARTY_DIR/compiler/ccec_compiler
     TIKCPP_DIR=$THIRD_PARTY_DIR/compiler/tikcpp
 
-    if [ "$IS_RELEASE" == "True" ];then
-        mkdir -p $THIRD_PARTY_DIR/compiler
-        ln -s $ASCEND_HOME_PATH/compiler/ccec_compiler $CCEC_COMPILER_DIR
-        ln -s $ASCEND_HOME_PATH/compiler/tikcpp $TIKCPP_DIR
-    fi
-
-    check_dependency_cache
     if [[ ! -d "$METADEF_DIR" ]]; then
-        cp -r $MKI_SOURCE_DIR/metadef $METADEF_DIR
-    fi
-    mkdir -p $THIRD_PARTY_DIR/compiler
-    if [ ! -d $CCEC_COMPILER_DIR ];then
-        if [ $ARCH = "aarch64" ];then
-            ln -s $MKI_SOURCE_DIR/ccec_compiler/aarch64-linux $CCEC_COMPILER_DIR
-        else
-            ln -s $MKI_SOURCE_DIR/ccec_compiler/x86_64-linux $CCEC_COMPILER_DIR
-        fi
+        git clone --depth 1 https://gitee.com/ascend/metadef.git $METADEF_DIR
     fi
 
-    if [ ! -d $TIKCPP_DIR ];then
-        ln -s $MKI_SOURCE_DIR/tikcpp $TIKCPP_DIR
-    fi
+    [[ -d "$THIRD_PARTY_DIR/compiler" ]] && rm -rf $THIRD_PARTY_DIR/compiler
+    mkdir -p $THIRD_PARTY_DIR/compiler
+    ln -s $ASCEND_HOME_PATH/compiler/ccec_compiler $CCEC_COMPILER_DIR
+    ln -s $ASCEND_HOME_PATH/compiler/tikcpp $TIKCPP_DIR
 }
 
 function fn_build_release_3rdparty()
 {
     fn_build_dependency
-    fn_build_huawei_secure_c
     fn_build_nlohmann_json
 }
 
@@ -131,13 +113,12 @@ function fn_init_pytorch_env()
     export PYTHON_INCLUDE_PATH="$(python3 -c 'from sysconfig import get_paths; print(get_paths()["include"])')"
     export PYTHON_LIB_PATH="$(python3 -c 'from sysconfig import get_paths; print(get_paths()["include"])')"
     export PYTORCH_INSTALL_PATH="$(python3 -c 'import torch, os; print(os.path.dirname(os.path.abspath(torch.__file__)))')"
-    export PYTORCH_NPU_INSTALL_PATH="$(python3 -c 'import torch, torch_npu, os; print(os.path.dirname(os.path.abspath(torch_npu.__file__)))')"
+    export PYTORCH_NPU_INSTALL_PATH="$(python3 -c 'import importlib.util; spec=importlib.util.find_spec("torch_npu"); \
+                                                   print(spec.submodule_search_locations[0])')"
     echo "PYTHON_INCLUDE_PATH=$PYTHON_INCLUDE_PATH"
     echo "PYTHON_LIB_PATH=$PYTHON_LIB_PATH"
     echo "PYTORCH_INSTALL_PATH=$PYTORCH_INSTALL_PATH"
-    if [ -f $PYTORCH_NPU_INSTALL_PATH/include/torch_npu/csrc/core/npu/NPUFormat.h ]; then
-        COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNPU_FORMAT_H_VALID=ON"
-    fi
+    echo "PYTORCH_NPU_INSTALL_PATH=$PYTORCH_NPU_INSTALL_PATH"
 }
 
 function fn_init_use_cxx11_abi()
@@ -184,17 +165,15 @@ function fn_platform_configs_copy()
     done
 }
 
-function fn_tbe_info_copy()
+function fn_config_json_copy()
 {
-    INFO_DIR=$CODE_ROOT/configs
-    INFO_DEST_DIR=$OUTPUT_DIR/mki/configs
-    if [ -d "$INFO_DEST_DIR" ];then
-        rm -rf $INFO_DEST_DIR
+    CONFIG_JSON_DIR=$CODE_ROOT/configs
+    CONFIG_JSON_DEST=$OUTPUT_DIR/mki/configs
+    if [ -d "$CONFIG_JSON_DEST" ];then
+        rm -rf $CONFIG_JSON_DEST
     fi
-    mkdir -p $INFO_DEST_DIR
-    for info_name in $(ls $INFO_DIR);do
-        cp -r $INFO_DIR/$info_name $INFO_DEST_DIR/$info_name
-    done
+    mkdir -p $CONFIG_JSON_DEST
+    cp $CONFIG_JSON_DIR/build_config.json $CONFIG_JSON_DEST/build_config.json
 }
 
 function fn_cmake_configs_copy()
@@ -225,14 +204,7 @@ function fn_build()
         exit 1
     fi
 
-    if [ "$SKIP_BUILD" == "ON" ]; then
-        echo "info: skip mki build because SKIP_BUILD is on."
-        return 0
-    fi
-
-    if [ "$INCREMENTAL_SWITCH" == "OFF" ];then
-        [ -n "$CACHE_DIR" ] && rm -rf $CACHE_DIR
-    fi
+    [ -n "$CACHE_DIR" ] && rm -rf $CACHE_DIR
     [[ ! -d "$CACHE_DIR" ]] && mkdir $CACHE_DIR
     [[ ! -d "$OUTPUT_DIR" ]] && mkdir -p $OUTPUT_DIR
     [[ ! -d $THIRD_PARTY_DIR ]] && mkdir -p $THIRD_PARTY_DIR
@@ -249,15 +221,9 @@ function fn_build()
     echo "** Mki framework build and install!"
     fn_compile_and_install "$CODE_ROOT" "$COMPILE_OPTIONS"
 
+    fn_config_json_copy
     fn_platform_configs_copy
     fn_cmake_configs_copy
-    fn_tbe_info_copy
-}
-
-function fn_build_example()
-{
-    cd $CODE_ROOT/example
-    bash $SCRIPT_DIR/build_ops.sh --mkidir=$OUTPUT_DIR/mki --build_config=$CODE_ROOT/configs
 }
 
 function fn_make_tar_package()
@@ -265,36 +231,6 @@ function fn_make_tar_package()
     cd $OUTPUT_DIR
     tar -czf mki.tar.gz mki
     rm -rf mki
-}
-
-function check_dependency_cache()
-{
-    if [ "$IS_RELEASE" == "True" ];then
-        return
-    fi
-    if [ "$FORCE_CLEAN" == "ON" ];then
-        echo "CLEAN ALL DEPENDENCY CACHE !!!!!"
-        rm $MKI_SOURCE_DIR -rf
-        rm $OUTPUT_DIR -rf
-        rm $CACHE_DIR -rf
-    fi
-    [[ ! -d "$MKI_SOURCE_DIR" ]] && mkdir -p $MKI_SOURCE_DIR
-    cd $MKI_SOURCE_DIR
-    if [ ! -d "$MKI_SOURCE_DIR/ccec_compiler" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/ccec_compiler.tar.gz ]] && wget --no-check-certificate $CMC_URL/ccec_compiler.tar.gz
-        tar xf ccec_compiler.tar.gz
-        rm ccec_compiler.tar.gz
-    fi
-    if [ ! -d "$MKI_SOURCE_DIR/metadef" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/metadef.tar.gz ]] && wget --no-check-certificate $CMC_URL/metadef.tar.gz
-        tar xf metadef.tar.gz
-    fi
-    if [ ! -d "$MKI_SOURCE_DIR/tikcpp" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/tikcpp.tar.gz ]] && wget --no-check-certificate $CMC_URL/tikcpp.tar.gz
-        tar xf tikcpp.tar.gz
-        rm tikcpp.tar.gz
-    fi
-    echo "dependency_cache is ready"
 }
 
 function fn_main()
@@ -338,18 +274,6 @@ function fn_main()
                 export OUTPUT_DIR=$(cd $arg2; pwd)
             fi
             ;;
-        --cache=*)
-            arg2=${arg2#*=}
-            if [ -z $arg2 ];then
-                echo "the cache directory is not set. This should be set like --cache=<cacheDir>"
-            else
-                cd $CURRENT_DIR
-                if [ ! -d "$arg2" ];then
-                    mkdir -p $arg2
-                fi
-                export CACHE_DIR=$(cd $arg2; pwd)
-            fi
-            ;;
         "--use_cxx11_abi=1")
             USE_CXX11_ABI=ON
             ;;
@@ -359,25 +283,6 @@ function fn_main()
         "--verbose")
             USE_VERBOSE=ON
             ;;
-        "--incremental")
-            INCREMENTAL_SWITCH=ON
-            ;;
-        "--force_clean")
-            FORCE_CLEAN=ON
-            ;;
-        --build_config=*)
-            arg2=${arg2#*=}
-            if [ -z $arg2 ];then
-                echo "the config directory is not set. This should be set like --build_config=<configFileDir>"
-            else
-                first_char=${arg2: 0: 1}
-                if [[ "$first_char" == "/" ]];then
-                    export BUILD_CONFIG_DIR=$arg2
-                else
-                    export BUILD_CONFIG_DIR=$CURRENT_DIR"/"$arg2
-                fi
-            fi
-            ;;
         --namespace=*)
             arg2=${arg2#*=}
             if [ -z $arg2 ];then
@@ -385,9 +290,6 @@ function fn_main()
             else
                 COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNAMESPACE:STRING=$arg2"
             fi
-            ;;
-        "--skip_build")
-            SKIP_BUILD=ON
             ;;
         "--no_werror")
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNO_WERROR=ON"
@@ -406,22 +308,16 @@ function fn_main()
             fn_init_pytorch_env
             fn_build
             ;;
-        "debug")
-            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug"
-            fn_build
-            ;;
         "release")
             IS_RELEASE=True
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Release"
             fn_build
             fn_make_tar_package
             ;;
-        "dev")
-            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Release"
+        "unittest")
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug -DBUILD_UNIT_TEST=ON"
+            fn_build_googletest
             fn_build
-            ;;
-        "example")
-            fn_build_example
             ;;
         "clean")
             [[ -d "$CACHE_DIR" ]] && rm -rf $CACHE_DIR
@@ -430,9 +326,9 @@ function fn_main()
             echo "clear all build history."
             ;;
         *)
-            echo "build.sh testframework|example|dev|debug|release|clean"\
-            "--incremental|--force_clean|--output=<dir>|--cache=<dir>|--use_cxx11_abi=0"\
-            "|--use_cxx11_abi=1|--build_config=<dir>|--skip_build|--no_werror|--namespace=<namespace>"
+            echo "build.sh testframework|release|unittest|clean"\
+            "--output=<dir>|--force_clean|--use_cxx11_abi=0|--use_cxx11_abi=1"\
+            "|--no_werror|--namespace=<namespace>"
             ;;
     esac
 }
