@@ -86,9 +86,9 @@ public:
     void SetLaunchWithTiling(bool flag);
     bool GetLaunchWithTiling() const;
 
-    // Scratch
-    MiniVector<uint64_t> &GetScratchSizes();
-    int64_t GetTotalScratchSize() const;
+    // Workspace
+    MiniVector<uint64_t> &GetWorkspaceSizes();
+    int64_t GetTotalWorkspaceSize() const;
 
     // Memset
     void SetMemsetInfo(uint64_t argIdx, uint64_t size);
@@ -98,7 +98,7 @@ private:
     void ResetArgs();
     void ResetTilingInfo();
     void ResetConstTensorInfo();
-    void ResetScratchSizes();
+    void ResetWorkspaceSizes();
     void ResetMemsetInfo();
 
 private:
@@ -109,7 +109,7 @@ private:
     int64_t hwsyncIdx_ = -1; // < 0: no hwsync, >= 0: hwsync arg idx
     TilingExtInfo tilingExtInfo_;
     MiniVector<ConstTensorInfo> constTensorInfo_;
-    MiniVector<uint64_t> scratchSizes_;
+    MiniVector<uint64_t> workspaceSizes_;
     MiniVector<MemsetInfo> memsetInfo_;
 };
 } // namespace Mki

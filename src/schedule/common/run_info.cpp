@@ -18,7 +18,7 @@ RunInfo::~RunInfo() {}
 
 void RunInfo::Reset()
 {
-    scratchAddr_ = nullptr;
+    workspaceAddr_ = nullptr;
     tilingDeviceAddr_ = nullptr;
 }
 
@@ -30,13 +30,13 @@ void RunInfo::SetStream(void *stream)
 
 void *RunInfo::GetStream() const { return stream_; }
 
-void RunInfo::SetScratchDeviceAddr(uint8_t *addr)
+void RunInfo::SetWorkspaceDeviceAddr(uint8_t *addr)
 {
     MKI_CHECK(addr != nullptr, "workspace device addr is nullptr", return);
-    scratchAddr_ = addr;
+    workspaceAddr_ = addr;
 }
 
-uint8_t *RunInfo::GetScratchDeviceAddr() const { return scratchAddr_; }
+uint8_t *RunInfo::GetWorkspaceDeviceAddr() const { return workspaceAddr_; }
 
 void RunInfo::SetTilingDeviceAddr(uint8_t *addr)
 {
@@ -52,9 +52,9 @@ std::string RunInfo::ToString() const
 
 #ifdef _DEBUG
     ss << "stream: " << stream_;
-    ss << ", workspaceAddr: " << (void *)scratchAddr_ << ", tilingDeviceAddr: " << (void *)tilingDeviceAddr_;
+    ss << ", workspaceAddr: " << (void *)workspaceAddr_ << ", tilingDeviceAddr: " << (void *)tilingDeviceAddr_;
 #else
-    ss << "stream: " << (stream_ != nullptr) << ", workspaceAddr: " << (scratchAddr_ != nullptr)
+    ss << "stream: " << (stream_ != nullptr) << ", workspaceAddr: " << (workspaceAddr_ != nullptr)
        << ", tilingDeviceAddr: " << (tilingDeviceAddr_ != nullptr);
 #endif
     ss << std::endl;
@@ -65,7 +65,7 @@ std::string RunInfo::ToString() const
 void RunInfo::Copy(const RunInfo &runInfo)
 {
     stream_ = runInfo.stream_;
-    scratchAddr_ = runInfo.scratchAddr_;
+    workspaceAddr_ = runInfo.workspaceAddr_;
     tilingDeviceAddr_ = runInfo.tilingDeviceAddr_;
 }
 } // namespace Mki

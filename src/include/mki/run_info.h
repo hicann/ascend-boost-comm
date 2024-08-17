@@ -28,8 +28,8 @@ public:
     void SetStream(void *stream);
     void *GetStream() const;
 
-    void SetScratchDeviceAddr(uint8_t *addr);
-    uint8_t *GetScratchDeviceAddr() const;
+    void SetWorkspaceDeviceAddr(uint8_t *addr);
+    uint8_t *GetWorkspaceDeviceAddr() const;
 
     void SetTilingDeviceAddr(uint8_t *addr);
     uint8_t *GetTilingDeviceAddr() const;
@@ -41,7 +41,7 @@ public:
 private:
     // used by User
     void *stream_ = nullptr;
-    uint8_t *scratchAddr_ = nullptr;
+    uint8_t *workspaceAddr_ = nullptr;
     uint8_t *tilingDeviceAddr_ = nullptr;
 };
 } // namespace Mki

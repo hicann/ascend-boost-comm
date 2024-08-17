@@ -33,7 +33,7 @@ void KernelInfo::Reset()
     ResetArgs();
     ResetTilingInfo();
     ResetConstTensorInfo();
-    ResetScratchSizes();
+    ResetWorkspaceSizes();
     ResetMemsetInfo();
 }
 
@@ -236,17 +236,17 @@ void KernelInfo::SetLaunchWithTiling(bool flag)
 
 bool KernelInfo::GetLaunchWithTiling() const { return launchWithTiling_; }
 
-MiniVector<uint64_t> &KernelInfo::GetScratchSizes()
+MiniVector<uint64_t> &KernelInfo::GetWorkspaceSizes()
 {
-    return scratchSizes_;
+    return workspaceSizes_;
 }
 
-int64_t KernelInfo::GetTotalScratchSize() const
+int64_t KernelInfo::GetTotalWorkspaceSize() const
 {
-    MKI_CHECK(initFlag_, "kernelInfo is not inited, get scratch size fail", return -1);
+    MKI_CHECK(initFlag_, "kernelInfo is not inited, get workspace size fail", return -1);
     uint64_t sum = 0;
-    for (auto scratchSize : scratchSizes_) {
-        sum += scratchSize;
+    for (auto workspaceSize : workspaceSizes_) {
+        sum += workspaceSize;
     }
     return static_cast<int64_t>(sum);
 }
@@ -263,7 +263,7 @@ std::string KernelInfo::ToString() const
         ss << ", constTensor" << i << ": argIdx " << constTensorInfo_[i].argIdx
            << ", size " << constTensorInfo_[i].size;
     }
-    ss << ", scratch sizes: " << scratchSizes_;
+    ss << ", workspace sizes: " << workspaceSizes_;
     for (size_t i = 0; i < memsetInfo_.size(); i++) {
         ss << ", memset" << i << ": argIdx " << memsetInfo_[i].argIdx
            << ", size " << memsetInfo_[i].size;
@@ -308,7 +308,7 @@ void KernelInfo::Copy(const KernelInfo &other)
     tilingExtInfo_.constTensorOffset = other.tilingExtInfo_.constTensorOffset;
     tilingExtInfo_.usedSize = other.tilingExtInfo_.usedSize;
     constTensorInfo_ = other.constTensorInfo_;
-    scratchSizes_ = other.scratchSizes_;
+    workspaceSizes_ = other.workspaceSizes_;
     memsetInfo_ = other.memsetInfo_;
 }
 
@@ -340,9 +340,9 @@ void KernelInfo::ResetConstTensorInfo()
     constTensorInfo_.clear();
 }
 
-void KernelInfo::ResetScratchSizes()
+void KernelInfo::ResetWorkspaceSizes()
 {
-    scratchSizes_.clear();
+    workspaceSizes_.clear();
 }
 
 void KernelInfo::ResetMemsetInfo()
