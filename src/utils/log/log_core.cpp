@@ -23,19 +23,19 @@
 namespace Mki {
 static bool GetLogToStdoutFromEnv()
 {
-    const char *envLogToStdout = std::getenv("MKI_LOG_TO_STDOUT");
+    const char *envLogToStdout = std::getenv("ASDOPS_LOG_TO_STDOUT");
     return envLogToStdout != nullptr && strcmp(envLogToStdout, "1") == 0;
 }
 
 static bool GetLogToFileFromEnv()
 {
-    const char *envLogToFile = std::getenv("MKI_LOG_TO_FILE");
+    const char *envLogToFile = std::getenv("ASDOPS_LOG_TO_FILE");
     return envLogToFile != nullptr && strcmp(envLogToFile, "1") == 0;
 }
 
 static LogLevel GetLogLevelFromEnv()
 {
-    const char *env = std::getenv("MKI_LOG_LEVEL");
+    const char *env = std::getenv("ASDOPS_LOG_LEVEL");
     if (env == nullptr) {
         return LogLevel::WARN;
     }

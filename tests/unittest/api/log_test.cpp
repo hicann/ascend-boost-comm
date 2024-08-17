@@ -21,8 +21,8 @@
 namespace Mki {
 TEST(LogCore, InitTest1)
 {
-    char envLogToStdout[] = "MKI_LOG_TO_STDOUT=0";
-    char envLogLevel[] = "MKI_LOG_LEVEL=WARN";
+    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=0";
+    char envLogLevel[] = "ASDOPS_LOG_LEVEL=WARN";
     putenv(envLogToStdout);
     putenv(envLogLevel);
     Mki::LogCore logCore;
@@ -34,8 +34,8 @@ TEST(LogCore, InitTest1)
 
 TEST(LogCore, InitTest2)
 {
-    char envLogToStdout[] = "MKI_LOG_TO_STDOUT=1";
-    char envLogLevel[] = "MKI_LOG_LEVEL=ErRoR";
+    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
+    char envLogLevel[] = "ASDOPS_LOG_LEVEL=ErRoR";
     putenv(envLogToStdout);
     putenv(envLogLevel);
     Mki::LogCore logCore;
@@ -49,8 +49,8 @@ TEST(LogCore, InitTest2)
 
 TEST(LogCore, InitTest3)
 {
-    char envLogToStdout[] = "MKI_LOG_TO_STDOUT=avc";
-    char envLogLevel[] = "MKI_LOG_LEVEL=ERROT";
+    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=avc";
+    char envLogLevel[] = "ASDOPS_LOG_LEVEL=ERROT";
     putenv(envLogToStdout);
     putenv(envLogLevel);
     Mki::LogCore logCore;
@@ -62,8 +62,8 @@ TEST(LogCore, InitTest3)
 
 TEST(LogCore, InitTest4)
 {
-    unsetenv("MKI_LOG_TO_STDOUT");
-    unsetenv("MKI_LOG_LEVEL");
+    unsetenv("ASDOPS_LOG_TO_STDOUT");
+    unsetenv("ASDOPS_LOG_LEVEL");
     Mki::LogCore logCore;
     Mki::LogLevel logLevel = logCore.GetLogLevel();
     std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
@@ -73,8 +73,8 @@ TEST(LogCore, InitTest4)
 
 TEST(LogCore, LogTest1)
 {
-    char envLogToStdout[] = "MKI_LOG_TO_STDOUT=1";
-    char envLogLevel[] = "MKI_LOG_LEVEL=INFO";
+    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
+    char envLogLevel[] = "ASDOPS_LOG_LEVEL=INFO";
     putenv(envLogToStdout);
     putenv(envLogLevel);
     Mki::LogCore logCore;
@@ -88,9 +88,9 @@ TEST(LogCore, LogTest1)
 
 TEST(LogCore, LogTest2)
 {
-    char envLogToStdout[] = "MKI_LOG_TO_STDOUT=1";
-    char envLogToFile[] = "MKI_LOG_TO_FILE=1";
-    char envLogLevel[] = "MKI_LOG_LEVEL=INFO";
+    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
+    char envLogToFile[] = "ASDOPS_LOG_TO_FILE=1";
+    char envLogLevel[] = "ASDOPS_LOG_LEVEL=INFO";
     putenv(envLogToStdout);
     putenv(envLogLevel);
     putenv(envLogToFile);

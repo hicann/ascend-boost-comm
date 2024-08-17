@@ -18,12 +18,12 @@ if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     export PYTORCH_INSTALL_PATH="$(python3 -c 'import importlib.util; spec=importlib.util.find_spec("torch"); \
                                                print(spec.submodule_search_locations[0])')"
     export LD_LIBRARY_PATH=$PYTORCH_INSTALL_PATH/lib:$LD_LIBRARY_PATH
-    export MKI_LOG_TO_STDOUT=0
-    export MKI_LOG_LEVEL=INFO
-    export MKI_LOG_TO_FILE=0
-    export MKI_LOG_TO_FILE_FLUSH=0
-    export MKI_LOG_TO_BOOST_TYPE=atb #算子库对应加速库日志类型，默认transformer
-    export MKI_LOG_PATH=~
+    export ASDOPS_LOG_TO_STDOUT=0
+    export ASDOPS_LOG_LEVEL=INFO
+    export ASDOPS_LOG_TO_FILE=0
+    export ASDOPS_LOG_TO_FILE_FLUSH=0
+    export ASDOPS_LOG_TO_BOOST_TYPE=atb #算子库对应加速库日志类型，默认transformer
+    export ASDOPS_LOG_PATH=~
 else
     echo "There is no 'set_env.sh' to import"
 fi

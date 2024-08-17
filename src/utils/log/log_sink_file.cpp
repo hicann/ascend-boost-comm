@@ -118,16 +118,16 @@ void LogSinkFile::Log(const char *log, uint64_t logLen)
 
 void LogSinkFile::Init()
 {
-    const char *env = std::getenv("MKI_LOG_TO_BOOST_TYPE");
+    const char *env = std::getenv("ASDOPS_LOG_TO_BOOST_TYPE");
     boostType_ = env && IsValidFileName(env) ? std::string(env) : "mki";
 
-    env = std::getenv("MKI_LOG_PATH");
+    env = std::getenv("ASDOPS_LOG_PATH");
     std::string logRootDir = env && IsValidFileName(env) ? std::string(env) : GetHomeDir();
     logRootDir = PathCheckAndRegular(logRootDir);
 
     logDir_ = logRootDir + "/" + boostType_ + "/log";
 
-    env = std::getenv("MKI_LOG_TO_FILE_FLUSH");
+    env = std::getenv("ASDOPS_LOG_TO_FILE_FLUSH");
     isFlush_ = env ? std::string(env) == "1" : false;
 }
 
