@@ -28,7 +28,7 @@ DEVICE_CODE_PACK_SWITCH=ON
 USE_VERBOSE=OFF
 USE_CXX11_ABI=""
 IS_RELEASE=False
-BUILD_OPTION_LIST="testframework release unittest clean help"
+BUILD_OPTION_LIST="testframework release dev debug unittest clean help"
 BUILD_CONFIGURE_LIST=("--output=.*" "--use_cxx11_abi=0" "--use_cxx11_abi=1"
                       "--verbose" "--no_werror" "--namespace=.*")
 
@@ -314,6 +314,15 @@ function fn_main()
             fn_build
             fn_make_tar_package
             ;;
+        "dev")
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Release"
+            fn_build
+            ;;
+        "debug")
+            IS_RELEASE=False
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug"
+            fn_build
+            ;;
         "unittest")
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug -DBUILD_UNIT_TEST=ON"
             fn_build_googletest
@@ -326,7 +335,7 @@ function fn_main()
             echo "clear all build history."
             ;;
         *)
-            echo "build.sh testframework|release|unittest|clean"\
+            echo "build.sh testframework|release|dev|debug|unittest|clean"\
             "--output=<dir>|--force_clean|--use_cxx11_abi=0|--use_cxx11_abi=1"\
             "|--no_werror|--namespace=<namespace>"
             ;;
