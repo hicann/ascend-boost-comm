@@ -13,7 +13,7 @@ target_compile_definitions(mki_static PRIVATE fe=MkiFe PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki SHARED ${SOURCE_FILES} ${BINARY_SRC_LIST})
 add_dependencies(mki binary_encode_srcs)
-target_link_libraries(mki PUBLIC dl pthread c_sec mmpa)
+target_link_libraries(mki PUBLIC dl pthread c_sec mmpa profapi)
 target_compile_definitions(mki PRIVATE fe=MkiFe PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki_loader STATIC ${LOADER_SOURCE_FILES})
