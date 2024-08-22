@@ -48,7 +48,6 @@ public:
     const SVector<Tensor> &GetOutTensors() const;
     SVector<Tensor> &GetOutTensors();
 
-    std::string ParamToJsonString() const;
     std::string ToString() const;
 
 private:
