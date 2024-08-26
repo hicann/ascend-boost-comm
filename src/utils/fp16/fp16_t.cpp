@@ -253,7 +253,7 @@ static double Fp16ToDouble(const uint16_t &fpValue)
 static uint8_t FP16CheckIntOverflow(uint16_t sVal, uint16_t &hfExp, uint64_t &longIntM,
                                     uint16_t &shiftOut, uint8_t type)
 {
-    uint64_t MaxValueMap[TRANS_TYPE_NUM][2] = {  // 2: negative and positive
+    uint64_t maxValueMap[TRANS_TYPE_NUM][2] = {  // 2: negative and positive
         {0x20000u,    0x1FFFFu},    // MAX negative/positive int8, 0x20000u: 0x1FFFFu
         {0x2000000Lu, 0x1FFFFFFLu}, // MAX negative/positive int16, 0x2000000Lu: 0x1FFFFFFLu
     };
@@ -262,8 +262,8 @@ static uint8_t FP16CheckIntOverflow(uint16_t sVal, uint16_t &hfExp, uint64_t &lo
         return 1;
     }
     uint8_t overflowFlag = 0;
-    uint64_t maxNegetaiveValue = MaxValueMap[type][0];
-    uint64_t maxPositiveValue = MaxValueMap[type][1];
+    uint64_t maxNegetaiveValue = maxValueMap[type][0];
+    uint64_t maxPositiveValue = maxValueMap[type][1];
     while (hfExp != FP16_EXP_BIAS) {
         if (hfExp > FP16_EXP_BIAS) {
             hfExp -= 1;
@@ -1058,7 +1058,7 @@ Fp16T &Fp16T::operator=(const uint8_t &uiVal)
     return *this;
 }
 
-static int16_t GetExpValueformInt16(uint32_t &mTmp, uint16_t &mMax, uint16_t &len)
+static int16_t GetExpValueformInt16(uint32_t &mTmp, uint16_t mMax, uint16_t len)
 {
     int16_t eVal = FP16_EXP_BIAS + FP16_MAN_LEN;
     uint16_t eTmp = len - CONST_11;

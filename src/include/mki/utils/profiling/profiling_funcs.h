@@ -27,10 +27,10 @@ public:
     uint64_t ProfSysCycleTime() const;
     uint64_t ProfGetHashId(const char *hashInfo, size_t length) const;
     uint64_t ProfGetHashId(const char *hashInfo, size_t length, void const *key);
-    void SetProfilingLevel0Status(bool status);
-    void SetProfilingLevel1Status(bool status);
-    bool GetProfilingLevel0Status();
-    bool GetProfilingLevel1Status();
+    void SetProfilingLevel0Status(bool status) const;
+    void SetProfilingLevel1Status(bool status) const;
+    bool GetProfilingLevel0Status() const;
+    bool GetProfilingLevel1Status() const;
     static int32_t MkiProfCommandHandle(uint32_t type, void *data, uint32_t len);
 
 private:

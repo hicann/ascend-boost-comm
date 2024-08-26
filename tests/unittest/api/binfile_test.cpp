@@ -31,7 +31,7 @@ TEST(BinFileTest, all)
         EXPECT_EQ(attrMap.size(), 1);
         EXPECT_EQ(attrMap[0].second, "3");
 
-        std::vector<std::pair<std::string, std::pair<void *, uint64_t>>> objMap;
+        std::vector<std::pair<std::string, std::pair<char *, uint64_t>>> objMap;
         binFile.GetAllObjects(objMap);
         EXPECT_EQ(objMap.size(), 1);
         EXPECT_EQ(objMap[0].second.second, 10);
@@ -56,7 +56,7 @@ TEST(BinFileTest, all0)
         EXPECT_EQ(attrMap.size(), 1);
         EXPECT_EQ(attrMap[0].second, "3");
 
-        std::vector<std::pair<std::string, std::pair<void *, uint64_t>>> objMap;
+        std::vector<std::pair<std::string, std::pair<char *, uint64_t>>> objMap;
         binFile.GetAllObjects(objMap);
         EXPECT_EQ(objMap.size(), 1);
         EXPECT_EQ(objMap[0].second.second, 10);
@@ -81,7 +81,7 @@ TEST(BinFileTest, all1)
         EXPECT_EQ(attrMap.size(), 1);
         EXPECT_EQ(attrMap[0].second, "3");
 
-        std::vector<std::pair<std::string, std::pair<void *, uint64_t>>> objMap;
+        std::vector<std::pair<std::string, std::pair<char *, uint64_t>>> objMap;
         binFile.GetAllObjects(objMap);
         EXPECT_EQ(objMap.size(), 1);
         EXPECT_EQ(objMap[0].second.second, 10);

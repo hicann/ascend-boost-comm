@@ -37,22 +37,22 @@ private:
     ~PlatformManager();
 
     uint32_t LoadConfigFile(std::string filePath);
-    uint32_t LoadIniFile(std::string realFilePath);
+    uint32_t LoadIniFile(std::string iniFileRealPath);
 
     std::string GetSoFilePath() const;
-    std::string RealPath(const std::string &filePath) const;
+    std::string RealPath(const std::string &path) const;
 
     void ParseVersion(PlatMapType &versionMap, std::string &socVersion) const;
     void ParsePlatformRes(const std::string &label, PlatMapType &platformResMap,
-                          fe::PlatFormInfos &platInfoTemp) const;
+                          fe::PlatFormInfos &platformInfoTemp) const;
     uint32_t ParsePlatformInfo(std::map<std::string, PlatMapType> &contentMap,
-                               std::string &socVersion, fe::PlatFormInfos &platInfoTemp) const;
+                               std::string &socVersion, fe::PlatFormInfos &platformInfoTemp) const;
     bool ParseAICoreintrinsicDtypeMap(PlatMapType &aiCoreintrinsicDtypeMap,
-                                      fe::PlatFormInfos &platInfoTemp) const;
+                                      fe::PlatFormInfos &platformInfoTemp) const;
     bool ParseVectorCoreintrinsicDtypeMap(PlatMapType &vectorCoreintrinsicDtypeMap,
-                                          fe::PlatFormInfos &platInfoTemp) const;
+                                          fe::PlatFormInfos &platformInfoTemp) const;
 
-    uint32_t AssemblePlatformInfoVector(std::map<std::string, PlatMapType> &contentMap);
+    uint32_t AssemblePlatformInfoVector(std::map<std::string, PlatMapType> &contentInfoMap);
     void FillupFixPipeInfo(fe::PlatFormInfos &platformInfos) const;
 
 private:

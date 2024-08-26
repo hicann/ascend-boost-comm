@@ -58,13 +58,13 @@ public:
     ~BinFile();
 
     Status AddAttr(const std::string &name, const std::string &value);
-    Status AddObject(const std::string &name, void *binaryBuffer, uint64_t binaryLen);
+    Status AddObject(const std::string &name, char *binaryBuffer, uint64_t binaryLen);
 
     Status Write(const std::string &filePath, const mode_t mode = BIN_FILE_MODE);
     Status Read(const std::string &filePath);
 
     void GetAllAttrs(std::vector<std::pair<std::string, std::string>> &attrs);
-    void GetAllObjects(std::vector<std::pair<std::string, std::pair<void *, uint64_t>>> &binaries);
+    void GetAllObjects(std::vector<std::pair<std::string, std::pair<char *, uint64_t>>> &binaries);
 
 private:
     bool WriteImpl(int &fd);
