@@ -45,7 +45,6 @@ public:
     bool Init(const std::string &kernelName);
     uint32_t GetKernelTilingSize() const;
     int32_t GetKernelCoreType() const;
-    const char *GetKernelCompileInfo() const;
 
 private:
     bool CheckBinaryValid() const;
