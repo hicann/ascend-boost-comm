@@ -1182,33 +1182,11 @@ Fp16T &Fp16T::operator=(const int32_t &iVal)
         int16_t eVal;
         uint32_t mTmp = (uiVal & FP32_ABS_MAX);
 
-        uint32_t mMin = FP16_MAN_HIDE_BIT;
-        uint32_t mMax = mMin << 1;
+        uint16_t mMin = FP16_MAN_HIDE_BIT;
+        uint16_t mMax = mMin << 1;
         uint16_t len = static_cast<uint16_t>(GetManBitLength(mTmp));
         if (len > CONST_11) {
-            eVal = FP16_EXP_BIAS + FP16_MAN_LEN;
-            uint32_t trctMask = 1;
-            uint16_t eTmp = len - CONST_11;
-            for (int i = 1; i < eTmp; i++) {
-                trctMask = (trctMask << 1) + 1;
-            }
-            uint32_t mTrct = (mTmp & trctMask) << (CONST_32 - eTmp);
-            for (int i = 0; i < eTmp; i++) {
-                eVal = eVal + 1;
-                mTmp = (mTmp >> 1);
-            }
-            bool bLastBit = ((mTmp & 1) > 0);
-            bool bTrctHigh = false;
-            bool bTrctLeft = false;
-            if (Fp16RoundMode::ROUND_TO_NEAREST == FP16_ROUND_MODE) { // Truncate
-                bTrctLeft = ((mTrct & FP32_ABS_MAX) > 0);
-                bTrctHigh = ((mTrct & FP32_SIGN_MASK) > 0);
-            }
-            mTmp = ManRoundToNearest(bLastBit, bTrctHigh, bTrctLeft, mTmp);
-            while (mTmp >= mMax || eVal < 0) {
-                eVal = eVal + 1;
-                mTmp = mTmp >> 1;
-            }
+            eVal = GetExpValueformInt16(mTmp, mMax, len);
             if (eVal >= FP16_MAX_EXP) {
                 mTmp = FP16_MAX_MAN;
                 eVal = FP16_MAX_EXP - 1;
@@ -1232,34 +1210,11 @@ Fp16T &Fp16T::operator=(const uint32_t &uiVal)
         int16_t eVal;
         uint32_t mTmp = uiVal;
 
-        uint32_t mMin = FP16_MAN_HIDE_BIT;
-        uint32_t mMax = mMin << 1;
+        uint16_t mMin = FP16_MAN_HIDE_BIT;
+        uint16_t mMax = mMin << 1;
         uint16_t len = static_cast<uint16_t>(GetManBitLength(mTmp));
         if (len > CONST_11) {
-            eVal = FP16_EXP_BIAS + FP16_MAN_LEN;
-            uint32_t mTrct = 0;
-            uint32_t trctMask = 1;
-            uint16_t eTmp = len - CONST_11;
-            for (int i = 1; i < eTmp; i++) {
-                trctMask = (trctMask << 1) + 1;
-            }
-            mTrct = (mTmp & trctMask) << (CONST_32 - eTmp);
-            for (int i = 0; i < eTmp; i++) {
-                mTmp = (mTmp >> 1);
-                eVal = eVal + 1;
-            }
-            bool bLastBit = ((mTmp & 1) > 0);
-            bool bTrctHigh = false;
-            bool bTrctLeft = false;
-            if (Fp16RoundMode::ROUND_TO_NEAREST == FP16_ROUND_MODE) { // Truncate
-                bTrctHigh = ((mTrct & FP32_SIGN_MASK) > 0);
-                bTrctLeft = ((mTrct & FP32_ABS_MAX) > 0);
-            }
-            mTmp = ManRoundToNearest(bLastBit, bTrctHigh, bTrctLeft, mTmp);
-            while (mTmp >= mMax || eVal < 0) {
-                mTmp = mTmp >> 1;
-                eVal = eVal + 1;
-            }
+            eVal = GetExpValueformInt16(mTmp, mMax, len);
             if (eVal >= FP16_MAX_EXP) {
                 eVal = FP16_MAX_EXP - 1;
                 mTmp = FP16_MAX_MAN;
