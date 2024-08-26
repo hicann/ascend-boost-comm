@@ -125,7 +125,7 @@ std::string MkiTorch::GetTensorsFromBuf(Mki::SVector<Mki::Tensor> &mkiTensors)
     return "ok";
 }
 
-Mki::Kernel *MkiTorch::GetKernelInstance(Mki::LaunchParam &launchParam)
+Mki::Kernel *MkiTorch::GetKernelInstance(Mki::LaunchParam &launchParam, const std::string &kernelName)
 {
     Mki::Operation *op = Mki::AutoGen::GetOpByName(opName_);
     if (op == nullptr) {
@@ -139,12 +139,15 @@ Mki::Kernel *MkiTorch::GetKernelInstance(Mki::LaunchParam &launchParam)
         MKI_LOG(ERROR) << opName_ << " infer shape fail, error:" << status.ToString();
         return nullptr;
     }
-
     MKI_LOG(INFO) << "after infershape, launchParam:\n" << launchParam.ToString();
-    Mki::Kernel *kernel = op->GetBestKernel(launchParam);
-    if (kernel == nullptr) {
-        MKI_LOG(ERROR) << opName_ << " get best kernel fail";
-        return nullptr;
+
+    Mki::Kernel *kernel = nullptr;
+    if (kernelName != "") {
+        kernel = op->GetKernelByName(kernelName);
+        MKI_CHECK(kernel != nullptr, opName_ << " get kernel by name " << kernelName << " fail", return nullptr);
+    } else {
+        kernel = op->GetBestKernel(launchParam);
+        MKI_CHECK(kernel != nullptr, opName_ << " get best kernel fail", return nullptr);
     }
 
     return kernel;
@@ -265,9 +268,9 @@ std::string MkiTorch::RunOpPerf(Mki::LaunchParam &launchParam, int runTimes)
     Mki::Status status;
 
     retStr = SaveTensorsToBuf(launchParam.GetInTensors());
-    MKI_CHECK(retStr != "ok", "failed to save tensors to buffer", return retStr);
+    MKI_CHECK(retStr == "ok", "failed to save tensors to buffer", return retStr);
 
-    std::shared_ptr<Mki::Kernel> kernel(GetKernelInstance(launchParam));
+    std::shared_ptr<Mki::Kernel> kernel(GetKernelInstance(launchParam, kernelName_));
     MKI_CHECK(kernel != nullptr, "failed to get kernel instance", return "failed to init op");
 
     Mki::RunInfo runInfo;
@@ -292,7 +295,7 @@ std::string MkiTorch::RunOpPerf(Mki::LaunchParam &launchParam, int runTimes)
 
     for (int runIdx = 0; runIdx < runTimes; runIdx++) {
         retStr = GetTensorsFromBuf(launchParam.GetInTensors());
-        MKI_CHECK(retStr != "ok", "failed to save tensors to buffer", return retStr);
+        MKI_CHECK(retStr == "ok", "failed to save tensors to buffer", return retStr);
 
         status = kernel->Run(launchParam, runInfo);
         MKI_LOG_IF(!status.Ok(), ERROR) << kernel->GetName() << " run fail, error:" << status.ToString();
@@ -360,6 +363,9 @@ std::string MkiTorch::ExecuteImpl(std::vector<at::Tensor> &atInTensors, std::vec
     int perfFlag = 0;
 
     opName_ = opDescJson["opName"];
+    if (opDescJson.contains("kernelName")) {
+        kernelName_ = opDescJson["kernelName"];
+    }
     if (opDescJson.find("runTimes") != opDescJson.end()) {
         perfFlag = 1;
         runTimes = opDescJson["runTimes"];
@@ -377,8 +383,7 @@ std::string MkiTorch::Execute(std::vector<at::Tensor> atInTensors, std::vector<a
 {
     ContiguousAtTensor(atInTensors);
     ContiguousAtTensor(atOutTensors);
-    std::string retStr = ExecuteImpl(atInTensors, atOutTensors);
-    return retStr;
+    return ExecuteImpl(atInTensors, atOutTensors);
 }
 } // namespace Test
 } // namespace Mki

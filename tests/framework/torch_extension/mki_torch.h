@@ -44,7 +44,7 @@ private:
     std::string SaveTensorsToBuf(Mki::SVector<Mki::Tensor> &mkiTensors);
     std::string GetTensorsFromBuf(Mki::SVector<Mki::Tensor> &mkiTensors);
 
-    Mki::Kernel *GetKernelInstance(Mki::LaunchParam &launchParam);
+    Mki::Kernel *GetKernelInstance(Mki::LaunchParam &launchParam, const std::string &kernelName = "");
 
     std::string AddWorkspace(const Mki::KernelInfo &kernelInfo, Mki::RunInfo &runInfo);
     std::string FreeWorkspace(const Mki::KernelInfo &kernelInfo, Mki::RunInfo &runInfo);
@@ -57,8 +57,9 @@ private:
     bool launchWithTiling_{true};
     uint8_t *deviceLaunchBuffer_{nullptr};
     uint8_t *tensorTempBufList_[20];
-    std::string opDescJsonStr_;
-    std::string opName_;
+    std::string opDescJsonStr_{""};
+    std::string opName_{""};
+    std::string kernelName_{""};
 };
 } // namespace Test
 } // namespace Mki

@@ -140,7 +140,7 @@ def write_to_cpp(binary_path, header, dst_cpp_path, tactic, target_version):
         logging.error("file %s is not found!", binary_path)
         return False
     # 将数据写入到cpp文件中
-    name = f'kernelBin_{tactic}_{target_version}'
+    name = f'KERNELBIN_{tactic.upper()}_{target_version.upper()}'
     with open(dst_cpp_path, 'w') as f:
         f.write('#include <cstdint>\n#include "mki_loader/op_register.h"\n')
         f.write('namespace OpSpace {\nstatic const uint8_t ')

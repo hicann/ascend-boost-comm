@@ -90,7 +90,7 @@ void ExtractFP16(const uint16_t &val, uint16_t *sVal, int16_t *eVal, uint16_t *m
     *mVal = FP16_EXTRAC_MAN(val);
 
     // Denormal
-    if (0 == (*eVal)) {
+    if ((*eVal) == 0) {
         *eVal = 1;
     }
 }

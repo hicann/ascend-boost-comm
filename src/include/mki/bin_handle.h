@@ -33,13 +33,13 @@ struct KernelMetaInfo {
     uint32_t tilingSize = 0;
     uint32_t coreType = 0;
     uint32_t magic = MKIRT_DEV_BINARY_MAGIC_ELF_AICUBE;
-    void *codeBuf = nullptr;
+    const void *codeBuf = nullptr;
     uint32_t codeBufLen = 0;
 };
 
 class BinHandle : public NonCopyable {
 public:
-    BinHandle(const BinaryBasicInfo *binInfo);
+    explicit BinHandle(const BinaryBasicInfo *binInfo);
     ~BinHandle();
     KernelHandle GetHandle() const;
     bool Init(const std::string &kernelName);

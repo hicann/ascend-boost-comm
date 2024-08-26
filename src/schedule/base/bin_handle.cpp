@@ -93,7 +93,7 @@ bool BinHandle::Init(const std::string &kernelName)
     MKI_CHECK(kernelBinStart + UINT32_TYPE_LENGTH <= maxAddr, "length error", return false);
     uint32_t kernelBinSize = *reinterpret_cast<const uint32_t *>(kernelBinStart);
     MKI_CHECK(kernelBinStart + UINT32_TYPE_LENGTH + kernelBinSize == maxAddr, "length error", return false);
-    metaInfo_.codeBuf = const_cast<uint8_t *>(kernelBinStart + UINT32_TYPE_LENGTH);
+    metaInfo_.codeBuf = static_cast<const void *>(kernelBinStart + UINT32_TYPE_LENGTH);
     metaInfo_.codeBufLen = kernelBinSize;
 
     MKI_CHECK(CheckKernelInfo(kernelName), kernelName << " check kernel info error", return false);
