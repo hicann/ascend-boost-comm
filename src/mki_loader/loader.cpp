@@ -16,7 +16,6 @@
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/log/log.h"
 #include "mki_loader/op_register.h"
-#include "mki/utils/singleton/singleton.h"
 #include "mki/utils/platform/platform_info.h"
 
 namespace OpSpace {
@@ -24,12 +23,12 @@ Loader::Loader() { Load(); }
 
 Loader::~Loader() {}
 
-void Loader::GetAllOperations(std::unordered_map<std::string, Operation *> &ops) const
+void Loader::GetAllOperations(std::unordered_map<std::string, Mki::Operation *> &ops) const
 {
     ops = opMap_;
 }
 
-void Loader::GetOpKernels(const std::string &opName, KernelMap &kernels) const
+void Loader::GetOpKernels(const std::string &opName, Mki::KernelMap &kernels) const
 {
     auto it = opKernelMap_.find(opName);
     if (it != opKernelMap_.end()) {
@@ -46,7 +45,7 @@ bool Loader::CreateOperations()
 {
     auto &operationCreators = OperationRegister::GetOperationCreators();
     for (const auto &opCreator : operationCreators) {
-        Operation *operation = opCreator();
+        Mki::Operation *operation = opCreator();
         MKI_CHECK(operation != nullptr, "create operation fail", return false);
         opMap_[operation->GetName()] = operation;
         MKI_LOG(DEBUG) << "Create operation " << operation->GetName();
@@ -69,7 +68,7 @@ bool Loader::CreateKernels()
 
         auto kernelCreator = creatorInfo.func;
         MKI_CHECK(kernelCreator, kernelName << " creator function is null", continue);
-        const Kernel *kernel = kernelCreator(&handle);
+        const Mki::Kernel *kernel = kernelCreator(&handle);
         MKI_CHECK(kernel != nullptr, "Invalid kernel found in op: " << kernelName, return false);
 
         const auto &opName = creatorInfo.opName;
@@ -81,7 +80,7 @@ bool Loader::CreateKernels()
 
 bool Loader::LoadKernelBinarys()
 {
-    std::string deviceVersion = PlatformInfo::Instance().GetPlatformName();
+    std::string deviceVersion = Mki::PlatformInfo::Instance().GetPlatformName();
     MKI_CHECK(deviceVersion != "unrecognized", "Get device soc version fail: " << deviceVersion, return false);
 
     const auto &kernelBinaryMap = KernelBinaryRegister::GetKernelBinaryMap();
@@ -103,7 +102,7 @@ bool Loader::OpBaseAddKernels() const
 {
     for (const auto &[opName, op] : opMap_) {
         MKI_LOG(DEBUG) << "mki load operation: " << opName;
-        OperationBase *opBase = dynamic_cast<OperationBase *>(op);
+        Mki::OperationBase *opBase = dynamic_cast<Mki::OperationBase *>(op);
         MKI_CHECK(opBase != nullptr, opName << ": opBase is nullptr", return false);
         auto it = opKernelMap_.find(opName);
         if (it == opKernelMap_.end()) {

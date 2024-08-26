@@ -42,7 +42,7 @@ struct MemsetInfo {
 public:
     KernelInfo() = default;
     ~KernelInfo();
-    void Copy(const KernelInfo &kernelInfo);
+    void Copy(const KernelInfo &other);
     std::string ToString() const;
 
 public:

@@ -22,10 +22,9 @@
 #define MACRO_TO_STR(name) #name
 #define MKI_NAMESPACE_LOG(level, spaceName) MKI_LOG(level) << (MACRO_TO_STR(spaceName))
 
-using namespace Mki;
 namespace OpSpace {
-using NewOperationFunc = Operation*(*)();
-using NewKernelFunc = const Kernel*(*)(const BinHandle *);
+using NewOperationFunc = Mki::Operation*(*)();
+using NewKernelFunc = const Mki::Kernel*(*)(const Mki::BinHandle *);
 
 class OperationRegister {
 public:
@@ -80,15 +79,15 @@ public:
         MKI_NAMESPACE_LOG(DEBUG, OpSpace) << " register kernel binary " << kernelName << "-" << soc << " success";
     }
 
-    static std::map<std::string, std::vector<BinaryBasicInfo>> &GetKernelBinaryMap()
+    static std::map<std::string, std::vector<Mki::BinaryBasicInfo>> &GetKernelBinaryMap()
     {
-        static std::map<std::string, std::vector<BinaryBasicInfo>> binaryMap;
+        static std::map<std::string, std::vector<Mki::BinaryBasicInfo>> binaryMap;
         return binaryMap;
     }
 };
 
 #define REG_OPERATION(opName)                                                                                      \
-    Operation *GetOperation##opName()                                                                              \
+    Mki::Operation *GetOperation##opName()                                                                         \
     {                                                                                                              \
         static opName op##opName(#opName);                                                                         \
         return &op##opName;                                                                                        \
@@ -96,7 +95,7 @@ public:
     static OperationRegister op##opName##register = OperationRegister(#opName, GetOperation##opName)
 
 #define REG_KERNEL_BASE(kerName)                                                                                   \
-    Kernel const *GetKernel##kerName(const BinHandle *binHandle)                                                   \
+    Mki::Kernel const *GetKernel##kerName(const Mki::BinHandle *binHandle)                                         \
     {                                                                                                              \
         static kerName ker##kerName(#kerName, binHandle);                                                          \
         SetKernelSelfCreator(ker##kerName, [=](){ return new kerName(#kerName, binHandle); });                     \

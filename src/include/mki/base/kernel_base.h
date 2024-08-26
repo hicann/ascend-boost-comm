@@ -12,7 +12,6 @@
 #ifndef MKI_BASE_KERNEL_BASE_H
 #define MKI_BASE_KERNEL_BASE_H
 #include <string>
-#include <vector>
 #include <functional>
 #include <map>
 #include "mki/kernel.h"
@@ -60,7 +59,7 @@ private:
                                  RtHostInputInfoT *info, uint64_t infoNum);
     Status UpdateConstTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo);
     Status UpdateInOutWkspArgs(void **args, uint64_t argsNum, const LaunchParam &launchParam, const RunInfo &runInfo);
-    Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, RunInfo &runInfo) const;
+    Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, const RunInfo &runInfo) const;
     Status UpdateTilingArgs(void **args, uint64_t argsNum, RunInfo &runInfo) const;
     Status MemsetTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo);
 

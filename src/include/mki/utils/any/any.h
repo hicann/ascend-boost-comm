@@ -107,7 +107,6 @@ private:
 };
 
 template <typename T> const T &AnyCast(const Any &any) { return any.Cast<T>(); }
-template <typename T> T &AnyCast(Any &any) { return any.Cast<T>(); }
 } // namespace Mki
 
 #endif

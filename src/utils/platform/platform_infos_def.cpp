@@ -46,28 +46,28 @@ bool PlatFormInfos::GetPlatformRes(const std::string &label, std::map<std::strin
     return platform_infos_impl_->GetPlatformRes(label, res);
 }
 
-void PlatFormInfos::SetAICoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes)
+void PlatFormInfos::SetAICoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsicDtypes)
 {
-    platform_infos_impl_->SetAICoreIntrinsicDtype(intrinsic_dtypes);
+    platform_infos_impl_->SetAICoreIntrinsicDtype(intrinsicDtypes);
 }
 
-void PlatFormInfos::SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes)
+void PlatFormInfos::SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsicDtypes)
 {
-    platform_infos_impl_->SetVectorCoreIntrinsicDtype(intrinsic_dtypes);
+    platform_infos_impl_->SetVectorCoreIntrinsicDtype(intrinsicDtypes);
 }
 
-void PlatFormInfos::SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map)
+void PlatFormInfos::SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipeDtypeMap)
 {
-    platform_infos_impl_->SetFixPipeDtypeMap(fixpipe_dtype_map);
+    platform_infos_impl_->SetFixPipeDtypeMap(fixpipeDtypeMap);
 }
 
 std::mutex g_coreNumMutex;
-void PlatFormInfos::SetCoreNumByCoreType(const std::string &core_type)
+void PlatFormInfos::SetCoreNumByCoreType(const std::string &coreType)
 {
     std::lock_guard<std::mutex> lockGuard(g_coreNumMutex);
     std::string coreNumStr;
     std::string coreTypeStr;
-    if (core_type == "VectorCore") {
+    if (coreType == "VectorCore") {
         coreTypeStr = "vector_core_cnt";
     } else {
         coreTypeStr = "ai_core_cnt";
@@ -86,11 +86,11 @@ void PlatFormInfos::SetCoreNumByCoreType(const std::string &core_type)
     }
 }
 
-uint32_t PlatFormInfos::GetCoreNumByType(const std::string &core_type)
+uint32_t PlatFormInfos::GetCoreNumByType(const std::string &coreType)
 {
     std::lock_guard<std::mutex> lockGuard(g_coreNumMutex);
     std::string coreNumStr;
-    std::string coreTypeStr = core_type == "VectorCore" ? "vector_core_cnt" : "ai_core_cnt";
+    std::string coreTypeStr = coreType == "VectorCore" ? "vector_core_cnt" : "ai_core_cnt";
     (void)GetPlatformRes("SoCInfo", coreTypeStr, coreNumStr);
     MKI_LOG(DEBUG) << "Get PlatFormInfos::core_num_ to " << coreTypeStr << ": " << coreNumStr;
     if (coreNumStr.empty()) {
@@ -112,10 +112,10 @@ uint32_t PlatFormInfos::GetCoreNum() const
     return core_num_;
 }
 
-void PlatFormInfos::GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size)
+void PlatFormInfos::GetLocalMemSize(const LocalMemType &memType, uint64_t &size)
 {
     std::string sizeStr;
-    switch (mem_type) {
+    switch (memType) {
         case LocalMemType::L0_A: {
             (void)GetPlatformRes("AICoreSpec", "l0_a_size", sizeStr);
             break;
@@ -162,10 +162,10 @@ void PlatFormInfos::GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size
     }
 }
 
-void PlatFormInfos::GetLocalMemBw(const LocalMemType &mem_type, uint64_t &bw_size)
+void PlatFormInfos::GetLocalMemBw(const LocalMemType &memType, uint64_t &bwSize)
 {
     std::string bwSizeStr;
-    switch (mem_type) {
+    switch (memType) {
         case LocalMemType::L2: {
             (void)GetPlatformRes("AICoreMemoryRates", "l2_rate", bwSizeStr);
             break;
@@ -180,14 +180,14 @@ void PlatFormInfos::GetLocalMemBw(const LocalMemType &mem_type, uint64_t &bw_siz
     }
 
     if (bwSizeStr.empty()) {
-        bw_size = 0;
+        bwSize = 0;
     } else {
         try {
-            bw_size = static_cast<uint64_t>(std::stoll(bwSizeStr.c_str()));
+            bwSize = static_cast<uint64_t>(std::stoll(bwSizeStr.c_str()));
         } catch (const std::invalid_argument &e) {
-            bw_size = 0;
+            bwSize = 0;
         } catch (const std::out_of_range &e) {
-            bw_size = 0;
+            bwSize = 0;
         }
     }
 }
