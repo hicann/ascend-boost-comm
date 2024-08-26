@@ -71,7 +71,7 @@ void OpSchedule::AddOperationByName(Operation *op)
     }
 }
 
-void OpSchedule::AddOperationKernels(Operation *op)
+void OpSchedule::AddOperationKernels(const Operation *op)
 {
     KernelList kernelList = op->GetKernelList();
     for (const auto &kernel : kernelList) {

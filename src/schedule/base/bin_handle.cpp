@@ -77,7 +77,7 @@ bool BinHandle::Init(const std::string &kernelName)
         uint32_t kernelNameSize = *reinterpret_cast<const uint32_t *>(kernelNameStart);
         kernelNameStart += UINT32_TYPE_LENGTH;
         MKI_CHECK(kernelNameStart + kernelNameSize <= maxAddr, "length error", return false);
-        std::string str = (const char *)kernelNameStart;
+        std::string str = reinterpret_cast<const char *>(kernelNameStart);
         MKI_CHECK(str.length() < kernelNameSize, "length error", return false);
         metaInfo_.kernelList.push_back(str);
         kernelNameStart += kernelNameSize;
@@ -86,7 +86,7 @@ bool BinHandle::Init(const std::string &kernelName)
     MKI_CHECK(compileInfoStart + UINT32_TYPE_LENGTH <= maxAddr, "length error", return false);
     uint32_t compileInfoSize = *reinterpret_cast<const uint32_t *>(compileInfoStart);
     compileInfoStart += UINT32_TYPE_LENGTH;
-    metaInfo_.compileInfo = (const char *)compileInfoStart;
+    metaInfo_.compileInfo = reinterpret_cast<const char *>(compileInfoStart);
     MKI_CHECK(metaInfo_.compileInfo.length() < compileInfoSize, "length error", return false);
 
     const uint8_t *kernelBinStart = data + header.kernelBinOffset;

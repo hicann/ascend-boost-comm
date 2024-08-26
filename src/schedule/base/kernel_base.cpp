@@ -16,7 +16,6 @@
 #include "mki/utils/file_system/file_system.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
-#include "mki/utils/singleton/singleton.h"
 #include "mki/utils/memset/clear_tensors.h"
 
 namespace Mki {
@@ -283,7 +282,7 @@ Status KernelBase::UpdateInOutWkspArgs(void **args, uint64_t argsNum,
     return Status::OkStatus();
 }
 
-Status KernelBase::UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, RunInfo &runInfo) const
+Status KernelBase::UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, const RunInfo &runInfo) const
 {
     UNUSED_VALUE(runInfo);
     MKI_CHECK((argsNum > 1), "argsNum invalid : " << argsNum, return Status::FailStatus(-1));

@@ -98,7 +98,7 @@ public:
         return blockDim;
     }
 
-    Status Run(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream)
+    Status Run(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream) const
     {
         MemsetArgs memsetArgs;
         (void)memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));

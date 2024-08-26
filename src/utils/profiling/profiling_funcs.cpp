@@ -24,22 +24,22 @@ bool ProfilingFuncs::isProfilingLevel1Enable_ = false;
 
 static ProfilingFuncs g_profiling = Mki::GetSingleton<ProfilingFuncs>();
 
-void ProfilingFuncs::SetProfilingLevel0Status(bool status)
+void ProfilingFuncs::SetProfilingLevel0Status(bool status) const
 {
     isProfilingLevel0Enable_ = status;
 }
 
-void ProfilingFuncs::SetProfilingLevel1Status(bool status)
+void ProfilingFuncs::SetProfilingLevel1Status(bool status) const
 {
     isProfilingLevel1Enable_ = status;
 }
 
-bool ProfilingFuncs::GetProfilingLevel0Status()
+bool ProfilingFuncs::GetProfilingLevel0Status() const
 {
     return isProfilingLevel0Enable_;
 };
 
-bool ProfilingFuncs::GetProfilingLevel1Status()
+bool ProfilingFuncs::GetProfilingLevel1Status() const
 {
     return isProfilingLevel1Enable_;
 }

@@ -142,12 +142,16 @@ bool FileSystem::ReadFile(const std::string &filePath, uint8_t *buffer, uint64_t
     return true;
 }
 
-bool FileSystem::WriteFile(const void *codeBuf, uint64_t codeLen, const std::string &filePath, const mode_t mode)
+bool FileSystem::WriteFile(const char *codeBuf, uint64_t codeLen, const std::string &filePath, const mode_t mode)
 {
     if (codeLen > MAX_FILE_SIZE || codeBuf == nullptr) {
         MKI_LOG(ERROR) << "codeLen or codeBuf is invalid, codeLen : " << codeLen;
         return false;
     }
+
+    char resolvedDir[PATH_MAX] = {0};
+    MKI_CHECK(realpath(DirName(filePath).c_str(), resolvedDir) != nullptr,
+              filePath << " realpath resolved fail", return false);
 
     int fd = open(filePath.c_str(), O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
@@ -155,7 +159,7 @@ bool FileSystem::WriteFile(const void *codeBuf, uint64_t codeLen, const std::str
         return false;
     }
 
-    auto writeSize = write(fd, reinterpret_cast<const char *>(codeBuf), codeLen);
+    auto writeSize = write(fd, codeBuf, codeLen);
     (void)close(fd);
     if (writeSize != static_cast<ssize_t>(codeLen)) {
         MKI_LOG(ERROR) << "write file failed, writeSize : " << writeSize << ", codeLen : " << codeLen;

@@ -28,13 +28,13 @@ public:
     PlatInfoMapType GetVectorCoreIntrinsicDtype();
     PlatInfoMapType GetFixPipeDtypeMap();
 
-    void SetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
+    void SetPlatformRes(const std::string &label, std::map<std::string, std::string> &result);
     bool GetPlatformRes(const std::string &label, const std::string &key, std::string &value);
-    bool GetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
+    bool GetPlatformRes(const std::string &label, std::map<std::string, std::string> &result);
 
-    void SetFixPipeDtypeMap(const PlatInfoMapType &fixpipeDtypeMap);
-    void SetAICoreIntrinsicDtype(PlatInfoMapType &intrinsicDtypes);
-    void SetVectorCoreIntrinsicDtype(PlatInfoMapType &intrinsicDtypes);
+    void SetFixPipeDtypeMap(const PlatInfoMapType &dtypeMap);
+    void SetAICoreIntrinsicDtype(PlatInfoMapType &dtypes);
+    void SetVectorCoreIntrinsicDtype(PlatInfoMapType &dtypes);
 
 private:
     PlatInfoMapType aiCoreIntrinsicDtypeMap_;

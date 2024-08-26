@@ -19,14 +19,13 @@
 #include "mki/kernel.h"
 #include "mki/bin_handle.h"
 
-using namespace Mki;
 namespace OpSpace {
-class Loader : public NonCopyable {
+class Loader : public Mki::NonCopyable {
 public:
     Loader();
     ~Loader();
-    void GetAllOperations(std::unordered_map<std::string, Operation *> &ops) const;
-    void GetOpKernels(const std::string &opName, KernelMap &kernels) const;
+    void GetAllOperations(std::unordered_map<std::string, Mki::Operation *> &ops) const;
+    void GetOpKernels(const std::string &opName, Mki::KernelMap &kernels) const;
     bool IsValid() const;
 
 private:
@@ -38,9 +37,9 @@ private:
 
 private:
     std::atomic_bool loadSuccess_{false};
-    std::unordered_map<std::string, Operation *> opMap_;
-    std::unordered_map<std::string, KernelMap> opKernelMap_;
-    std::unordered_map<std::string, BinHandle> binHandles_;
+    std::unordered_map<std::string, Mki::Operation *> opMap_;
+    std::unordered_map<std::string, Mki::KernelMap> opKernelMap_;
+    std::unordered_map<std::string, Mki::BinHandle> binHandles_;
 };
 } // namespace OpSpace
 #endif

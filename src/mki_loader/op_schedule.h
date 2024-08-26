@@ -32,7 +32,7 @@ public:
 private:
     void AddAllOperations();
     void AddOperationByName(Operation *op);
-    void AddOperationKernels(Operation *op);
+    void AddOperationKernels(const Operation *op);
     void AddKernel(Kernel const *kernel);
 
 private:
