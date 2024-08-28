@@ -18,34 +18,35 @@ extern "C" {
 #endif
 
 // rt device
-using RtGetDeviceCountFunc = int (*)(int32_t *cnt);
-using RtGetDeviceIDsFunc = int (*)(int32_t *devices, int32_t len);
-using RtSetDeviceFunc = int (*)(int32_t devId);
-using RtResetDeviceFunc = int (*)(int32_t devId);
-using RtGetDeviceFunc = int (*)(int32_t *devId);
-using RtSetSocVersionFunc = int (*)(const char *version);
-using RtGetSocVersionFunc = int (*)(char *version, uint32_t maxLen);
-using RtDeviceGetBareTgidFunc = int(*)(uint32_t *pid);
-using RtDeviceGetPairDevicesInfoFunc = int(*)(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t *val);
+int rtGetDeviceCount(int32_t *cnt);
+int rtGetDeviceIDs(int32_t *devices, int32_t len);
+int rtSetDevice(int32_t devId);
+int rtDeviceReset(int32_t devId);
+int rtGetDevice(int32_t *devId);
+int rtSetSocVersion(const char *version);
+int rtGetSocVersion(char *version, uint32_t maxLen);
+int rtDeviceGetBareTgid(uint32_t *pid);
+int rtGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t *val);
 
 // rt stream
 typedef void *rtStream_t;
-using RtStreamCreateFunc = int (*)(rtStream_t *stm, int32_t priority);
-using RtStreamDestroyFunc = int (*)(rtStream_t stm);
-using RtStreamSynchronizeFunc = int (*)(rtStream_t stm);
-using RtGetStreamIdFunc = int (*)(rtStream_t stm, int32_t *streamId);
+
+int rtStreamCreate(rtStream_t *stm, int32_t priority);
+int rtStreamDestroy(rtStream_t stm);
+int rtStreamSynchronize(rtStream_t stm);
+int rtGetStreamId(rtStream_t stm, int32_t *streamId);
 
 // rt mem
-using RtMallocFunc = int (*)(void **devPtr, uint64_t size, uint32_t type);
-using RtFreeFunc = int (*)(void *devPtr);
-using RtMallocHostFunc = int (*)(void **hostPtr, uint64_t size);
-using RtFreeHostFunc = int (*)(void *hostPtr);
-using RtMemcpyFunc = int (*)(void *dst, uint64_t destMax, const void *src, uint64_t cnt, int kind);
-using RtMemcpyAsyncFunc = int(*)(void *dst, uint64_t destMax, const void *src, uint64_t cnt, int kind, void *stream);
-using RtMemsetAsyncFunc = int(*)(void *dst, uint64_t destMax, uint32_t value, uint64_t cnt, void *stream);
-using RtIpcSetMemoryNameFunc = int(*)(const void *ptr, uint64_t byteCount, const char *name, uint32_t len);
-using RtIpcOpenMemoryFunc = int(*)(void **ptr, const char *name);
-using RtSetIpcMemPidFunc = int(*)(const char *name, int32_t pid[], int num);
+int rtMalloc(void **devPtr, uint64_t size, uint32_t type);
+int rtFree(void *devPtr);
+int rtMallocHost(void **hostPtr, uint64_t size);
+int rtFreeHost(void *hostPtr);
+int rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t cnt, int kind);
+int rtMemcpyAsync(void *dst, uint64_t destMax, const void *src, uint64_t cnt, int kind, void *stream);
+int rtMemsetAsync(void *dst, uint64_t destMax, uint32_t value, uint64_t cnt, void *stream);
+int rtIpcSetMemoryName(const void *ptr, uint64_t byteCount, const char *name, uint32_t len);
+int rtIpcOpenMemory(void **ptr, const char *name);
+int rtSetIpcMemPid(const char *name, int32_t pid[], int num);
 
 // rt kernel
 typedef struct {
@@ -56,21 +57,22 @@ typedef struct {
 } RtDevBinaryT;
 
 typedef void *rtStream_t;
-using RtDevBinaryRegisterFunc = int (*)(const RtDevBinaryT *bin, void **hdl);
-using RtDevBinaryUnRegisterFunc = int (*)(void *hdl);
-using RtFunctionRegisterFunc = int (*)(void *binHandle, const void *subFunc, const char *stubName,
-                                   const void *kernelInfoExt, uint32_t funcMode);
-using RtRegisterAllKernelFunc = int (*)(const RtDevBinaryT *bin, void **hdl);
-using RtKernelLaunchFunc = int (*)(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize,
-                                   void *smDesc, rtStream_t sm);
-using RtKernelLaunchWithHandleFunc = int(*)(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
-                                        RtArgsExT *argsInfo, void *smDesc, rtStream_t sm,
-                                        const RtTaskCfgInfoT *cfgInfo);
-using RtKernelLaunchWithFlagFunc = int(*)(const void *stubFunc, uint32_t blockDim, RtArgsExT *argsInfo, void *smDesc,
-                                        rtStream_t sm, uint32_t flags, const RtTaskCfgInfoT *cfgInfo);
+
+int rtDevBinaryRegister(const RtDevBinaryT *bin, void **hdl);
+int rtDevBinaryUnRegister(void *hdl);
+int rtFunctionRegister(void *binHandle, const void *subFunc, const char *stubName,
+                       const void *kernelInfoExt, uint32_t funcMode);
+int rtRegisterAllKernel(const RtDevBinaryT *bin, void **hdl);
+int rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize,
+                   void *smDesc, rtStream_t sm);
+int rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
+                               RtArgsExT *argsInfo, void *smDesc, rtStream_t sm,
+                               const RtTaskCfgInfoT *cfgInfo);
+int rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, RtArgsExT *argsInfo, void *smDesc,
+                             rtStream_t sm, uint32_t flags, const RtTaskCfgInfoT *cfgInfo);
 
 // rt other
-using RtGetC2cCtrlAddrFunc = int (*)(uint64_t *addr, uint32_t *len);
+int rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
 
 #ifdef __cplusplus
 }
@@ -79,8 +81,8 @@ using RtGetC2cCtrlAddrFunc = int (*)(uint64_t *addr, uint32_t *len);
 namespace Mki {
 class RtBackend : public Backend {
 public:
-    RtBackend();
-    ~RtBackend() override;
+    RtBackend() = default;
+    ~RtBackend() override = default;
 
 public:
     int DeviceGetCount(int32_t *devCount) override;
@@ -132,64 +134,7 @@ public:
 private:
     RtBackend(const RtBackend &) = delete;
     const RtBackend &operator=(const RtBackend &) = delete;
-    void Init();
-    void InitDeviceFuncs();
-    void InitMemFuncs();
-    void InitModuleFuncs();
-    void InitStreamFuncs();
-    void InitOtherFuncs();
-#ifdef _DEBUG
-    void InitMsdebugHandle();
-#endif
     int ModuleDestoryRtModule(void *rtModule);
-
-private:
-    void *soHandle_ = nullptr;
-#ifdef _DEBUG
-    void *stubHandle_ = nullptr;
-#endif
-    int initStatus_ = MKIRT_SUCCESS;
-
-private:
-    RtGetDeviceCountFunc rtGetDeviceCount_ = nullptr;
-    RtGetDeviceIDsFunc rtGetDeviceIDs_ = nullptr;
-    RtSetDeviceFunc rtSetDevice_ = nullptr;
-    RtResetDeviceFunc rtResetDevice_ = nullptr;
-    RtGetDeviceFunc rtGetDevice_ = nullptr;
-    RtSetSocVersionFunc rtSetSocVersion_ = nullptr;
-    RtGetSocVersionFunc rtGetSocVersion_ = nullptr;
-    RtDeviceGetBareTgidFunc rtDeviceGetBareTgid_ = nullptr;
-    RtDeviceGetPairDevicesInfoFunc rtDevicePairDevicesInfo_ = nullptr;
-
-private:
-    RtStreamCreateFunc rtStreamCreate_ = nullptr;
-    RtStreamDestroyFunc rtStreamDestroy_ = nullptr;
-    RtStreamSynchronizeFunc rtStreamSynchronize_ = nullptr;
-    RtGetStreamIdFunc rtGetStreamId_ = nullptr;
-
-private:
-    RtMallocFunc rtMalloc_ = nullptr;
-    RtFreeFunc rtFree_ = nullptr;
-    RtMallocHostFunc rtMallocHost_ = nullptr;
-    RtFreeHostFunc rtFreeHost_ = nullptr;
-    RtMemcpyFunc rtMemcpy_ = nullptr;
-    RtMemcpyAsyncFunc rtMemcpyAsync_ = nullptr;
-    RtMemsetAsyncFunc rtMemsetAsync_ = nullptr;
-    RtIpcSetMemoryNameFunc rtIpcSetMemoryName_ = nullptr;
-    RtIpcOpenMemoryFunc rtIpcOpenMemory_ = nullptr;
-    RtSetIpcMemPidFunc rtSetIpcMemPid_ = nullptr;
-
-private:
-    RtDevBinaryRegisterFunc rtDevBinaryRegister_ = nullptr;
-    RtDevBinaryUnRegisterFunc rtDevBinaryUnRegister_ = nullptr;
-    RtFunctionRegisterFunc rtFunctionRegister_ = nullptr;
-    RtRegisterAllKernelFunc rtRegisterAllKernel_ = nullptr;
-    RtKernelLaunchFunc rtKernelLaunch_ = nullptr;
-    RtKernelLaunchWithHandleFunc rtKernelLaunchWithHandle_ = nullptr;
-    RtKernelLaunchWithFlagFunc rtKernelLaunchWithFlag_ = nullptr;
-
-private:
-    RtGetC2cCtrlAddrFunc rtGetC2cCtrlAddr_ = nullptr;
 };
 }
 
