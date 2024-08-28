@@ -120,14 +120,6 @@ int32_t BinHandle::GetKernelCoreType() const
     return static_cast<int32_t>(metaInfo_.coreType);
 }
 
-const char *BinHandle::GetKernelCompileInfo() const
-{
-    if (!codeLoadSuccess_) {
-        return nullptr;
-    }
-    return metaInfo_.compileInfo.c_str();
-}
-
 bool BinHandle::RegisterBin(const std::string &kernelName)
 {
     size_t kernelNum = metaInfo_.kernelList.size();
