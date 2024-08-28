@@ -12,6 +12,7 @@ path="${BASH_SOURCE[0]}"
 if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     mki_path=$(cd $(dirname $path); pwd )
     export MKI_HOME_PATH="${mki_path}"
+    export ASDOPS_HOME_PATH="${mki_path}"
     export LD_LIBRARY_PATH=$MKI_HOME_PATH/lib:$MKI_HOME_PATH/tests:$LD_LIBRARY_PATH
     export PATH=$MKI_HOME_PATH/bin:$PATH
 

@@ -359,9 +359,9 @@ uint32_t PlatformManager::InitializePlatformManager()
     if (initFlag_) {
         return PLATFORM_SUCCESS;
     }
-    const char *mkiHomePath = getenv("MKI_HOME_PATH");
+    const char *mkiHomePath = getenv("ASDOPS_HOME_PATH");
     if (mkiHomePath == nullptr) {
-        MKI_LOG(ERROR) << "env MKI_HOME_PATH not exists";
+        MKI_LOG(ERROR) << "env ASDOPS_HOME_PATH not exists";
         return PLATFORM_FAILED;
     }
     std::string mkiHomePathStr = mkiHomePath;
