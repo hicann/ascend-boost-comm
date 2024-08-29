@@ -12,9 +12,7 @@
 #include <gtest/gtest.h>
 #include "mki/utils/log/log.h"
 #include "mki/utils/platform/platform_info.h"
-#include "platform/platform_infos_def.h"
 #include "mki/utils/platform/platform_manager.h"
-#include "utils/platform/platform_infos_impl.h"
 
 namespace Mki {
 TEST(PlatformTest, platformTest1)
@@ -23,11 +21,11 @@ TEST(PlatformTest, platformTest1)
     Mki::PlatformManager &platformManager = Mki::PlatformManager::Instance();
     uint32_t ret = platformManager.InitializePlatformManager();
     EXPECT_EQ(ret, PLATFORM_SUCCESS);
-    fe::PlatFormInfos platformInfo;
-    ret = platformManager.GetPlatformInfos("Ascend910A", platformInfo);
+    PlatformConfigs platformConfigs;
+    ret = platformManager.GetPlatformConfigs("Ascend910A", platformConfigs);
     EXPECT_EQ(ret, PLATFORM_SUCCESS);
     std::string val;
-    platformInfo.GetPlatformRes("SoCInfo", "ai_core_cnt", val);
+    platformConfigs.GetPlatformSpec("SoCInfo", "ai_core_cnt", val);
     EXPECT_EQ(val, "32");
 }
 
@@ -42,29 +40,25 @@ TEST(PlatformInfoTest, SupportL0c2out) {
 }
 
 TEST(PlatformInfoTest, SupportL0c2out0) {
-    fe::PlatFormInfos platformInfo;
-    platformInfo.Init();
+    PlatformConfigs platformConfigs;
     std::string label = "platform1";
     uint64_t size = 10;
     uint64_t size1 = 0;
     std::map<std::string, std::string> res;
-    platformInfo.GetPlatformRes(label, res);
-    platformInfo.GetLocalMemSize(fe::LocalMemType::HBM, size);
-    platformInfo.GetLocalMemSize(fe::LocalMemType::HBM, size1);
-    platformInfo.GetLocalMemBw(fe::LocalMemType::L2, size1);
-    platformInfo.GetLocalMemBw(fe::LocalMemType::HBM, size1);
-    platformInfo.GetLocalMemBw(fe::LocalMemType::L2, size);
-    platformInfo.GetFixPipeDtypeMap();
+    platformConfigs.GetPlatformSpec(label, res);
+    platformConfigs.GetLocalMemSize(LocalMemType::HBM, size);
+    platformConfigs.GetLocalMemSize(LocalMemType::HBM, size1);
+    platformConfigs.GetFixPipeDtypeMap();
 }
 
-TEST(PlatFormInfosImplTest, GetPlatformRes)
+TEST(PlatFormInfosImplTest, GetPlatformSpec)
 {
     std::string label = "platform1";
-    fe::PlatFormInfosImpl platformInfoimp;
+    PlatformConfigs platformConfigs;
     std::map<std::string, std::string> res;
-    ASSERT_FALSE(platformInfoimp.GetPlatformRes(label, res));
+    ASSERT_FALSE(platformConfigs.GetPlatformSpec(label, res));
     std::map<std::string, std::vector<std::string>> map1;
-    EXPECT_EQ(platformInfoimp.GetFixPipeDtypeMap(), map1);
+    EXPECT_EQ(platformConfigs.GetFixPipeDtypeMap(), map1);
 }
 
 TEST(PlatformManagerTest, Finalize)

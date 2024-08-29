@@ -61,7 +61,7 @@ private:
     PlatformType platformType_ = PlatformType::PLATFORM_INVALID;
     std::string platformName_;
 
-    fe::PlatFormInfos platformInfo_;
+    PlatformConfigs platformConfigs_;
 };
 } // namespace Mki
 

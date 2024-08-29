@@ -1387,4 +1387,4 @@ std::ostream &operator<<(std::ostream &os, const Fp16T &fp16)
     os << static_cast<float>(fp16);
     return os;
 }
-} // namespace fe
+} // namespace Mki

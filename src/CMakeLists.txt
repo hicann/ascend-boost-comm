@@ -9,16 +9,13 @@ set_source_files_properties(${BINARY_SRC_LIST} PROPERTIES GENERATED TRUE)
 add_library(mki_static STATIC ${SOURCE_FILES} ${BINARY_SRC_LIST})
 add_dependencies(mki_static binary_encode_srcs)
 target_link_libraries(mki_static PUBLIC dl pthread c_sec mmpa runtime)
-target_compile_definitions(mki_static PRIVATE fe=MkiFe PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki SHARED ${SOURCE_FILES} ${BINARY_SRC_LIST})
 add_dependencies(mki binary_encode_srcs)
 target_link_libraries(mki PUBLIC dl pthread c_sec mmpa profapi runtime)
-target_compile_definitions(mki PRIVATE fe=MkiFe PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki_loader STATIC ${LOADER_SOURCE_FILES})
 target_link_libraries(mki_loader PUBLIC mki dl pthread c_sec mmpa)
-target_compile_definitions(mki_loader PRIVATE fe=${NAMESPACE}Fe)
 
 add_executable(sym_check ${CMAKE_CURRENT_LIST_DIR}/sym_check.cpp)
 target_link_libraries(sym_check PRIVATE mki_loader mki)

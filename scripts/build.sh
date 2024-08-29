@@ -88,13 +88,8 @@ function fn_build_nlohmann_json()
 function fn_build_dependency()
 {
     ARCH=$(uname -m)
-    METADEF_DIR=$THIRD_PARTY_DIR/metadef
     CCEC_COMPILER_DIR=$THIRD_PARTY_DIR/compiler/ccec_compiler
     TIKCPP_DIR=$THIRD_PARTY_DIR/compiler/tikcpp
-
-    if [[ ! -d "$METADEF_DIR" ]]; then
-        git clone --depth 1 https://gitee.com/ascend/metadef.git $METADEF_DIR
-    fi
 
     [[ -d "$THIRD_PARTY_DIR/compiler" ]] && rm -rf $THIRD_PARTY_DIR/compiler
     mkdir -p $THIRD_PARTY_DIR/compiler

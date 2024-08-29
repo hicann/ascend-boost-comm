@@ -96,7 +96,6 @@ function fn_build_huawei_secure_c()
 function fn_build_dependency()
 {
     ARCH=$(uname -m)
-    METADEF_DIR=$THIRD_PARTY_DIR/metadef
     CCEC_COMPILER_DIR=$THIRD_PARTY_DIR/compiler/ccec_compiler
     TIKCPP_DIR=$THIRD_PARTY_DIR/compiler/tikcpp
 
@@ -107,9 +106,6 @@ function fn_build_dependency()
     fi
 
     check_dependency_cache
-    if [[ ! -d "$METADEF_DIR" ]]; then
-        cp -r $MKI_SOURCE_DIR/metadef $METADEF_DIR
-    fi
     mkdir -p $THIRD_PARTY_DIR/compiler
     if [ ! -d $CCEC_COMPILER_DIR ];then
         if [ $ARCH = "aarch64" ];then
@@ -260,10 +256,6 @@ function check_dependency_cache()
         [[ ! -f $MKI_SOURCE_DIR/ccec_compiler.tar.gz ]] && wget --no-check-certificate $CMC_URL/ccec_compiler.tar.gz
         tar xf ccec_compiler.tar.gz
         rm ccec_compiler.tar.gz
-    fi
-    if [ ! -d "$MKI_SOURCE_DIR/metadef" ]; then
-        [[ ! -f $MKI_SOURCE_DIR/metadef.tar.gz ]] && wget --no-check-certificate $CMC_URL/metadef.tar.gz
-        tar xf metadef.tar.gz
     fi
     if [ ! -d "$MKI_SOURCE_DIR/tikcpp" ]; then
         [[ ! -f $MKI_SOURCE_DIR/tikcpp.tar.gz ]] && wget --no-check-certificate $CMC_URL/tikcpp.tar.gz
