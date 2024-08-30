@@ -178,6 +178,7 @@ Status BinFile::Read(const std::string &filePath)
 Status BinFile::ParseBinFile(std::ifstream &fd, size_t fileSize)
 {
     MKI_LOG(DEBUG) << "Begin to parse bin file";
+    bool foundAttrObjectLength = false;
     bool matchAttrEnd = false;
     std::string line;
     uint32_t lineNum = 0;
@@ -199,6 +200,13 @@ Status BinFile::ParseBinFile(std::ifstream &fd, size_t fileSize)
             break;
         } else if (attrName == ATTR_OBJECT_COUNT) {
             continue; // this attr is not used now
+        } else if (attrName == ATTR_OBJECT_LENGTH) {
+            MKI_CHECK(!foundAttrObjectLength, "object length is repeated", break);
+            foundAttrObjectLength = true;
+            uint64_t totalBinarySize = std::strtoull(attrValue.c_str(), nullptr, 10); // 10进制
+            MKI_CHECK(totalBinarySize <= static_cast<uint64_t>(MAX_FILE_SIZE), "totalBinarySize exceeded", break);
+            MKI_LOG(DEBUG) << "Parsed object length " << totalBinarySize;
+            binariesBuffer_.resize(totalBinarySize);
         } else if (attrName.at(0) == '$') {
             MKI_CHECK(ParseSystemAttr(attrName, attrValue).Ok(), "failed to parse attr", break);
         } else {
@@ -222,13 +230,7 @@ Status BinFile::ParseBinFile(std::ifstream &fd, size_t fileSize)
 
 Status BinFile::ParseSystemAttr(const std::string &attrName, const std::string &value)
 {
-    if (attrName == ATTR_OBJECT_LENGTH) {
-        uint64_t totalBinarySize = std::strtoull(value.c_str(), nullptr, 10); // 10 进制
-        MKI_CHECK(totalBinarySize <= static_cast<uint64_t>(MAX_FILE_SIZE),
-            "totalBinarySize exceeded", return Status::FailStatus(1, "totalBinarySize exceeded"));
-        MKI_LOG(DEBUG) << "Parsed object length " << totalBinarySize;
-        binariesBuffer_.resize(totalBinarySize);
-    } else if (StartsWith(attrName, ATTR_OBJECT_PREFIX)) {
+    if (StartsWith(attrName, ATTR_OBJECT_PREFIX)) {
         std::string objName = attrName;
         StrErase(objName, ATTR_OBJECT_PREFIX);
         std::vector<std::string> fields;

@@ -206,4 +206,24 @@ TEST(BinFileTest, exceedMaxLen)
         EXPECT_EQ(attrMap.size(), 0);
     }
 }
+
+TEST(BinFileTest, changeObjectLength)
+{
+    {
+        std::string binData;
+        binData.append("$Version=1.0\n");
+        binData.append("$Object.Length=3\n");
+        binData.append("$Object.Tactic1=0,3\n");
+        binData.append("Tactic1.CompileInfo=111\n");
+        binData.append("$Object.Length=1\n");
+        binData.append("$End=1\n");
+        FileSystem::WriteFile(binData.data(), binData.size(), "4.bin");
+    }
+    {
+        BinFile binFile;
+        Status status = binFile.Read("4.bin");
+        EXPECT_FALSE(status.Ok());
+        FileSystem::DeleteFile("4.bin");
+    }
+}
 } // namespace Mki
