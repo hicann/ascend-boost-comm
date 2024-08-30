@@ -254,7 +254,7 @@ bool FileSystem::IsSymLink(const std::string &filePath)
     return S_ISLNK(buf.st_mode);
 }
 
-std::string FileSystem::PathCheckAndRegular(const std::string &path, bool symlinkCheck)
+std::string FileSystem::PathCheckAndRegular(const std::string &path, bool symlinkCheck, bool parentReferenceCheck)
 {
     // 1. check if "path" is empty
     if (path.empty()) {
@@ -268,15 +268,22 @@ std::string FileSystem::PathCheckAndRegular(const std::string &path, bool symlin
         return "";
     }
 
-    // 3. check if is symbolic link
+    // 3. check if "path" contains parent directory reference
+    if (parentReferenceCheck && path.find("..") != std::string::npos) {
+        MKI_LOG(ERROR) << "file path " << path.c_str() << " contains parent directory reference!";
+        return "";
+    }
+
+    // 4. check if is symbolic link
     if (symlinkCheck) {
-        if (IsSymLink(path)) {
+        std::string regularPath = RemoveTrailingSlash(path);
+        if (IsSymLink(regularPath)) {
             MKI_LOG(ERROR) << "file path " << path.c_str() << " is symbolic link!";
             return "";
         }
     }
 
-    // 4. get the real path
+    // 5. get the real path
     char resolvedPath[PATH_MAX] = {0};
     std::string res = "";
 
@@ -286,5 +293,20 @@ std::string FileSystem::PathCheckAndRegular(const std::string &path, bool symlin
         MKI_LOG(ERROR) << "path " << path.c_str() << " is not exist";
     }
     return res;
+}
+
+std::string FileSystem::RemoveTrailingSlash(const std::string &path)
+{
+    size_t lastNonSlash = path.find_last_not_of("/");
+    // If there is no non-/ character and the path is not empty, / is returned.
+    if (lastNonSlash == std::string::npos && !path.empty()) {
+        return "/";
+    // When the last non-/ character is not the last character,
+    // return the substring from the beginning of the path to the last non-/ character.
+    } else if (lastNonSlash != std::string::npos && lastNonSlash != path.size() - 1) {
+        return path.substr(0, lastNonSlash + 1);
+    } else {
+        return path;
+    }
 }
 } // namespace Mki

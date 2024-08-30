@@ -36,10 +36,14 @@ public:
     static bool Rename(const std::string &filePath, const std::string &newFilePath);
     static bool MakeDir(const std::string &dirPath, int mode);
     static bool Makedirs(const std::string &dirPath, const mode_t mode);
-    static std::string PathCheckAndRegular(const std::string &path, bool symlinkCheck = true);
+    static std::string PathCheckAndRegular(const std::string &path, bool symlinkCheck = true,
+                                           bool parentReferenceCheck = true);
 
 private:
+    // A symlink with a trailing slash (/) is not recognized as a symlink,
+    // which is consistent with the operating system.
     static bool IsSymLink(const std::string &filePath);
+    static std::string RemoveTrailingSlash(const std::string &path);
     static void GetDirChildItemsImpl(const std::string &dirPath, bool matchFile, bool matchDir,
                                      std::vector<std::string> &itemPaths);
 };
