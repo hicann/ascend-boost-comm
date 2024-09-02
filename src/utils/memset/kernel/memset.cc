@@ -26,18 +26,18 @@ public:
         pipe_.InitBuffer(tilingBuf_, sizeof(uint32_t) * TILING_LEN);
         tilingTensor_ = tilingBuf_.Get<uint32_t>();
         DataCopy(tilingTensor_, tensorTilingGm, TILING_LEN);
-        pipe_barrier(PIPE_ALL);
+        AscendC::PipeBarrier<PIPE_ALL>();
 
         maxUbSize_ = tilingTensor_.GetValue(3 * 8); // ub size offset, 3 list, each has 8 uint32
-        pipe_barrier(PIPE_ALL);
+        AscendC::PipeBarrier<PIPE_ALL>();
         pipe_.InitBuffer(zeroBuf_, maxUbSize_);
         zeroTensor_ = zeroBuf_.Get<uint16_t>();
         Duplicate(zeroTensor_, (uint16_t)0, maxUbSize_ / sizeof(uint16_t));
-        set_flag(PIPE_MTE3, PIPE_V, EVENT_ID0);
-        wait_flag(PIPE_MTE3, PIPE_V, EVENT_ID0);
+        AscendC::SetFlag<AscendC::HardEvent::MTE3_V>(EVENT_ID0);
+        AscendC::WaitFlag<AscendC::HardEvent::MTE3_V>(EVENT_ID0);
     }
 
-    __aicore__ inline void CleanTensor(uint32_t idx, __gm__ uint8_t *tensor, __gm__ uint8_t *tiling)
+    __aicore__ inline void CleanTensor(uint32_t idx, __gm__ uint8_t *tensor)
     {
         if (tensor == nullptr) {
             return;
@@ -48,7 +48,7 @@ public:
 
         uint32_t base = sizeBlock * AscendC::GetBlockIdx();
         AscendC::GlobalTensor<uint16_t> tensorGm;
-        for (uint32_t i = 0; i < sizeBlock; i += sizeLoop) {
+        for (uint32_t i = 0; i < sizeBlock && (base + i) < size; i += sizeLoop) {
             uint32_t leftCount = size - (base + i);
             uint32_t handleCount = leftCount < sizeLoop ? leftCount : sizeLoop;
             tensorGm.SetGlobalBuffer((__gm__ uint16_t *)(tensor + base + i));
@@ -73,13 +73,13 @@ extern "C" __global__ __aicore__ void memory_set(GM_ADDR tensor0, GM_ADDR tensor
     Memset kernel;
     kernel.Init(tiling);
     uint32_t idx = 0;
-    kernel.CleanTensor(idx++, tensor0, tiling);
-    kernel.CleanTensor(idx++, tensor1, tiling);
-    kernel.CleanTensor(idx++, tensor2, tiling);
-    kernel.CleanTensor(idx++, tensor3, tiling);
-    kernel.CleanTensor(idx++, tensor4, tiling);
-    kernel.CleanTensor(idx++, tensor5, tiling);
-    kernel.CleanTensor(idx++, tensor6, tiling);
-    kernel.CleanTensor(idx++, tensor7, tiling);
-    pipe_barrier(PIPE_ALL);
+    kernel.CleanTensor(idx++, tensor0);
+    kernel.CleanTensor(idx++, tensor1);
+    kernel.CleanTensor(idx++, tensor2);
+    kernel.CleanTensor(idx++, tensor3);
+    kernel.CleanTensor(idx++, tensor4);
+    kernel.CleanTensor(idx++, tensor5);
+    kernel.CleanTensor(idx++, tensor6);
+    kernel.CleanTensor(idx++, tensor7);
+    AscendC::PipeBarrier<PIPE_ALL>();
 }
