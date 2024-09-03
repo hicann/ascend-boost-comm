@@ -50,7 +50,7 @@ void PlatformInfo::Init()
     } else if (socVersion.find("Ascend910B") == 0) {
         platformType_ = PlatformType::ASCEND_910B;
         platformName_ = "ascend910b";
-    } else if (socVersion.find("Ascend910C") == 0) {    // 910C 按 910B 处理
+    } else if (socVersion.find("Ascend910_93") == 0) {    // 910_93 按 910B 处理
         platformType_ = PlatformType::ASCEND_910B;
         platformName_ = "ascend910b";
     } else {
