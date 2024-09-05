@@ -9,16 +9,14 @@
 # See the Mulan PSL v2 for more details.
 import os
 from op_test import OpTest
-import pandas as pd
 import logging
 from pathlib import Path
 from typing import Union
 from case_runner import __test_runner
-from case_parser import csv_parser
-from case import Case
+from case_parser import DefaultCsvParser
 
 
-def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: callable = csv_parser) -> Union[OpTest, callable]:
+def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: callable = DefaultCsvParser) -> Union[OpTest, callable]:
     logging.info("loading csv testcase...")
 
     def __csv_filter(file_name):
@@ -26,11 +24,13 @@ def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: cal
 
     def decorator(__cls: OpTest) -> OpTest:
         setattr(__cls, '__test_runner', __test_runner)
+
         csv_files_path = []
         if Path(csv_path).is_file():
             csv_files_path = [csv_path]
         else:
             csv_files_path = filter(__csv_filter, os.listdir(csv_path))
+
         setattr(__cls, 'test_cases', {})
         cases = []
         for csv_file in csv_files_path:

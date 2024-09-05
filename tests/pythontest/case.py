@@ -18,5 +18,5 @@ class Case:
         self.op_param = {}
         self.in_tensors = []
         self.out_tensors = []
-        self.soc_version = []
+        self.soc_version = ""
         self.test_type = ""

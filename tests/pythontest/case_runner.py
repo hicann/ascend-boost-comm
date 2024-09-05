@@ -13,7 +13,9 @@ from op_test import OpTest
 from case import Case
 import numpy
 import torch
-import pandas as pd
+from functools import partial
+from numpy.random import *
+
 
 def __test_runner(self: OpTest, case_name: str) -> None:
     # get case from self
@@ -37,9 +39,9 @@ def __test_runner(self: OpTest, case_name: str) -> None:
             in_tensor = self.custom(
                 i, in_tensor['dtype'], in_tensor['format'], in_tensor['shape'])
         else:
-            shape = in_tensor['shape']
-            in_tensor = torch.from_numpy(
-                eval(in_tensor['generate'])).to(in_tensor['dtype'])
+            tensor_generator = in_tensor['generator']
+            in_tensor = tensor_generator(
+                size=in_tensor['shape']).to(in_tensor['dtype'])
         in_tensors.append(in_tensor)
 
     out_tensors = []
