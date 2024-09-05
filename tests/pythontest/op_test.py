@@ -18,7 +18,7 @@ import torch_npu
 from abc import abstractmethod
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    format='%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s')
 
 MKI_HOME_PATH = os.environ.get("MKI_HOME_PATH")
 if MKI_HOME_PATH is None:
