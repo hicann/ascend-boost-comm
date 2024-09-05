@@ -9,17 +9,17 @@
 - `golden_calc`: 生成标杆数据。除了随机生成类算子外，都需要重载这个函数。
 - `golden_compare`: 算子结果与标杆比较。默认为`torch.allclose(rtol=0, atol=0)`,若允许一定误差，或有更高标准，可以重载。
 - `custom`: 自定义Tensor中数值生成逻辑。如果numpy的语句无法满足需求，可以在csv样例中指定custom重载custom函数。
-- `op_type`:定义算子类型以便选取对应精度标准。若不重载，将进行二进制比对。
 
 ### 3. 编写`test_case`
 
 #### 方法一、手写`test`函数体
 
 定义`test`开头的函数，在其中生成op_param和tensor等数据，然后执行execute。
+execute会自动处理golden比较等逻辑。
 
 #### 方法二、编写csv用例并使用装饰器加载
 
-使用装饰器`CaseInject`，从csv文件读取op_param和tensor等数据，然后执行execute
+使用装饰器`CaseInject`装饰测试类，从csv文件读取op_param和tensor等数据，然后执行execute。
 
 - 装饰器`case_injector.CaseInject`可以接收参数`csv_path`，用于加载指定csv文件或者指定目录下的csv文件。不指定时，默认加载同级目录下的`.csv`文件。
 
