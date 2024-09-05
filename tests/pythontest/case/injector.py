@@ -12,18 +12,19 @@ from op_test import OpTest
 import logging
 from pathlib import Path
 from typing import Union
-from case_runner import __test_runner
-from case_parser import DefaultCsvParser
+from runner import __case_runner
+from parser import BaseParser, DefaultCsvParser
 
 
-def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: callable = DefaultCsvParser) -> Union[OpTest, callable]:
+def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: BaseParser = DefaultCsvParser) -> Union[OpTest, callable]:
     logging.info("loading csv testcase...")
+    csv_parser = parser()
 
     def __csv_filter(file_name):
         return os.path.splitext(file_name)[1].lower() == '.csv'
 
     def decorator(__cls: OpTest) -> OpTest:
-        setattr(__cls, '__test_runner', __test_runner)
+        setattr(__cls, '__test_runner', __case_runner)
 
         csv_files_path = []
         if Path(csv_path).is_file():
@@ -34,7 +35,7 @@ def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: cal
         setattr(__cls, 'test_cases', {})
         cases = []
         for csv_file in csv_files_path:
-            cases.extend(parser(os.path.join(csv_path, csv_file)))
+            cases.extend(csv_parser.parse(os.path.join(csv_path, csv_file)))
         for case in cases:
             if case.case_name in __cls.test_cases:
                 logging.info("found duplicate case name. ignored.")

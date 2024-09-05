@@ -10,6 +10,7 @@
 
 from constant import OpTypes
 
+
 class Case:
     def __init__(self) -> None:
         self.case_name = ""

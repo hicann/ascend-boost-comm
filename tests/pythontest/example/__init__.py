@@ -9,10 +9,8 @@
 # See the Mulan PSL v2 for more details.
 import sys
 sys.path.append("..")
-from torch import Tensor
 import torch
-from case_injector import CaseInject
-from constant import OpTypes
+from case.injector import CaseInject
 import unittest
 from op_test import OpTest
 

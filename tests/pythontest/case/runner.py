@@ -7,17 +7,15 @@
 # EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
-import json
-import random
 from op_test import OpTest
 from case import Case
 import numpy
+from numpy import *
 import torch
-from functools import partial
 from numpy.random import *
 
 
-def __test_runner(self: OpTest, case_name: str) -> None:
+def __case_runner(self: OpTest, case_name: str) -> None:
     # get case from self
     case: Case = self.test_cases[case_name]
     # set soc version
@@ -29,28 +27,27 @@ def __test_runner(self: OpTest, case_name: str) -> None:
     # set param
     self.set_param(case.op_name, case.op_param)
     # gen tensor
-    random_seed = random.randint(0, 1000000)
+    random_seed = randint(0, 1000000)
     numpy.random.seed(random_seed)
 
     in_tensors = []
 
     for i, in_tensor in enumerate(case.in_tensors):
-        if in_tensor['generate'] == 'custom':
+        if in_tensor['generator'] == 'custom':
             in_tensor = self.custom(
                 i, in_tensor['dtype'], in_tensor['format'], in_tensor['shape'])
         else:
             tensor_generator = in_tensor['generator']
-            in_tensor = tensor_generator(
-                size=in_tensor['shape']).to(in_tensor['dtype'])
+            in_tensor = torch.from_numpy(tensor_generator(
+                size=in_tensor['shape'])).to(in_tensor['dtype'])
         in_tensors.append(in_tensor)
 
     out_tensors = []
     for out_tensor in case.out_tensors:
         out_tensors.append(torch.zeros(
-            out_tensors['shape']).to(out_tensors['dtype']))
+            out_tensor['shape']).to(out_tensor['dtype']))
 
     # execute
-    test_type = case.test_type
-    if test_type == 'Function':
+    if case.test_type == 'Function':
         # 仅关心是否通过，使用ut的assert
         self.execute(in_tensors, out_tensors)

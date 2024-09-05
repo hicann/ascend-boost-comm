@@ -21,7 +21,7 @@ execute会自动处理golden比较等逻辑。
 
 使用装饰器`CaseInject`装饰测试类，从csv文件读取op_param和tensor等数据，然后执行execute。
 
-- 装饰器`case_injector.CaseInject`可以接收参数`csv_path`，用于加载指定csv文件或者指定目录下的csv文件。不指定时，默认加载同级目录下的`.csv`文件。
+- 装饰器`case.injector.CaseInject`可以接收参数`csv_path`，用于加载指定csv文件或者指定目录下的csv文件。不指定时，默认加载同级目录下的`.csv`文件。
 
 - 以上两种样例读取方式可以混用。
 
@@ -35,30 +35,42 @@ execute会自动处理golden比较等逻辑。
 
 ```bash
 tests/pythontest/
-├── example                 # 测试编写示例
+├── example             # 测试编写示例
 │   ├── __init__.py
 │   └── test_example_function.csv
-├── case_injector.py        # 用例注入装饰器，将csv用例注入到test类的一个dict成员
-├── case_runner.py          # 用例注入函数，用CaseInject注入用例时，一并注入到test类
-├── constant.py             # 一些常量，例如算子种类、数据类型
-├── op_test.py              # 测试总基类
+├── case
+│   ├── __init__.py     # 用例类
+│   ├── injector.py     # 用例注入器
+│   ├── parser.py       # 用例加载器
+│   └── runner.py       # 用例运行函数
+├── constant.py         # 一些常量，例如算子种类、数据类型
+├── op_test.py          #测试基类
 └── README.md
+
 ```
 
-# 样例字段说明
+## 样例字段说明
 
-|名称|描述|形式|
-|---|---|---|
-|CaseNum|用例编号|递增的int|
-|CaseName|用例名称|str|
-|OpName|Operation名称|str|
-|TacticName|Tactic名称|str|
-|OpParam|Operation参数|dict/json|
-|In(Out)Num|输入/输出数量|int|
-|In(Out)DType|输入/输出数据类型|参见`constant.py`，多个Tensor间用;分隔|
-|In(Out)Shape|输入/输出形状|tuple[int]，多个Tensor间用;分隔|
-|In(Out)Format|输入/输出格式|保留字段，尚不支持nd以外的格式，可留空|
-|DataGenerate|数据生成方式|使用numpy的语句进行生成，可使用shape和dtype，或者填写custom然后在custom函数中自定义生成逻辑|
-|TestType|测试类型|Function|
-|SocVersion|芯片型号|Ascend310P/Ascend910B|
-|ExpectedError|期望错误类型|保留字段，尚未支持|
+| 名称          | 描述              | 形式                                                                                        |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------- |
+| CaseNum       | 用例编号          | `递增的int`                                                                                   |
+| CaseName      | 用例名称          | `str`                                                                                         |
+| OpName        | Operation名称     | `str`                                                                                         |
+| TacticName    | Tactic名称        | `str`                                                                                         |
+| OpParam       | Operation参数     | `dict`/`json`                                                                                   |
+| In(Out)Num    | 输入/输出数量     | int                                                                                         |
+| In(Out)DType  | 输入/输出数据类型 | 参见`constant.py`，多个Tensor间用;分隔                                                      |
+| In(Out)Shape  | 输入/输出形状     | `tuple[int]`，多个Tensor间用;分隔                                                             |
+| In(Out)Format | 输入/输出格式     | 保留字段，尚不支持nd以外的格式，可留空                                                      |
+| DataGenerate  | 数据生成方式      | 可使用`numpy`或`numpy.random`中的函数，会自动应用shape；若留空或输入无效内容，则使用测试类中重载的`custom`函数 |
+| TestType      | 测试类型          | `"Function"`                                                                                    |
+| SocVersion    | 芯片型号          | `Ascend310P`/`Ascend910B`                                                                       |
+| ExpectedError | 期望错误类型      | 保留字段，尚未支持                                                                          |
+
+## 高级用法
+
+### 使用第三方用例
+
+参考`case/parser.py`，解析第三方用例到`Case`类。
+
+（待补充）

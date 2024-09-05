@@ -14,23 +14,31 @@ from constant import OP_DTYPES
 import ast
 import numpy
 from functools import partial
+from abc import ABCMeta, abstractmethod
 
 
-class DefaultCsvParser:
-    def __get_generator(generator_str: str):
-        func_name = ""
-        kwargs = {}
+class BaseParser(metaclass=ABCMeta):
+    @abstractmethod
+    def parse(self, csv_file_path: str) -> Case:
+        pass
+
+
+class DefaultCsvParser(BaseParser):
+    def __get_generator(self, generator_str: str):
         tree = ast.parse(generator_str)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                func_name = node.func.id
-                kwargs = {kw.arg: float(ast.unparse(kw.value))
-                          for kw in node.keywords}
-                print(kwargs)
-        func = getattr(numpy.random, func_name)
-        return partial(func, **kwargs)
+            if not isinstance(node, ast.Call):
+                continue
+            func_random = getattr(numpy.random, node.func.id, None)
+            func = getattr(numpy, node.func.id, None)
+            if func_random is not None:
+                func = func_random
+            kwargs = {kw.arg: float(ast.unparse(kw.value))
+                      for kw in node.keywords}
+            return partial(func, **kwargs)
+        return None
 
-    def __call__(self, csv_file_path: str) -> Case:
+    def parse(self, csv_file_path: str) -> Case:
         case_list = []
         csv_case = pd.read_csv(csv_file_path, sep='|')
         for case_row in csv_case.iterrows():
@@ -60,7 +68,7 @@ class DefaultCsvParser:
             out_shapes = tuple(
                 map(lambda s: tuple(map(int, s.split(','))), str(case_data['OutShape']).split(';')))
             for i in range(out_num):
-                case.in_tensors.append({
+                case.out_tensors.append({
                     'dtype': out_dtypes[i],
                     'format': out_formats[i],
                     'shape': out_shapes[i],
