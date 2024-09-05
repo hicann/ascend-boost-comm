@@ -9,65 +9,46 @@
 # See the Mulan PSL v2 for more details.
 import json
 import random
-import numpy
 from op_test import OpTest
-from constant import OP_DTYPES
+from case import Case
+import numpy
 import torch
 import pandas as pd
 
-
 def __test_runner(self: OpTest, case_name: str) -> None:
     # get case from self
-    case_line = self.test_cases[case_name]["case"]
+    case: Case = self.test_cases[case_name]
     # set soc version
-    soc_version = case_line['SocVersion']
+    soc_version = case.soc_version
     if soc_version == 'Ascend910B':
         self.set_support_910b_only()
     if soc_version == 'Ascend310P':
         self.set_support_310p_only()
     # set param
-    op_name = case_line['OpName']
-    op_param = json.loads(case_line['OpParam'])
-    self.set_param(op_name, op_param)
+    self.set_param(case.op_name, case.op_param)
     # gen tensor
     random_seed = random.randint(0, 1000000)
     numpy.random.seed(random_seed)
 
-    in_num = int(case_line['InNum'])
-    in_dtype = tuple(
-        map(lambda t: OP_DTYPES[t], case_line['InDType'].split(';')))
-    in_format = tuple(case_line['InFormat'].split(';'))
-    in_shape = tuple(
-        map(lambda s: tuple(map(int, s.split(','))), str(case_line['InShape']).split(';')))
     in_tensors = []
-    data_generates = tuple(case_line['DataGenerate'].split(';'))
-    for i in range(in_num):
-        data_generate = data_generates[i]
-        in_tensor = None
-        if data_generate == 'custom':
-            in_tensor = self.custom(in_dtype[i], in_format[i], in_shape[i])
+
+    for i, in_tensor in enumerate(case.in_tensors):
+        if in_tensor['generate'] == 'custom':
+            in_tensor = self.custom(
+                i, in_tensor['dtype'], in_tensor['format'], in_tensor['shape'])
         else:
-            shape = in_shape[i]
-            dtype = in_dtype[i]
-            in_tensor = torch.from_numpy(eval(data_generate)).to(dtype)
+            shape = in_tensor['shape']
+            in_tensor = torch.from_numpy(
+                eval(in_tensor['generate'])).to(in_tensor['dtype'])
         in_tensors.append(in_tensor)
-    out_num = int(case_line['OutNum'])
-    out_dtype = tuple(
-        map(lambda t: OP_DTYPES[t], case_line['OutDType'].split(';')))
-    out_format = tuple(case_line['OutFormat'].split(';'))
-    out_shape = tuple(
-        map(lambda s: tuple(map(int, s.split(','))), str(case_line['OutShape']).split(';')))
+
     out_tensors = []
-    for i in range(out_num):
-        out_tensor = torch.zeros(
-            out_shape[i]).to(out_dtype[i])
-        out_tensors.append(out_tensor)
+    for out_tensor in case.out_tensors:
+        out_tensors.append(torch.zeros(
+            out_tensors['shape']).to(out_tensors['dtype']))
+
     # execute
-    test_type = case_line['TestType']
-    case_file = self.test_cases[case_name]['file_path']
-    result_data = pd.read_csv(case_file, sep='|')
-    result_data = pd.concat([result_data, pd.DataFrame(
-        columns=["mare", "mere", "rmse", "err", "eb", "pass", "RandomSeed"])], sort=False)
+    test_type = case.test_type
     if test_type == 'Function':
         # 仅关心是否通过，使用ut的assert
         self.execute(in_tensors, out_tensors)

@@ -14,15 +14,15 @@ import logging
 from pathlib import Path
 from typing import Union
 from case_runner import __test_runner
+from case_parser import csv_parser
+from case import Case
 
 
-def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".") -> Union[OpTest, callable]:
+def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".", parser: callable = csv_parser) -> Union[OpTest, callable]:
     logging.info("loading csv testcase...")
 
     def __csv_filter(file_name):
         return os.path.splitext(file_name)[1].lower() == '.csv'
-
-
 
     def decorator(__cls: OpTest) -> OpTest:
         setattr(__cls, '__test_runner', __test_runner)
@@ -30,25 +30,22 @@ def CaseInject(cls: Union[None, OpTest] = None, csv_path: str = ".") -> Union[Op
         if Path(csv_path).is_file():
             csv_files_path = [csv_path]
         else:
-
             csv_files_path = filter(__csv_filter, os.listdir(csv_path))
         setattr(__cls, 'test_cases', {})
-        for file in csv_files_path:
-            csv_case = pd.read_csv(file, sep='|')
-            for case in csv_case.iterrows():
-                case_data = case[1]
-                case_name = case_data['CaseName']
-                __cls.test_cases[case_name] = {
-                    "case": case_data, "file_path": file}
-                if getattr(__cls, f'test_{case_name}', None) is None:
-                    def __test_func(self:OpTest): 
-                        return self.__test_runner(case_name)
-                    setattr(__cls,
-                            f'test_{case_name}', __test_func)
-                    logging.info(f"loading case \"{case_name}\" OK!")
-                else:
-                    logging.info("found duplicate case name. ignored.")
-            logging.info(f"load csv {file} OK")
+        cases = []
+        for csv_file in csv_files_path:
+            cases.extend(parser(os.path.join(csv_path, csv_file)))
+        for case in cases:
+            if case.case_name in __cls.test_cases:
+                logging.info("found duplicate case name. ignored.")
+                continue
+            __cls.test_cases[case.case_name] = case
+
+            def __test_func(self: OpTest):
+                return self.__test_runner(case.case_name)
+            setattr(__cls,
+                    f'test_{case.case_name}', __test_func)
+            logging.info(f"loading case \"{case.case_name}\" OK!")
         return __cls
     if cls is not None:
         return decorator(cls)
