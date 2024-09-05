@@ -15,6 +15,7 @@ import ast
 import numpy
 from functools import partial
 from abc import ABCMeta, abstractmethod
+import torch
 
 
 class BaseParser(metaclass=ABCMeta):
@@ -25,14 +26,16 @@ class BaseParser(metaclass=ABCMeta):
 
 class DefaultCsvParser(BaseParser):
     def __get_generator(self, generator_str: str):
+        func_pkgs = (torch,numpy.random,numpy)
         tree = ast.parse(generator_str)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            func_random = getattr(numpy.random, node.func.id, None)
-            func = getattr(numpy, node.func.id, None)
-            if func_random is not None:
-                func = func_random
+            func = None
+            for func_pkg in func_pkgs:
+                func = getattr(func_pkg, node.func.id, None)
+                if func is not None:
+                    break
             kwargs = {kw.arg: float(ast.unparse(kw.value))
                       for kw in node.keywords}
             return partial(func, **kwargs)

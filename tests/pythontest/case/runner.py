@@ -38,9 +38,14 @@ def __case_runner(self: OpTest, case_name: str) -> None:
                 i, in_tensor['dtype'], in_tensor['format'], in_tensor['shape'])
         else:
             tensor_generator = in_tensor['generator']
-            in_tensor = torch.from_numpy(tensor_generator(
-                size=in_tensor['shape'])).to(in_tensor['dtype'])
-        in_tensors.append(in_tensor)
+            in_tensor = None
+            if tensor_generator.func.__module__ == "numpy":
+                in_tensor = torch.from_numpy(tensor_generator(
+                    size=in_tensor['shape']))
+            if tensor_generator.func.__module__ == "torch":
+                in_tensor = tensor_generator(
+                    size=in_tensor['shape'])
+        in_tensors.append(in_tensor.to(in_tensor['dtype']))
 
     out_tensors = []
     for out_tensor in case.out_tensors:

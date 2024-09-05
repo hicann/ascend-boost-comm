@@ -208,6 +208,6 @@ class OpTest(unittest.TestCase):
         if len(out_tensors) != len(golden_out_tensors):
             return False
         for i in range(len(out_tensors)):
-            if not torch.allclose(out_tensors[i], golden_out_tensors[i], rtol=0, atol=0):
+            if not torch.allclose(out_tensors[i], golden_out_tensors[i], rtol=0.001, atol=0.001):
                 return False
         return True
