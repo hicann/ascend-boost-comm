@@ -40,16 +40,16 @@ def __test_runner(self: OpTest, case_name: str) -> None:
     in_shape = tuple(
         map(lambda s: tuple(map(int, s.split(','))), str(case_line['InShape']).split(';')))
     in_tensors = []
-    data_gen_types = tuple(case_line['DataGeneration'].split(';'))
+    data_generates = tuple(case_line['DataGenerate'].split(';'))
     for i in range(in_num):
-        data_gen_type = data_gen_types[i]
+        data_generate = data_generates[i]
         in_tensor = None
-        if data_gen_type == 'custom':
-            in_tensor = self.custom(in_dtype, in_format, in_shape)
+        if data_generate == 'custom':
+            in_tensor = self.custom(in_dtype[i], in_format[i], in_shape[i])
         else:
-            shape = in_shape
-            dtype = in_dtype
-            in_tensor = torch.from_numpy(eval(data_gen_type)).to(dtype)
+            shape = in_shape[i]
+            dtype = in_dtype[i]
+            in_tensor = torch.from_numpy(eval(data_generate)).to(dtype)
         in_tensors.append(in_tensor)
     out_num = int(case_line['OutNum'])
     out_dtype = tuple(
