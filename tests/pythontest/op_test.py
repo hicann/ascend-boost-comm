@@ -15,11 +15,10 @@ import re
 import numpy
 import torch
 import torch_npu
-
+from abc import abstractmethod
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
+                    format='%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s')
 
 MKI_HOME_PATH = os.environ.get("MKI_HOME_PATH")
 if MKI_HOME_PATH is None:
@@ -30,8 +29,9 @@ torch.classes.load_library(LIB_PATH)
 
 
 class OpTest(unittest.TestCase):
+
     def setUp(self):
-        logging.info("running testcase " \
+        logging.info("running testcase "
                      f"{self.__class__.__name__}.{self._testMethodName}")
         self.format_default = -1
         self.format_nz = 29
@@ -49,7 +49,7 @@ class OpTest(unittest.TestCase):
             "specificParam": op_param}
         self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(
             self.op_desc))
-    
+
     def set_param_perf(self, op_name, run_times, op_param):
         self.op_desc = {
             "opName": op_name,
@@ -81,23 +81,8 @@ class OpTest(unittest.TestCase):
             self.op_desc))
 
     def execute(self, in_tensors, out_tensors, envs=None):
-        npu_device = self.__get_npu_device()
-        torch_npu.npu.set_device(npu_device)
-
-        if self.support_soc:
-            device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
-                soc_version = "Ascend910B"
-            elif re.search("Ascend310P", device_name, re.I):
-                soc_version = "Ascend310P"
-            else:
-                logging.error("device_name %s is not supported", device_name)
-                quit(1)
-
-            if soc_version not in self.support_soc:
-                logging.info("Current soc is %s is not supported for this case: %s",
-                             soc_version, str(self.support_soc))
-                return
+        if not self.__set_npu_device():
+            return
 
         in_tensors_npu = [tensor.npu() for tensor in in_tensors]
         out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
@@ -126,23 +111,27 @@ class OpTest(unittest.TestCase):
         self.assertTrue(self.golden_compare(out_tensors, golden_out_tensors))
 
     def execute_perf(self, in_tensors, out_tensors, envs=None):
-        npu_device = self.__get_npu_device()
-        torch_npu.npu.set_device(npu_device)
+        if not self.__set_npu_device():
+            return
 
-        if self.support_soc:
-            device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
-                soc_version = "Ascend910B"
-            elif re.search("Ascend310P", device_name, re.I):
-                soc_version = "Ascend310P"
-            else:
-                logging.error("device_name %s is not supported", device_name)
-                quit(1)
+        in_tensors_npu = [tensor.npu() for tensor in in_tensors]
+        out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
+                           for i in out_tensors]
+        self.__set_envs(envs)
+        self.run_result = self.mki.execute(in_tensors_npu, out_tensors_npu)
+        self.__unset_envs(envs)
 
-            if soc_version not in self.support_soc:
-                logging.info("Current soc is %s is not supported for this case: %s",
-                             soc_version, str(self.support_soc))
-                return
+        if out_tensors_npu:
+            out_tensors = [tensor.cpu() for tensor in out_tensors_npu]
+        else:
+            logging.info("No output tensor, use input tensors as output")
+            out_tensors = [tensor.cpu() for tensor in in_tensors_npu]
+
+        return out_tensors
+
+    def execute_unittest(self, in_tensors, out_tensors, envs=None):
+        if not self.__set_npu_device():
+            return
 
         in_tensors_npu = [tensor.npu() for tensor in in_tensors]
         out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
@@ -177,6 +166,26 @@ class OpTest(unittest.TestCase):
             npu_device = f"npu:{npu_device}"
         return npu_device
 
+    def __set_npu_device(self):
+        npu_device = self.__get_npu_device()
+        torch_npu.npu.set_device(npu_device)
+
+        if self.support_soc:
+            device_name = torch_npu.npu.get_device_name()
+            if re.search("Ascend910B", device_name, re.I):
+                soc_version = "Ascend910B"
+            elif re.search("Ascend310P", device_name, re.I):
+                soc_version = "Ascend310P"
+            else:
+                logging.error("device_name %s is not supported", device_name)
+                return False
+
+            if soc_version not in self.support_soc:
+                logging.info("Current soc is %s is not supported for this case: %s",
+                             soc_version, str(self.support_soc))
+                return False
+        return True
+
     def __create_tensor(self, dtype, format, shape, minValue, maxValue, device=None):
         if device is None:
             device = self.__get_npu_device()
@@ -186,3 +195,19 @@ class OpTest(unittest.TestCase):
         if format != -1:
             npu_input = torch_npu.npu_format_cast(npu_input, format)
         return cpu_input, npu_input
+
+    @abstractmethod
+    def custom(self, i, dtype, format, shape):
+        pass
+
+    def golden_calc(self, in_tensors):
+        logging.info("base golden_calc is called")
+        return []
+
+    def golden_compare(self, out_tensors, golden_out_tensors):
+        if len(out_tensors) != len(golden_out_tensors):
+            return False
+        for i in range(len(out_tensors)):
+            if not torch.allclose(out_tensors[i], golden_out_tensors[i], rtol=0.001, atol=0.001):
+                return False
+        return True

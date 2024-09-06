@@ -1,0 +1,58 @@
+# Copyright (c) 2024 Huawei Technologies Co., Ltd.
+# MindKernelInfra is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+#          http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+from op_test import OpTest
+from case import Case
+import numpy
+from numpy import *
+import torch
+from numpy.random import *
+
+
+def __case_runner(self: OpTest, case_name: str) -> None:
+    # get case from self
+    case: Case = self.test_cases[case_name]
+    # set soc version
+    soc_version = case.soc_version
+    if soc_version == 'Ascend910B':
+        self.set_support_910b_only()
+    if soc_version == 'Ascend310P':
+        self.set_support_310p_only()
+    # set param
+    self.set_param(case.op_name, case.op_param)
+    # gen tensor
+    random_seed = randint(0, 1000000)
+    numpy.random.seed(random_seed)
+
+    in_tensors = []
+
+    for i, in_tensor in enumerate(case.in_tensors):
+        if in_tensor['generator'] == 'custom':
+            in_tensor = self.custom(
+                i, in_tensor['dtype'], in_tensor['format'], in_tensor['shape'])
+        else:
+            tensor_generator = in_tensor['generator']
+            in_tensor = None
+            if tensor_generator.func.__module__ == "numpy":
+                in_tensor = torch.from_numpy(tensor_generator(
+                    size=in_tensor['shape']))
+            if tensor_generator.func.__module__ == "torch":
+                in_tensor = tensor_generator(
+                    size=in_tensor['shape'])
+        in_tensors.append(in_tensor.to(in_tensor['dtype']))
+
+    out_tensors = []
+    for out_tensor in case.out_tensors:
+        out_tensors.append(torch.zeros(
+            out_tensor['shape']).to(out_tensor['dtype']))
+
+    # execute
+    if case.test_type == 'Function':
+        # 仅关心是否通过，使用ut的assert
+        self.execute(in_tensors, out_tensors)
