@@ -155,7 +155,7 @@ Mki::Kernel *MkiTorch::GetKernelInstance(Mki::LaunchParam &launchParam, const st
 
 std::string MkiTorch::AddWorkspace(const Mki::KernelInfo &kernelInfo, Mki::RunInfo &runInfo)
 {
-    size_t bufferSize = kernelInfo.GetTotalScratchSize();
+    size_t bufferSize = kernelInfo.GetTotalWorkspaceSize();
     if (bufferSize == 0) {
         MKI_LOG(INFO) << "no workspace";
         return "ok";
@@ -168,14 +168,14 @@ std::string MkiTorch::AddWorkspace(const Mki::KernelInfo &kernelInfo, Mki::RunIn
                        << "errDesc:" << Mki::MkiRtErrorDesc(ret);
         return "error:MkiRtMemMallocDevice fail";
     }
-    runInfo.SetScratchDeviceAddr(deviceBuffer);
+    runInfo.SetWorkspaceDeviceAddr(deviceBuffer);
     return "ok";
 }
 
 std::string MkiTorch::FreeWorkspace(const Mki::KernelInfo &kernelInfo, Mki::RunInfo &runInfo)
 {
-    uint8_t *deviceBuffer = runInfo.GetScratchDeviceAddr();
-    size_t bufferSize = kernelInfo.GetTotalScratchSize();
+    uint8_t *deviceBuffer = runInfo.GetWorkspaceDeviceAddr();
+    size_t bufferSize = kernelInfo.GetTotalWorkspaceSize();
     if (bufferSize == 0) {
         return "ok";
     }

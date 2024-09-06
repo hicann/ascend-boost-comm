@@ -196,7 +196,7 @@ uint64_t KernelBase::GetKernelParamNum(const LaunchParam &launchParam)
 {
     uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
     uint64_t constInputNum = kernelInfo_.GetConstTensorCount();
-    uint64_t workspaceNum = kernelInfo_.GetScratchSizes().size();
+    uint64_t workspaceNum = kernelInfo_.GetWorkspaceSizes().size();
     uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
     MKI_LOG(DEBUG) << "kernel param: " << inputOutputNum << " in/out, " << constInputNum << " const in, "
                   << workspaceNum << " workspaces, " << hwsyncNum << " hwsync";
@@ -267,8 +267,8 @@ Status KernelBase::UpdateInOutWkspArgs(void **args, uint64_t argsNum,
         MKI_LOG(DEBUG) << "args info: output tensor " << idx;
         args[idx] = launchParam.GetOutTensor(i++).data;
     }
-    auto workspaceAddr = runInfo.GetScratchDeviceAddr();
-    auto &workspaces = kernelInfo_.GetScratchSizes();
+    auto workspaceAddr = runInfo.GetWorkspaceDeviceAddr();
+    auto &workspaces = kernelInfo_.GetWorkspaceSizes();
     size_t workspaceNum = workspaces.size();
     uint64_t offset = 0;
     for (size_t i = 0; i < workspaceNum && idx < argsNum; idx++) {
