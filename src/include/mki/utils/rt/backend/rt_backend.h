@@ -134,7 +134,7 @@ public:
 private:
     RtBackend(const RtBackend &) = delete;
     const RtBackend &operator=(const RtBackend &) = delete;
-    int ModuleDestoryRtModule(void *rtModule);
+    int ModuleDestoryRtModule(void *rtModule) const;
 };
 }
 

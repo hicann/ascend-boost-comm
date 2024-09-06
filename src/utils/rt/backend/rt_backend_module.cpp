@@ -199,7 +199,7 @@ int RtBackend::GetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
     CHECK_STATUS_WITH_DESC_RETURN(rtGetC2cCtrlAddr(addr, len), "rt Get C2cCtrl Addr");
 }
 
-int RtBackend::ModuleDestoryRtModule(void *rtModule)
+int RtBackend::ModuleDestoryRtModule(void *rtModule) const
 {
     if (rtModule == nullptr) {
         return MKIRT_SUCCESS;
