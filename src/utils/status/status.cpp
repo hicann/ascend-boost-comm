@@ -10,6 +10,7 @@
  * See the Mulan PSL v2 for more details.
  */
 #include <securec.h>
+#include "mki/utils/assert/assert.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/status/status.h"
 
@@ -19,8 +20,7 @@ Status::Status() noexcept : rep_(nullptr){};
 
 Status::~Status()
 {
-    delete[] rep_;
-    rep_ = nullptr;
+    RemoveMsg();
 };
 
 Status::Status(const Status &other)
@@ -34,7 +34,8 @@ Status::Status(const Status &other)
     if (len > MAX_LOG_STRING_SIZE) {
         return;
     }
-    rep_ = new uint8_t[len];
+    rep_ = new (std::nothrow) uint8_t[len];
+    MKI_CHECK(rep_ != nullptr, "create msg holder failed", return);
     auto ret = memcpy_s(rep_, len, other.rep_, len);
     MKI_LOG_IF(ret != EOK, ERROR) << "memcpy failed";
 }
@@ -45,17 +46,14 @@ Status &Status::operator=(const Status &other)
         return *this;
     }
 
-    if (other.rep_ == nullptr) {
-        delete[] rep_;
-        rep_ = nullptr;
-    } else {
-        delete[] rep_;
-        rep_ = nullptr;
+    RemoveMsg();
+    if (other.rep_ != nullptr) {
         int len = other.GetLen();
         if (len > MAX_LOG_STRING_SIZE) {
             return *this;
         }
-        rep_ = new uint8_t[len];
+        rep_ = new (std::nothrow) uint8_t[len];
+        MKI_CHECK(rep_ != nullptr, "create msg holder failed", return *this);
         auto ret = memcpy_s(rep_, len, other.rep_, len);
         MKI_LOG_IF(ret != EOK, ERROR) << "memcpy failed";
     }
@@ -108,7 +106,8 @@ Status::Status(int code, const std::string &msg)
         return;
     }
     int len = static_cast<int>(sizeof(int) + sizeof(int) + msg.size() + 1);
-    rep_ = new uint8_t[len];
+    rep_ = new (std::nothrow) uint8_t[len];
+    MKI_CHECK(rep_ != nullptr, "create msg holder failed", return);
     int *lenPtr = reinterpret_cast<int *>(rep_);
     *lenPtr = len;
     int *codePtr = reinterpret_cast<int *>(rep_ + sizeof(int));
@@ -147,5 +146,13 @@ const char *Status::GetMsg() const
 {
     char *msgPtr = reinterpret_cast<char *>(rep_ + sizeof(int) + sizeof(int));
     return msgPtr;
+}
+
+void Status::RemoveMsg()
+{
+    if (rep_ != nullptr) {
+        delete[] rep_;
+        rep_ = nullptr;
+    }
 }
 } // namespace Mki

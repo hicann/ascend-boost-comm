@@ -38,7 +38,7 @@ public:
     bool GetPlatformSpec(const std::string &label, std::map<std::string, std::string> &res);
 
     uint32_t GetCoreNumByType(const std::string &coreType);
-    void GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size);
+    void GetLocalMemSize(const LocalMemType &memType, uint64_t &size);
 
     void SetFixPipeDtypeMap(const PlatInfoMapType &fixpipeDtypeMap);
     void SetAICoreIntrinsicDtype(PlatInfoMapType &intrinsicDtypes);

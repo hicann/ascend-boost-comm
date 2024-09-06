@@ -109,7 +109,7 @@ TEST(TestOperationIr, ParseIniInvalid)
     // invalid format
     file << "[TestOperationInvalid] \n "
             "input0.dtype=float,bf16,uint8,int16,uint16,uint32,int64,uint64,double,complex128 \n "
-            "input0.format=nchw,nchc,nc1hc0,fractal_z,nc1hwc0_c04,hwcn,ndhwc,fractal_nz,ncdhw,"
+            "input0.format=nchw,nhwc,nc1hwc0,fractal_z,nc1hwc0_c04,hwcn,ndhwc,fractal_nz,ncdhw,"
             "ndc1hwc0,fractal_z_3d,aaa,nd ";
     file.close();
     st = opIrCfg.Load(fileName);

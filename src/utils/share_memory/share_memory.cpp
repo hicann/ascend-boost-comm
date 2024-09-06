@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2024 Huawei Technologies Co., Ltd.
+ * MindKernelInfra is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+#include "mki/utils/share_memory/share_memory.h"
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <fcntl.h>
+#include <securec.h>
+#include <functional>
+#include "mki/utils/assert/assert.h"
+#include "mki/utils/log/log.h"
+
+namespace {
+constexpr int SEM_TIMEOUT = 300;
+}
+
+namespace Mki {
+ShareMemory::ShareMemory(const std::string &name, uint32_t size) : memSize_(size)
+{
+    sem_ = sem_open(name.c_str(), O_CREAT, S_IRUSR | S_IWUSR, 1);
+    MKI_CHECK(sem_ != SEM_FAILED, "share memory open fail, name:" << name, return);
+    MKI_LOG(INFO) << "create share memory begin, name:" << name;
+
+    SemLock();
+    shareMemory_ = (uint8_t *)CreateShareMemory(name, memSize_);
+    MKI_LOG(INFO) << "create share memory success";
+    SemUnLock();
+}
+
+ShareMemory::~ShareMemory()
+{
+    SemLock();
+    CleanUpShm();
+    SemUnLock();
+    CleanUpSem();
+}
+
+void *ShareMemory::GetShm()
+{
+    return shareMemory_;
+}
+
+void ShareMemory::SemLock() const
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += SEM_TIMEOUT;
+    int ret = sem_timedwait(sem_, &ts);
+    // 等待信号量超时
+    MKI_LOG_IF(ret == -1 && errno == ETIMEDOUT, ERROR) << "The semaphore waiting duration exceeds 5 minutes. Run the "
+        "rm -rf /dev/shm/sem." <<
+        fullName_ << " command to clear the semaphore.";
+}
+
+void ShareMemory::SemUnLock() const
+{
+    sem_post(sem_);
+}
+
+void *ShareMemory::CreateShareMemory(const std::string &name, uint32_t size)
+{
+    void *memory = nullptr;
+    struct shmid_ds buf;
+    key_t key = static_cast<key_t>(std::hash<std::string>{}(name));
+    shmid_ = shmget(key, size, IPC_CREAT | 0600); // 0600提供文件所有者读写权限
+    MKI_LOG(INFO) << "key: " << key << " shmid: " << shmid_;
+    MKI_CHECK(shmid_ != -1, "shmget err, errno is: " << errno, return nullptr);
+
+    memory = shmat(shmid_, nullptr, 0);
+    MKI_CHECK(memory != reinterpret_cast<void *>(-1), "shmat err, errno is: " << errno, return nullptr);
+
+    shmctl(shmid_, IPC_STAT, &buf);
+
+    if (buf.shm_nattch == 1) {
+        int ret = memset_s(memory, size, 0, size);
+        MKI_LOG_IF(ret != EOK, ERROR) << "memset_s Error! Error Code: " << ret;
+    }
+    return memory;
+}
+
+void ShareMemory::CleanUpShm()
+{
+    int ret = shmdt(shareMemory_);
+    MKI_LOG_IF(ret != 0, ERROR) << "shmdt failed, errno is: " << errno;
+    shmid_ds buf{};
+    shmctl(shmid_, IPC_STAT, &buf);
+    if (shmid_ != -1 && buf.shm_nattch == 0) {
+        ret = shmctl(shmid_, IPC_RMID, nullptr);
+        MKI_LOG_IF(ret != 0, ERROR) << "shmid: " << shmid_ << " delete share memory fail(shmctl IPC_RMID failed.) ret: "
+            << ret << " errno is: " << errno;
+    }
+}
+
+void ShareMemory::CleanUpSem()
+{
+    int ret = sem_close(sem_);
+    MKI_LOG_IF(ret != 0, ERROR) << "sem_close failed. ret: " << ret;
+    ret = sem_unlink(fullName_.c_str());
+    MKI_LOG_IF(ret != 0, INFO) << "Already unlink sem";
+}
+}

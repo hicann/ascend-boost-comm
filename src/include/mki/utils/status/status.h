@@ -36,6 +36,7 @@ private:
     int GetLen() const;
     int GetCode() const;
     const char *GetMsg() const;
+    void RemoveMsg();
 
 private:
     uint8_t *rep_{nullptr};

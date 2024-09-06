@@ -88,7 +88,7 @@ public:
 
     // Scratch
     MiniVector<uint64_t> &GetScratchSizes();
-    int64_t GetTotalScratchSize() const;
+    uint64_t GetTotalScratchSize() const;
 
     // Memset
     void SetMemsetInfo(uint64_t argIdx, uint64_t size);

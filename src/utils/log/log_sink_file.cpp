@@ -243,7 +243,7 @@ void LogSinkFile::MakeLogDir()
         return;
     }
 
-    mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+    mode_t mode = S_IRWXU | S_IRGRP |  S_IXGRP;
     uint32_t offset = 0;
     uint32_t pathLen = logDir_.size();
     do {

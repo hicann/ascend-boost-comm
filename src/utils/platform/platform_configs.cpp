@@ -102,10 +102,10 @@ const std::map<std::string, std::map<std::string, std::string>> &PlatformConfigs
     return platformSpecMap_;
 }
 
-void PlatformConfigs::GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size)
+void PlatformConfigs::GetLocalMemSize(const LocalMemType &memType, uint64_t &size)
 {
     std::string sizeStr;
-    switch (mem_type) {
+    switch (memType) {
         case LocalMemType::L0_A: {
             (void)GetPlatformSpec("AICoreSpec", "l0_a_size", sizeStr);
             break;

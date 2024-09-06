@@ -16,7 +16,8 @@ namespace Mki {
 namespace Utils {
 size_t RoundUp(size_t size, size_t divisor)
 {
-    if (divisor == 0) {
+    if (divisor == 0 || (size + divisor - 1) < size) {
+        MKI_LOG(ERROR) << "divisor is 0 or (size + divisor - 1) < size";
         return size;
     }
     return (size + divisor - 1) / divisor * divisor;

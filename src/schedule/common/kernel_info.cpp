@@ -241,14 +241,14 @@ MiniVector<uint64_t> &KernelInfo::GetScratchSizes()
     return scratchSizes_;
 }
 
-int64_t KernelInfo::GetTotalScratchSize() const
+uint64_t KernelInfo::GetTotalScratchSize() const
 {
     MKI_CHECK(initFlag_, "kernelInfo is not inited, get scratch size fail", return -1);
     uint64_t sum = 0;
     for (auto scratchSize : scratchSizes_) {
         sum += scratchSize;
     }
-    return static_cast<int64_t>(sum);
+    return sum;
 }
 
 std::string KernelInfo::ToString() const

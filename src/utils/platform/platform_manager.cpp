@@ -48,7 +48,6 @@ const std::string STR_VECTOR_CORE_INTRINSIC_DTYPE_MAP = "VectorCoreintrinsicDtyp
 
 const std::string SOC_VERSION_ASCEND910 = "Ascend910";
 const std::string SOC_VERSION_ASCEND910A = "Ascend910A";
-const std::string SOC_VERSION_ASCEND320 = "Ascend320";
 const std::string SOC_VERSION_ASCEND031 = "Ascend031";
 
 const std::string SOC_VERSION_ASCEND310B1 = "Ascend310B1";
@@ -64,10 +63,9 @@ const std::string SOC_VERSION_ASCEND910_9372 = "Ascend910_9372";
 const std::string SOC_VERSION_ASCEND910_9361 = "Ascend910_9361";
 
 const std::unordered_set<std::string> FIXPIPE_SOCVERSION = {
-    SOC_VERSION_ASCEND320,   SOC_VERSION_ASCEND310B1, SOC_VERSION_ASCEND910B1, SOC_VERSION_ASCEND910B2,
-    SOC_VERSION_ASCEND910B3, SOC_VERSION_ASCEND910B4, SOC_VERSION_ASCEND910_9391, SOC_VERSION_ASCEND910_9381,
-    SOC_VERSION_ASCEND910_9392, SOC_VERSION_ASCEND910_9382,
-    SOC_VERSION_ASCEND910_9372, SOC_VERSION_ASCEND910_9361, SOC_VERSION_ASCEND031
+    SOC_VERSION_ASCEND310B1, SOC_VERSION_ASCEND910B1, SOC_VERSION_ASCEND910B2, SOC_VERSION_ASCEND910B3,
+    SOC_VERSION_ASCEND910B4, SOC_VERSION_ASCEND910_9391, SOC_VERSION_ASCEND910_9381, SOC_VERSION_ASCEND910_9392,
+    SOC_VERSION_ASCEND910_9382, SOC_VERSION_ASCEND910_9372, SOC_VERSION_ASCEND910_9361, SOC_VERSION_ASCEND031
 };
 
 enum class PlatformInfoType {
@@ -192,12 +190,12 @@ static std::vector<std::string> Split(const std::string &str, char pattern)
 }
 
 uint32_t PlatformManager::AssemblePlatformInfoVector(
-    std::map<std::string, std::map<std::string, std::string>> &contentInfoMap)
+    std::map<std::string, std::map<std::string, std::string>> &contentMap)
 {
     std::string socVersion;
     PlatformConfigs platformConfigs;
 
-    if (ParsePlatformInfo(contentInfoMap, socVersion, platformConfigs) != PLATFORM_SUCCESS) {
+    if (ParsePlatformInfo(contentMap, socVersion, platformConfigs) != PLATFORM_SUCCESS) {
         MKI_LOG(ERROR) << "Parse platform info from content failed";
         return PLATFORM_FAILED;
     }

@@ -53,10 +53,10 @@ LogStream::LogStream(const char *filePath, int line, const char *funcName, LogLe
     localtime_r(&tmpTime, &timeinfo);
     char timeStr[64] = {0}; // 64 日志buffer长度
     (void)strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-
+    std::string fileName = (logEntity_.fileName != nullptr) ? logEntity_.fileName : "EmptyFile";
     stream_.str("");
     stream_ << "[" << timeStr << "." << us << "] [" << LogLevelToString(logEntity_.level) << "] ["
-            << logEntity_.threadId << "] [" << logEntity_.fileName << ":" << logEntity_.line << "] ";
+            << logEntity_.threadId << "] [" << fileName << ":" << logEntity_.line << "] ";
 }
 
 void LogStream::Format(const char *format, ...)

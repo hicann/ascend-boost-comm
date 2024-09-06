@@ -79,7 +79,7 @@ static const std::map<int, std::string> MAP_DTYPE_TO_STRING = {
     { TENSOR_DTYPE_INT32, "int32" },
     { TENSOR_DTYPE_UINT8, "uint8" },
     { TENSOR_DTYPE_INT16, "int16" },
-    { TENSOR_DTYPE_UINT16, "uint32" },
+    { TENSOR_DTYPE_UINT16, "uint16" },
     { TENSOR_DTYPE_UINT32, "uint32" },
     { TENSOR_DTYPE_INT64, "int64" },
     { TENSOR_DTYPE_UINT64, "uint64" },
@@ -102,9 +102,9 @@ const std::string &GetStrWithDType(int dType)
 
 static const std::map<std::string, TensorFormat> MAP_STRING_TO_FORMAT = {
     { "nchw", TENSOR_FORMAT_NCHW },
-    { "nchc", TENSOR_FORMAT_NHWC },
+    { "nhwc", TENSOR_FORMAT_NHWC },
     { "nd", TENSOR_FORMAT_ND },
-    { "nc1hc0", TENSOR_FORMAT_NC1HWC0 },
+    { "nc1hwc0", TENSOR_FORMAT_NC1HWC0 },
     { "fractal_z", TENSOR_FORMAT_FRACTAL_Z },
     { "nc1hwc0_c04", TENSOR_FORMAT_NC1HWC0_C04 },
     { "hwcn", TENSOR_FORMAT_HWCN },
@@ -126,9 +126,9 @@ TensorFormat GetFormatWithStr(const std::string &formatStr)
 
 static const std::map<int, std::string> MAP_FORMAT_TO_STRING = {
     { TENSOR_FORMAT_NCHW, "nchw" },
-    { TENSOR_FORMAT_NHWC, "nchc" },
+    { TENSOR_FORMAT_NHWC, "nhwc" },
     { TENSOR_FORMAT_ND, "nd" },
-    { TENSOR_FORMAT_NC1HWC0, "nc1hc0" },
+    { TENSOR_FORMAT_NC1HWC0, "nc1hwc0" },
     { TENSOR_FORMAT_FRACTAL_Z, "fractal_z" },
     { TENSOR_FORMAT_NC1HWC0_C04, "nc1hwc0_c04" },
     { TENSOR_FORMAT_HWCN, "hwcn" },
