@@ -12,6 +12,10 @@
 #include <thread>
 #include <mutex>
 #include <dlfcn.h>
+#include <cstring>
+#include <unistd.h>
+#include <syscall.h>
+#include <securec.h>
 #include <mki/utils/singleton/singleton.h>
 #include <mki/utils/log/log.h>
 #include "mki/utils/profiling/prof_api.h"
@@ -134,5 +138,89 @@ int32_t ProfilingFuncs::MkiProfCommandHandle(uint32_t type, void *data, uint32_t
     }
 
     return PROFILING_REPORT_SUCCESS;
+}
+
+void ProfilingFuncs::ReportApiInfo(const uint64_t beginTime, const uint32_t tid, const std::string &name) const
+{
+    MsProfApi info = {};
+    info.type = MSPROF_REPORT_NODE_LAUNCH_TYPE;
+    info.itemId = ProfGetHashId(name.c_str(), name.length());
+    info.level = MSPROF_REPORT_NODE_LEVEL;
+    const uint64_t endTime = MsprofSysCycleTime();
+    info.threadId = tid;
+    info.beginTime = beginTime;
+    info.endTime = endTime;
+    info.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    info.reserve = 0;
+    auto ret = MsprofReportApi(true, &info);
+    if (ret != 0) {
+        MKI_LOG(ERROR) << "ProfReportApi error!";
+    }
+}
+
+void ProfilingFuncs::ReportAdditionalInfo(const uint64_t timeStamp, const uint32_t tid, const std::string &name,
+                                          uint32_t taskType, uint32_t blockDim) const
+{
+    const uint64_t nameHash = ProfGetHashId(name.c_str(), name.length());
+    MsprofCompactInfo nodeBasicInfo = {};
+
+    auto &profNodeBasicInfo = nodeBasicInfo.data.nodeBasicInfo;
+    profNodeBasicInfo.opName = nameHash;
+    profNodeBasicInfo.opType = nameHash;
+    profNodeBasicInfo.taskType = taskType;
+    profNodeBasicInfo.blockDim = blockDim;
+    nodeBasicInfo.level = static_cast<uint16_t>(MSPROF_REPORT_NODE_LEVEL);
+    nodeBasicInfo.type = MSPROF_REPORT_NODE_BASIC_INFO_TYPE;
+    nodeBasicInfo.timeStamp = timeStamp;
+    nodeBasicInfo.threadId = tid;
+    auto ret = ProfReportCompactInfo(static_cast<uint32_t>(true),
+        static_cast<void *>(&nodeBasicInfo), static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
+    if (ret != 0) {
+        MKI_LOG(ERROR) << "ProfReportCompactInfo error!";
+    }
+}
+
+// 上报contextInfo信息
+void ProfilingFuncs::ReportContextInfo(const uint64_t timeStamp, const uint32_t tid, const std::string &name) const
+{
+    MsprofAdditionalInfo additionalInfo = {};
+    additionalInfo.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    additionalInfo.level = MSPROF_REPORT_NODE_LEVEL;
+    additionalInfo.type = MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE;
+    additionalInfo.timeStamp = timeStamp;
+    additionalInfo.threadId = tid;
+    additionalInfo.dataLen = sizeof(MsprofContextIdInfo);
+
+    MsprofContextIdInfo contextInfo = {};
+    contextInfo.opName = ProfGetHashId(name.c_str(), name.length());
+    contextInfo.ctxIdNum = 1;
+    contextInfo.ctxIds[0] = 0;
+
+    int ret = memcpy_s(additionalInfo.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH,
+                       &contextInfo, sizeof(MsprofContextIdInfo));
+    MKI_LOG_IF(ret != 0, ERROR) << "memcpy_s Error! Error Code: " << ret;
+
+    auto retReport = ProfReportAdditionalInfo(static_cast<uint32_t>(true),
+        static_cast<void *>(&additionalInfo), static_cast<uint32_t>(sizeof(MsprofAdditionalInfo)));
+    if (retReport != 0) {
+        MKI_LOG(ERROR) << "ProfReportAdditionalInfo error!";
+    }
+}
+
+void ProfilingFuncs::ReportMsprofInfo(const uint64_t timeStamp, const std::string &name,
+                                      const uint32_t taskType, const uint32_t blockDim, const bool needReportCtx) const
+{
+    if (GetProfilingLevel0Status()) {
+        long sysTid = static_cast<int32_t>(syscall(SYS_gettid));
+        if (sysTid == -1) {
+            return;
+        }
+        uint32_t tid = static_cast<uint32_t>(sysTid);
+        ReportApiInfo(timeStamp, tid, name);
+        ReportAdditionalInfo(timeStamp + 1, tid, name, taskType, blockDim);
+        if (needReportCtx) {
+            ReportContextInfo(timeStamp + 1, tid, name);
+        }
+    }
 }
 } // namespace Mki

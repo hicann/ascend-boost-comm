@@ -17,6 +17,8 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
 #include "mki/utils/memset/clear_tensors.h"
+#include "mki/utils/singleton/singleton.h"
+#include "mki/utils/profiling/profiling_funcs.h"
 
 namespace Mki {
 KernelBase::KernelBase(const std::string &opName, const BinHandle *handle) : kernelName_(opName), handle_(handle)
@@ -105,7 +107,7 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     return Status::OkStatus();
 }
 
-Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
+Status KernelBase::InnerRun(const LaunchParam &launchParam, RunInfo &runInfo)
 {
     RtArgsExT argsEx;
     uint64_t argsNum = GetKernelParamNum(launchParam);
@@ -162,6 +164,27 @@ Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
                     return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction Launch fail"));
     }
     return Status::OkStatus();
+}
+
+Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
+{
+    ProfilingFuncs prof = GetSingleton<Mki::ProfilingFuncs>();
+    const uint64_t beginTime = prof.GetProfilingLevel0Status() ? prof.ProfSysCycleTime() : 0;
+
+    Status status = InnerRun(launchParam, runInfo);
+
+    if (prof.GetProfilingLevel0Status()) {
+        const KernelType taskType = GetType();
+        uint32_t blockDim = kernelInfo_.GetBlockDim();
+        if (taskType == KernelType::KERNEL_TYPE_MIX_AIC) {
+            constexpr uint32_t constTwo = 2U;
+            blockDim = ((blockDim & 0x0000FFFU) | (constTwo << 16U));
+        }
+        const bool needReportCtx = ((taskType == KernelType::KERNEL_TYPE_MIX_AIC) ||
+                                    (taskType == KernelType::KERNEL_TYPE_MIX_AIV));
+        prof.ReportMsprofInfo(beginTime, kernelName_, taskType, blockDim, needReportCtx);
+    }
+    return status;
 }
 
 bool KernelBase::CanSupport(const LaunchParam &launchParam) const

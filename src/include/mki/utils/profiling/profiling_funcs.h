@@ -31,6 +31,12 @@ public:
     void SetProfilingLevel1Status(bool status) const;
     bool GetProfilingLevel0Status() const;
     bool GetProfilingLevel1Status() const;
+    void ReportApiInfo(const uint64_t beginTime, const uint32_t tid, const std::string &name) const;
+    void ReportAdditionalInfo(const uint64_t timeStamp, const uint32_t tid, const std::string &name,
+		              uint32_t taskType, uint32_t blockDim) const;
+    void ReportContextInfo(const uint64_t timeStamp, const uint32_t tid, const std::string &name) const;
+    void ReportMsprofInfo(const uint64_t timeStamp, const std::string &name,
+                          const uint32_t taskType, const uint32_t blockDim, const bool needReportCtx) const;
     static int32_t MkiProfCommandHandle(uint32_t type, void *data, uint32_t len);
 
 private:
