@@ -15,6 +15,7 @@ import re
 import numpy
 import torch
 import torch_npu
+import warnings
 
 
 logging.basicConfig(level=logging.INFO,
@@ -31,7 +32,7 @@ torch.classes.load_library(LIB_PATH)
 
 class OpTest(unittest.TestCase):
     def setUp(self):
-        logging.info("running testcase " \
+        logging.info("running testcase "
                      f"{self.__class__.__name__}.{self._testMethodName}")
         self.format_default = -1
         self.format_nz = 29
@@ -49,7 +50,7 @@ class OpTest(unittest.TestCase):
             "specificParam": op_param}
         self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(
             self.op_desc))
-    
+
     def set_param_perf(self, op_name, run_times, op_param):
         self.op_desc = {
             "opName": op_name,
@@ -59,15 +60,23 @@ class OpTest(unittest.TestCase):
             self.op_desc))
 
     def set_support_910b(self):
+        warnings.warn(
+            "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
         self.support_soc.append("Ascend910B")
 
     def set_support_310p(self):
+        warnings.warn(
+            "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
         self.support_soc.append("Ascend310P")
 
     def set_support_910b_only(self):
+        warnings.warn(
+            "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
         self.support_soc = ["Ascend910B"]
 
     def set_support_310p_only(self):
+        warnings.warn(
+            "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
         self.support_soc = ["Ascend310P"]
 
     def set_input_formats(self, formats):
@@ -128,7 +137,6 @@ class OpTest(unittest.TestCase):
     def execute_perf(self, in_tensors, out_tensors, envs=None):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
-
         if self.support_soc:
             device_name = torch_npu.npu.get_device_name()
             if re.search("Ascend910B", device_name, re.I):
@@ -186,3 +194,21 @@ class OpTest(unittest.TestCase):
         if format != -1:
             npu_input = torch_npu.npu_format_cast(npu_input, format)
         return cpu_input, npu_input
+
+
+def get_soc_name():
+    available_soc_list = ("Ascend910B", "Ascend310P")
+    device_name = torch_npu.npu.get_device_name()
+    for soc_name in available_soc_list:
+        if re.search(soc_name, device_name, re.I):
+            return soc_name
+    logging.error("device_name %s is not supported", device_name)
+    return None
+
+
+def only_soc(soc_name):
+    return unittest.skipIf(soc_name != get_soc_name(), f"This case only runs on {soc_name}")
+
+
+only_910b = only_soc("Ascend910B")
+only_310p = only_soc("Ascend310P")
