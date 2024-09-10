@@ -37,6 +37,10 @@ if(BUILD_TEST_FRAMEWORK)
     add_subdirectory(${PROJECT_SOURCE_DIR}/tests/framework)
 endif()
 
+if(BUILD_EXAMPLE)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/example)
+endif()
+
 if(BUILD_UNIT_TEST)
     add_subdirectory(${PROJECT_SOURCE_DIR}/tests/unittest)
 endif()
