@@ -9,27 +9,35 @@ endmacro()
 
 macro(add_kernel kernel soc channel srcs tac)
     if (BUILD_${op_name}_${tac}_${soc})
-        set(${kernel}_${soc}_output
-            ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${tac}/${kernel}.o)
-        add_custom_command(
-            OUTPUT ${${kernel}_${soc}_output}
-            DEPENDS ${srcs}
-            WORKING_DIRECTORY ${OPS_PROJECT_ROOT_DIR}
-            COMMAND python3 ${MKI_SCRIPT_DIR}/compile_ascendc.py
-                    --soc ${soc}
-                    --channel ${channel}
-                    --srcs ${CMAKE_CURRENT_LIST_DIR}/${srcs}
-                    --dst ${${kernel}_${soc}_output}
-                    --code_root ${OPS_THIRD_PARTY_DIR}/..
-                    --kernel ${kernel}
-        )
-        add_custom_target(ascendc_${kernel}_${soc} ALL
-            DEPENDS ${${kernel}_${soc}_output}
-        )
-        set(LOCAL_BINARY_SRC_LIST ${LOCAL_BINARY_SRC_LIST} $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
-        set(BINARY_SRC_LIST ${BINARY_SRC_LIST} ${LOCAL_BINARY_SRC_LIST} PARENT_SCOPE)
-        set(LOCAL_BINARY_TARGET_LIST ${LOCAL_BINARY_TARGET_LIST} ascendc_${kernel}_${soc})
-        set(BINARY_TARGET_LIST ${BINARY_TARGET_LIST} ${LOCAL_BINARY_TARGET_LIST} PARENT_SCOPE)
+        string(TOLOWER ${soc} soc_lower)
+        string(LENGTH ${soc} soc_length)
+        string(SUBSTRING "${CHIP_TYPE}" 0 ${soc_length} chip_type_prefix)
+        if ((NOT USE_MSDEBUG) OR (USE_MSDEBUG AND ("${soc_lower}" STREQUAL "${chip_type_prefix}")))
+            set(${kernel}_${soc}_output
+                ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${tac}/${kernel}.o)
+            set(PYTHON_ARGS 
+                "--soc" "${soc}"
+                "--channel" "${channel}"
+                "--srcs" "${CMAKE_CURRENT_LIST_DIR}/${srcs}"
+                "--dst" "${${kernel}_${soc}_output}"
+                "--code_root" "${OPS_THIRD_PARTY_DIR}/.."
+                "--kernel" "${kernel}"
+                "--use_msdebug" "${USE_MSDEBUG}"
+            )
+            add_custom_command(
+                OUTPUT ${${kernel}_${soc}_output}
+                DEPENDS ${srcs}
+                WORKING_DIRECTORY ${OPS_PROJECT_ROOT_DIR}
+                COMMAND python3 ${MKI_SCRIPT_DIR}/compile_ascendc.py ${PYTHON_ARGS}
+            )
+            add_custom_target(ascendc_${kernel}_${soc} ALL
+                DEPENDS ${${kernel}_${soc}_output}
+            )
+            set(LOCAL_BINARY_SRC_LIST ${LOCAL_BINARY_SRC_LIST} $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
+            set(BINARY_SRC_LIST ${BINARY_SRC_LIST} ${LOCAL_BINARY_SRC_LIST} PARENT_SCOPE)
+            set(LOCAL_BINARY_TARGET_LIST ${LOCAL_BINARY_TARGET_LIST} ascendc_${kernel}_${soc})
+            set(BINARY_TARGET_LIST ${BINARY_TARGET_LIST} ${LOCAL_BINARY_TARGET_LIST} PARENT_SCOPE)
+        endif()
     endif()
 endmacro()
 

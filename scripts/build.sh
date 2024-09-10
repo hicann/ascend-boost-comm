@@ -30,7 +30,7 @@ USE_CXX11_ABI=""
 IS_RELEASE=False
 BUILD_OPTION_LIST="testframework release example dev debug unittest clean help"
 BUILD_CONFIGURE_LIST=("--output=.*" "--use_cxx11_abi=0" "--use_cxx11_abi=1"
-                      "--verbose" "--no_werror" "--namespace=.*")
+                      "--verbose" "--no_werror" "--namespace=.*" "--msdebug")
 
 # install cann
 function fn_install_cann_and_kernel()
@@ -289,6 +289,10 @@ function fn_main()
         "--no_werror")
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNO_WERROR=ON"
             ;;
+        "--msdebug")
+            CHIP_TYPE=$(npu-smi info -m | grep -oE 'Ascend\s*\S+' | head -n 1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DUSE_MSDEBUG=ON -DCHIP_TYPE=${CHIP_TYPE}"
+            ;;
         esac
         shift
     }
@@ -337,7 +341,7 @@ function fn_main()
         *)
             echo "build.sh testframework|release|example|dev|debug|unittest|clean"\
             "--output=<dir>|--force_clean|--use_cxx11_abi=0|--use_cxx11_abi=1"\
-            "|--no_werror|--namespace=<namespace>"
+            "|--no_werror|--namespace=<namespace>|--msdebug"
             ;;
     esac
 }
