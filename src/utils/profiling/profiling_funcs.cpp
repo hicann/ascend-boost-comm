@@ -75,6 +75,12 @@ int32_t ProfilingFuncs::ProfReportAdditionalInfo(uint32_t agingFlag, const void 
     return MsprofReportAdditionalInfo(agingFlag, data, length);
 }
 
+int32_t ProfilingFuncs::ProfReportTypeInfo(uint16_t level, uint32_t typeId, std::string typeName) const
+{
+    MKI_LOG(INFO) << "ProfReportTypeInfo start!";
+    return MsprofRegTypeInfo(level, typeId, typeName.c_str());
+}
+
 uint64_t ProfilingFuncs::ProfSysCycleTime() const
 {
     return MsprofSysCycleTime();
@@ -118,18 +124,15 @@ int32_t ProfilingFuncs::MkiProfCommandHandle(uint32_t type, void *data, uint32_t
     const uint32_t profType = profilerConfig->type;
 
     if (profType == PROF_COMMANDHANDLE_TYPE_START) {
-        MKI_LOG(INFO) << "Open Profiling Switch";
-        isProfilingLevel0Enable_ = true;
+        if ((profSwitch & PROF_TASK_TIME_L0) != PROF_CTRL_INVALID) {
+            isProfilingLevel0Enable_ = true;
+        }
+        if ((profSwitch & PROF_TASK_TIME_L1) != PROF_CTRL_INVALID) {
+            isProfilingLevel1Enable_ = true;
+        }
     }
     if (profType == PROF_COMMANDHANDLE_TYPE_STOP) {
-        MKI_LOG(INFO) << "Close Profiling Switch";
         isProfilingLevel0Enable_ = false;
-    }
-    if (((profSwitch & PROF_TASK_TIME_L1) != PROF_CTRL_INVALID) ||
-        ((profSwitch & PROF_TASK_TIME_L2) != PROF_CTRL_INVALID)) {
-        MKI_LOG(INFO) << "Open Profiling TensorInfo Switch";
-        isProfilingLevel1Enable_ = true;
-    } else {
         isProfilingLevel1Enable_ = false;
     }
 
