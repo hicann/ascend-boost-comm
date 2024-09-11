@@ -62,7 +62,6 @@ private:
     Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, const RunInfo &runInfo) const;
     Status UpdateTilingArgs(void **args, uint64_t argsNum, RunInfo &runInfo) const;
     Status MemsetTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo);
-    Status InnerRun(const LaunchParam &launchParam, RunInfo &runInfo);
 
 private:
     std::string kernelName_;
