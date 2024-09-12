@@ -23,6 +23,7 @@ public:
     ~ProfilingFuncs();
     int32_t ProfReportApi(uint32_t agingFlag, const MsProfApi *api) const;
     int32_t ProfReportCompactInfo(uint32_t agingFlag, const void *data, uint32_t length) const;
+    int32_t ProfReportTypeInfo(uint16_t reportBaseType, uint32_t type, std::string name) const;
     int32_t ProfReportAdditionalInfo(uint32_t agingFlag, const void *data, uint32_t length) const;
     uint64_t ProfSysCycleTime() const;
     uint64_t ProfGetHashId(const char *hashInfo, size_t length) const;

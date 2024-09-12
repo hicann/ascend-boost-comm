@@ -33,6 +33,9 @@ const uint16_t MSPROF_REPORT_NODE_LEVEL = 10000;
 
 const uint32_t MSPROF_REPORT_ACL_OTHERS_BASE_TYPE = 0x40000;
 
+const uint32_t MSPROF_REPORT_EXECUTE_TYPE_ID = 0xB6666;
+const uint32_t MSPROF_REPORT_SETUP_TYPE_ID = 0xB8888;
+
 const uint32_t MSPROF_REPORT_NODE_BASIC_INFO_TYPE = 0;
 const uint32_t MSPROF_REPORT_NODE_LAUNCH_TYPE = 5;
 
@@ -47,6 +50,7 @@ const int32_t PROFILING_REPORT_FAILED = -1;
 
 // DataTypeConfig
 constexpr uint64_t PROF_ACL_API              = 0x00000001ULL;
+constexpr uint64_t PROF_TASK_TIME_L0         = 0x00000800ULL;
 constexpr uint64_t PROF_TASK_TIME_L1         = 0x00000002ULL;
 constexpr uint64_t PROF_TASK_TIME_L2         = 0x00002000ULL;
 constexpr uint64_t PROF_AICORE_METRICS       = 0x00000004ULL;
@@ -195,6 +199,8 @@ struct MsprofTensorInfo {
 MSVP_PROF_API int32_t MsprofReportApi(uint32_t agingFlag, const MsProfApi *api);
 
 MSVP_PROF_API int32_t MsprofReportCompactInfo(uint32_t agingFlag, const void* data, uint32_t length);
+
+MSVP_PROF_API int32_t MsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName);
 
 MSVP_PROF_API int32_t MsprofReportAdditionalInfo(uint32_t agingFlag, const void* data, uint32_t length);
 
