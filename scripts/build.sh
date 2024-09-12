@@ -23,7 +23,6 @@ export OUTPUT_DIR=$CODE_ROOT/output
 export THIRD_PARTY_DIR=$CODE_ROOT/3rdparty
 BUILD_TEST_FRAMEWORK=OFF
 COMPILE_OPTIONS=""
-INCREMENTAL_SWITCH=OFF
 DEVICE_CODE_PACK_SWITCH=ON
 USE_VERBOSE=OFF
 USE_CXX11_ABI=""
@@ -302,8 +301,7 @@ function fn_main()
     COMPILE_OPTIONS="${COMPILE_OPTIONS} -DUSE_CXX11_ABI=$USE_CXX11_ABI"
     case "${arg1}" in
         "testframework")
-            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DBUILD_TEST_FRAMEWORK=ON"
-            BUILD_TEST_FRAMEWORK=ON
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST_FRAMEWORK=ON"
             fn_init_pytorch_env
             fn_build
             ;;
@@ -323,7 +321,6 @@ function fn_main()
             fn_build
             ;;
         "debug")
-            IS_RELEASE=False
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug"
             fn_build
             ;;

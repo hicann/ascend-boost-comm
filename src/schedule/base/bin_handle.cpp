@@ -32,7 +32,13 @@ struct KernelHeaderInfo {
 
 BinHandle::BinHandle(const BinaryBasicInfo *binInfo) : basicInfo_(binInfo) {}
 
-BinHandle::~BinHandle() {}
+BinHandle::~BinHandle()
+{
+    int st = MkiRtModuleDestory(&moduleHandle_);
+    if (st != MKIRT_SUCCESS) {
+        MKI_LOG(ERROR) << "Module Destory failed";
+    }
+}
 
 KernelHandle BinHandle::GetHandle() const { return &handle_; }
 
