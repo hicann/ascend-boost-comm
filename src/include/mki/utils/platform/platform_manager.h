@@ -41,9 +41,6 @@ private:
     uint32_t LoadConfigFile(std::string filePath);
     uint32_t LoadIniFile(std::string iniFileRealPath);
 
-    std::string GetSoFilePath() const;
-    std::string RealPath(const std::string &path) const;
-
     void ParseVersion(PlatMapType &versionMap, std::string &socVersion) const;
     void ParsePlatformSpec(const std::string &label, PlatMapType &platformSpecMap,
                           PlatformConfigs &platformConfigsTemp) const;

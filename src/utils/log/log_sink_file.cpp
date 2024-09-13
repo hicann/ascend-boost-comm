@@ -27,6 +27,7 @@
 #include <sys/statvfs.h>
 #include <securec.h>
 #include "mki/utils/log/log_core.h"
+#include "mki/utils/env/env.h"
 
 namespace Mki {
 constexpr size_t MAX_LOG_FILE_COUNT = 50;                               // 50 回滚管理50个日志文件
@@ -140,16 +141,17 @@ void LogSinkFile::Log(const char *log, uint64_t logLen)
 void LogSinkFile::Init()
 {
     const char *env = std::getenv("ASDOPS_LOG_TO_BOOST_TYPE");
-    boostType_ = env && IsValidFileName(env) ? std::string(env) : "mki";
+    boostType_ = env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : "mki";
 
     env = std::getenv("ASDOPS_LOG_PATH");
-    std::string logRootDir = env && IsValidFileName(env) ? std::string(env) : GetHomeDir();
+    std::string logRootDir =
+        env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : GetHomeDir();
     logRootDir = PathCheckAndRegular(logRootDir);
 
     logDir_ = logRootDir + "/" + boostType_ + "/log";
 
     env = std::getenv("ASDOPS_LOG_TO_FILE_FLUSH");
-    isFlush_ = env ? std::string(env) == "1" : false;
+    isFlush_ = env && strlen(env) <= MAX_ENV_STRING_LEN ? std::string(env) == "1" : false;
 }
 
 void LogSinkFile::DeleteOldestFile()
