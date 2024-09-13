@@ -291,7 +291,9 @@ uint32_t PlatformManager::ParsePlatformInfo(std::map<std::string, std::map<std::
     for (it = contentMap.begin(); it != contentMap.end(); it++) {
         if (it->first == STR_VERSION) {
             ParseVersion(it->second, socVersion);
-        } else if (it->first == STR_AI_CORE_INTRINSIC_DTYPE_MAP) {
+        }
+
+        if (it->first == STR_AI_CORE_INTRINSIC_DTYPE_MAP) {
             MKI_CHECK(ParseAICoreintrinsicDtypeMap(it->second, platformConfigsTemp),
                 "failed to parse aicore intrinsic dtype map", return PLATFORM_FAILED);
         } else if (it->first == STR_VECTOR_CORE_INTRINSIC_DTYPE_MAP) {
