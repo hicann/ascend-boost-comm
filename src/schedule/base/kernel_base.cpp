@@ -15,10 +15,186 @@
 #include "mki/utils/checktensor/check_tensor.h"
 #include "mki/utils/file_system/file_system.h"
 #include "mki/utils/log/log.h"
+#include "mki/utils/rt/rt.h"
 #include "mki/utils/math/tensor_utils.h"
 #include "mki/utils/memset/clear_tensors.h"
 
 namespace Mki {
+class KernelParamBuilder {
+public:
+    Status Init(const LaunchParam &launchParam, const RunInfo &runInfo, uint64_t argsNum, const KernelInfo &kernelInfo)
+    {
+        uint8_t *argsPtr = kernelInfo.GetArgs();
+        uint64_t argsSize = kernelInfo.GetArgsSize();
+        MKI_CHECK(argsPtr != nullptr, "args size invalid", return Status::FailStatus(-1));
+        MKI_CHECK(argsNum * sizeof(void *) <= argsSize, "args size invalid", return Status::FailStatus(-1));
+        auto ret = memset_s(argsPtr, argsSize, 0, argsNum * sizeof(void *));
+        MKI_CHECK(ret == EOK, "memory set failed", return Status::FailStatus(ERROR_INVALID_VALUE));
+        void **args = reinterpret_cast<void **>(static_cast<void *>(argsPtr));
+        // set hwsync
+        int64_t hwsyncIdx = kernelInfo.GetHwsyncIdx();
+        auto status = UpdateHwsyncArgs(args, argsNum, hwsyncIdx);
+        MKI_CHECK(status.Ok(), "failed to update hwsync args", return status);
+        // set const input
+        bool launchWithTiling = kernelInfo.GetLaunchWithTiling();
+        const auto &constTensorInfos = kernelInfo.GetConstTensorInfos();
+        if (launchWithTiling) {
+            constexpr size_t maxConstTensorCount = 1024;
+            size_t constTensorCount = kernelInfo.GetConstTensorCount();
+            if (constTensorCount > 0) {
+                MKI_CHECK(constTensorCount < maxConstTensorCount, "const tensor size check failed, is "
+                          << constTensorCount, return Status::FailStatus(-1));
+                hostInfo_.reset(new (std::nothrow) RtHostInputInfoT[constTensorCount]);
+                MKI_CHECK(hostInfo_ != nullptr, "hostInfo size nullptr", return Status::FailStatus(-1));
+                uint64_t constTensorOffset =
+                    Utils::GetTensorAlignedSize(kernelInfo.GetTilingUsedSize()) + argsNum * sizeof(void *);
+                status = UpdateConstTensorArgs(args, hostInfo_.get(), constTensorOffset, constTensorInfos);
+                MKI_CHECK(status.Ok(), "failed to update const tensor args, tiling flag: " << launchWithTiling,
+                          return status);
+            }
+            argsEx_.hostInputInfoPtr = hostInfo_.get();
+            argsEx_.hostInputInfoNum = constTensorCount;
+        } else {
+            uint64_t constTensorOffset = kernelInfo.GetConstTensorOffset();
+            status = UpdateConstTensorArgs(args, runInfo.GetTilingDeviceAddr(), constTensorOffset, constTensorInfos);
+            MKI_CHECK(status.Ok(), "failed to update const tensor args, tiling flag: " << launchWithTiling,
+                      return status);
+        }
+        // set input / output / workspace
+        const auto &workspaces = kernelInfo.GetScratchSizes();
+        status = UpdateInOutWkspArgs(args, argsNum, workspaces, launchParam, runInfo.GetScratchDeviceAddr());
+        MKI_CHECK(status.Ok(), "failed to update input output wksp args", return status);
+        // set tiling
+        status = launchWithTiling ? UpdateTilingArgs(argsEx_, argsNum)
+                                  : UpdateTilingArgs(args, argsNum, runInfo.GetTilingDeviceAddr());
+        MKI_CHECK(status.Ok(), "failed to get launch with tiling", return status);
+        // Memset
+        const auto &memsetInfo = kernelInfo.GetMemsetInfo();
+        status = MemsetTensorArgs(args, argsNum, runInfo.GetStream(), memsetInfo);
+        MKI_CHECK(status.Ok(), "failed to memset tensor args", return status);
+        // launch
+        kernelParam_.tilingId = kernelInfo.GetTilingId();
+        kernelParam_.blockDim = kernelInfo.GetBlockDim();
+        kernelParam_.argsEx = &argsEx_;
+        argsEx_.args = argsPtr;
+        argsEx_.argsSize = argsSize;
+        return status;
+    }
+
+    const MkiRtKernelParam &GetKernelParam() const
+    {
+        return kernelParam_;
+    }
+
+private:
+    Status UpdateHwsyncArgs(void **args, uint64_t argsNum, int64_t hwsyncIdx)
+    {
+        if (hwsyncIdx >= 0 && static_cast<uint64_t>(hwsyncIdx) < argsNum) {
+            uint64_t *addr = nullptr;
+            uint32_t len = 0;
+            int st = MkiRtGetC2cCtrlAddr(reinterpret_cast<uint64_t *>(&addr), &len);
+            MKI_CHECK(st == MKIRT_SUCCESS && addr != nullptr,
+                "Mki Get RtC2cCtrlAddr fail", return Status::FailStatus(-1));
+            MKI_LOG(INFO) << "args info: hwsync " << hwsyncIdx;
+            *(args + static_cast<uint64_t>(hwsyncIdx)) = addr;
+        }
+        return Status::OkStatus();
+    }
+
+    Status UpdateInOutWkspArgs(void **args, uint64_t argsNum, const MiniVector<uint64_t> &workspaces,
+                               const LaunchParam &launchParam, uint8_t *workspaceAddr)
+    {
+        size_t inputNum = launchParam.GetInTensorCount();
+        uint64_t idx = 0;
+        for (size_t i = 0; i < inputNum && idx < argsNum; idx++) {
+            if (args[idx] != nullptr) {
+                continue;
+            }
+            MKI_LOG(DEBUG) << "args info: input tensor " << idx;
+            args[idx] = launchParam.GetInTensor(i++).data;
+        }
+        size_t outputNum = launchParam.GetOutTensorCount();
+        for (size_t i = 0; i < outputNum && idx < argsNum; idx++) {
+            if (args[idx] != nullptr) {
+                continue;
+            }
+            MKI_LOG(DEBUG) << "args info: output tensor " << idx;
+            args[idx] = launchParam.GetOutTensor(i++).data;
+        }
+        size_t workspaceNum = workspaces.size();
+        uint64_t offset = 0;
+        for (size_t i = 0; i < workspaceNum && idx < argsNum; idx++) {
+            if (args[idx] != nullptr) {
+                continue;
+            }
+            MKI_LOG(DEBUG) << "args info: workspace " << idx << " offset " << offset;
+            args[idx] = workspaceAddr + offset;
+            offset += workspaces.at(i++);
+        }
+        return Status::OkStatus();
+    }
+
+    Status MemsetTensorArgs(void **args, uint64_t argsNum, void *stream,
+                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo)
+    {
+        if (memsetInfo.size() != 0) {
+            Status status = ClearTensors(args, argsNum, memsetInfo, stream);
+            MKI_CHECK(status.Ok(), "failed to clear tensors", return status);
+        }
+        return Status::OkStatus();
+    }
+
+    Status UpdateConstTensorArgs(void **args, RtHostInputInfoT *info, uint64_t constTensorOffset,
+                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos)
+    {
+        uint64_t offset = constTensorOffset;
+        for (uint64_t i = 0; i < constTensorInfos.size(); i++) {
+            auto &constTensorInfo = constTensorInfos.at(i);
+            args[constTensorInfo.argIdx] = info + i; // placeholder
+            info[i].addrOffset = constTensorInfo.argIdx * sizeof(void *);
+            info[i].dataOffset = offset;
+            MKI_LOG(DEBUG) << "args info: const tensor " << constTensorInfo.argIdx << " offset in args " << offset;
+            offset += constTensorInfo.size;
+        }
+        return Status::OkStatus();
+    }
+
+    Status UpdateConstTensorArgs(void **args, uint8_t *tilingDeviceAddr, uint64_t constTensorOffset,
+                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos)
+    {
+        uint64_t offset = constTensorOffset;
+        for (size_t i = 0; i < constTensorInfos.size(); i++) {
+            auto &constTensorInfo = constTensorInfos.at(i);
+            args[constTensorInfo.argIdx] = tilingDeviceAddr + offset;
+            MKI_LOG(DEBUG) << "args info: const tensor " << constTensorInfo.argIdx << " offset in tiling " << offset;
+            offset += constTensorInfo.size;
+        }
+        return Status::OkStatus();
+    }
+
+    Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum) const
+    {
+        MKI_CHECK((argsNum > 1), "argsNum invalid : " << argsNum, return Status::FailStatus(-1));
+        MKI_LOG(DEBUG) << "argsNum: tiling " << (argsNum - 1);
+        argsEx.hasTiling = 1;
+        argsEx.tilingAddrOffset = (argsNum - 1) * sizeof(void *);
+        argsEx.tilingDataOffset = argsNum * sizeof(void *);
+        return Status::OkStatus();
+    }
+
+    Status UpdateTilingArgs(void **args, uint64_t argsNum, uint8_t *tilingDeviceAddr) const
+    {
+        MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - 1);
+        args[argsNum - 1] = tilingDeviceAddr;
+        return Status::OkStatus();
+    }
+
+private:
+    RtArgsExT argsEx_;
+    std::unique_ptr<RtHostInputInfoT[]> hostInfo_{nullptr};
+    MkiRtKernelParam kernelParam_;
+};
+
 KernelBase::KernelBase(const std::string &opName, const BinHandle *handle) : kernelName_(opName), handle_(handle)
 {
     if (handle_ != nullptr) {
@@ -76,7 +252,7 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     auto status = InitImpl(launchParam);
     MKI_CHECK(status.Ok(), "Failed to init run info " << status.ToString(), return status);
 
-    auto kernelParamNum = GetKernelParamNum(launchParam);
+    auto kernelParamNum = GetKernelArgsNum(launchParam);
     uint64_t baseSize = kernelParamNum * sizeof(void *);
     uint64_t argsSize = baseSize;
     if (!launchWithTiling) {
@@ -105,49 +281,24 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     return Status::OkStatus();
 }
 
+uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
+{
+    uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
+    uint64_t constInputNum = kernelInfo_.GetConstTensorCount();
+    uint64_t workspaceNum = kernelInfo_.GetScratchSizes().size();
+    uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
+    MKI_LOG(DEBUG) << "kernel param: " << inputOutputNum << " in/out, " << constInputNum << " const in, "
+                << workspaceNum << " workspaces, " << hwsyncNum << " hwsync";
+    return inputOutputNum + constInputNum + workspaceNum + hwsyncNum + 1; // 1 is tiling
+}
+
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
-    RtArgsExT argsEx;
-    uint64_t argsNum = GetKernelParamNum(launchParam);
-    uint8_t *argsPtr = kernelInfo_.GetArgs();
-    uint64_t argsSize = kernelInfo_.GetArgsSize();
-    MKI_CHECK(argsPtr != nullptr, "args size invalid", return Status::FailStatus(-1));
-    MKI_CHECK(argsNum * sizeof(void *) <= argsSize, "args size invalid", return Status::FailStatus(-1));
-    auto ret = memset_s(argsPtr, argsSize, 0, argsNum * sizeof(void *));
-    MKI_CHECK(ret == EOK, "memory set failed", return Status::FailStatus(ERROR_INVALID_VALUE));
-    void **args = reinterpret_cast<void **>(static_cast<void *>(argsPtr));
-    // set hwsync
-    auto status = UpdateHwsyncArgs(args, argsNum);
-    MKI_CHECK(status.Ok(), "failed to update hwsync args", return status);
-    // set const input
-    size_t constTensorCount = kernelInfo_.GetConstTensorCount();
-    RtHostInputInfoT hostInfo[constTensorCount];
-
-    bool launchWithTiling = kernelInfo_.GetLaunchWithTiling();
-    status = launchWithTiling ? UpdateConstTensorArgs(args, argsNum, hostInfo, constTensorCount)
-                                        : UpdateConstTensorArgs(args, argsNum, runInfo);
-    MKI_CHECK(status.Ok(), "failed to update const tensor args", return status);
-    // set input / output / workspace
-    status = UpdateInOutWkspArgs(args, argsNum, launchParam, runInfo);
-    MKI_CHECK(status.Ok(), "failed to update input output wksp args", return status);
-    // set tiling
-    status = launchWithTiling ? UpdateTilingArgs(argsEx, argsNum, runInfo)
-                                        : UpdateTilingArgs(args, argsNum, runInfo);
-    MKI_CHECK(status.Ok(), "failed to get launch with tiling", return status);
-    // Memset
-    status = MemsetTensorArgs(args, argsNum, runInfo);
-    MKI_CHECK(status.Ok(), "failed to memset tensor args", return status);
-    // launch
-    MkiRtKernelParam kernelParam{};
-    kernelParam.tilingId = kernelInfo_.GetTilingId();
-    kernelParam.blockDim = kernelInfo_.GetBlockDim();
-    kernelParam.argsEx = &argsEx;
-    argsEx.args = argsPtr;
-    argsEx.argsSize = argsSize;
-    if (launchWithTiling) {
-        argsEx.hostInputInfoPtr = hostInfo;
-        argsEx.hostInputInfoNum = constTensorCount;
-    }
+    KernelParamBuilder paramBuilder;
+    uint64_t argsNum = GetKernelArgsNum(launchParam);
+    Status status = paramBuilder.Init(launchParam, runInfo, argsNum, kernelInfo_);
+    MKI_CHECK(status.Ok(), "failed to build kernel params", return status);
+    const MkiRtKernelParam &kernelParam = paramBuilder.GetKernelParam();
     MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
     if (*handle_->GetHandle() != nullptr) {
         MKI_LOG(DEBUG) << "launch function with handle";
@@ -190,123 +341,6 @@ Status KernelBase::InitImpl(const LaunchParam &launchParam)
 {
     UNUSED_VALUE(launchParam);
     MKI_CHECK(false, "InitImpl has to be overriden!", return Status::FailStatus(-1));
-}
-
-uint64_t KernelBase::GetKernelParamNum(const LaunchParam &launchParam)
-{
-    uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
-    uint64_t constInputNum = kernelInfo_.GetConstTensorCount();
-    uint64_t workspaceNum = kernelInfo_.GetScratchSizes().size();
-    uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
-    MKI_LOG(DEBUG) << "kernel param: " << inputOutputNum << " in/out, " << constInputNum << " const in, "
-                  << workspaceNum << " workspaces, " << hwsyncNum << " hwsync";
-    return inputOutputNum + constInputNum + workspaceNum + hwsyncNum + 1; // 1 is tiling
-}
-
-Status KernelBase::UpdateHwsyncArgs(void **args, uint64_t argsNum)
-{
-    int64_t hwsyncIdx = kernelInfo_.GetHwsyncIdx();
-    if (hwsyncIdx >= 0 && static_cast<uint64_t>(hwsyncIdx) < argsNum) {
-        uint64_t *addr = nullptr;
-        uint32_t len = 0;
-        int st = MkiRtGetC2cCtrlAddr(reinterpret_cast<uint64_t *>(&addr), &len);
-        MKI_CHECK(st == MKIRT_SUCCESS && addr != nullptr,
-            "Mki Get RtC2cCtrlAddr fail", return Status::FailStatus(-1));
-        MKI_LOG(INFO) << "args info: hwsync " << hwsyncIdx;
-        *(args + static_cast<uint64_t>(hwsyncIdx)) = addr;
-    }
-    return Status::OkStatus();
-}
-
-Status KernelBase::UpdateConstTensorArgs(void **args, uint64_t argsNum,
-                                         RtHostInputInfoT *info, uint64_t infoNum)
-{
-    uint64_t offset = Utils::GetTensorAlignedSize(kernelInfo_.GetTilingUsedSize()) + argsNum * sizeof(void *);
-    for (uint64_t i = 0; i < infoNum; i++) {
-        auto &constTensorInfo = kernelInfo_.GetConstTensorInfo(i);
-        args[constTensorInfo.argIdx] = info + i; // placeholder
-        info[i].addrOffset = constTensorInfo.argIdx * sizeof(void *);
-        info[i].dataOffset = offset;
-        MKI_LOG(DEBUG) << "args info: const tensor " << constTensorInfo.argIdx << " offset in args " << offset;
-        offset += constTensorInfo.size;
-    }
-    return Status::OkStatus();
-}
-
-Status KernelBase::UpdateConstTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo)
-{
-    UNUSED_VALUE(argsNum);
-    uint8_t *tilingDeviceAddr = runInfo.GetTilingDeviceAddr();
-    uint64_t offset = kernelInfo_.GetConstTensorOffset();
-    for (size_t i = 0; i < kernelInfo_.GetConstTensorCount(); i++) {
-        auto &constTensorInfo = kernelInfo_.GetConstTensorInfo(i);
-        args[constTensorInfo.argIdx] = tilingDeviceAddr + offset;
-        MKI_LOG(DEBUG) << "args info: const tensor " << constTensorInfo.argIdx << " offset in tiling " << offset;
-        offset += constTensorInfo.size;
-    }
-    return Status::OkStatus();
-}
-
-Status KernelBase::UpdateInOutWkspArgs(void **args, uint64_t argsNum,
-    const LaunchParam &launchParam, const RunInfo &runInfo)
-{
-    size_t inputNum = launchParam.GetInTensorCount();
-    uint64_t idx = 0;
-    for (size_t i = 0; i < inputNum && idx < argsNum; idx++) {
-        if (args[idx] != nullptr) {
-            continue;
-        }
-        MKI_LOG(DEBUG) << "args info: input tensor " << idx;
-        args[idx] = launchParam.GetInTensor(i++).data;
-    }
-    size_t outputNum = launchParam.GetOutTensorCount();
-    for (size_t i = 0; i < outputNum && idx < argsNum; idx++) {
-        if (args[idx] != nullptr) {
-            continue;
-        }
-        MKI_LOG(DEBUG) << "args info: output tensor " << idx;
-        args[idx] = launchParam.GetOutTensor(i++).data;
-    }
-    auto workspaceAddr = runInfo.GetScratchDeviceAddr();
-    auto &workspaces = kernelInfo_.GetScratchSizes();
-    size_t workspaceNum = workspaces.size();
-    uint64_t offset = 0;
-    for (size_t i = 0; i < workspaceNum && idx < argsNum; idx++) {
-        if (args[idx] != nullptr) {
-            continue;
-        }
-        MKI_LOG(DEBUG) << "args info: workspace " << idx << " offset " << offset;
-        args[idx] = workspaceAddr + offset;
-        offset += workspaces.at(i++);
-    }
-    return Status::OkStatus();
-}
-
-Status KernelBase::UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, const RunInfo &runInfo) const
-{
-    UNUSED_VALUE(runInfo);
-    MKI_CHECK((argsNum > 1), "argsNum invalid : " << argsNum, return Status::FailStatus(-1));
-    MKI_LOG(DEBUG) << "argsNum: tiling " << (argsNum - 1);
-    argsEx.hasTiling = 1;
-    argsEx.tilingAddrOffset = (argsNum - 1) * sizeof(void *);
-    argsEx.tilingDataOffset = argsNum * sizeof(void *);
-    return Status::OkStatus();
-}
-
-Status KernelBase::UpdateTilingArgs(void **args, uint64_t argsNum, RunInfo &runInfo) const
-{
-    MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - 1);
-    args[argsNum - 1] = runInfo.GetTilingDeviceAddr();
-    return Status::OkStatus();
-}
-
-Status KernelBase::MemsetTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo)
-{
-    if (kernelInfo_.GetMemsetInfo().size() != 0) {
-        Status status = ClearTensors(args, argsNum, kernelInfo_.GetMemsetInfo(), runInfo.GetStream());
-        MKI_CHECK(status.Ok(), "failed to clear tensors", return status);
-    }
-    return Status::OkStatus();
 }
 
 Kernel *KernelBase::Clone() const
