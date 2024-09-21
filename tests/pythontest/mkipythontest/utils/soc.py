@@ -1,0 +1,42 @@
+import logging
+import re
+import unittest
+from typing import Callable, Iterable, Union
+
+import torch_npu
+
+
+def get_soc_name() -> str:
+    """
+    获取芯片名称
+
+    :return: 芯片名称
+    """
+    available_soc_list = ("Ascend910B", "Ascend310P")
+    device_name = torch_npu.npu.get_device_name()
+    for soc_name in available_soc_list:
+        if re.search(soc_name, device_name, re.I):
+            return soc_name
+    logging.error("device_name %s is not supported", device_name)
+    return None
+
+
+def only_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
+    """
+    芯片限制装饰器
+
+    :param soc_name: 芯片名称
+    :return: 芯片限制装饰器
+    """
+    if isinstance(soc_name, str):
+        return unittest.skipIf(
+            soc_name != get_soc_name(), f"This case only runs on {soc_name}"
+        )
+    return unittest.skipIf(
+        get_soc_name(
+        ) not in soc_name, f"This case only runs on {str(soc_name)}"
+    )
+
+
+only_910b = only_soc("Ascend910B")
+only_310p = only_soc("Ascend310P")
