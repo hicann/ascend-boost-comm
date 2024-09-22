@@ -69,8 +69,10 @@ class DefaultCsvParser(BaseParser):
 
             case.soc_version = tuple(case_data['SocVersion'].split(","))
             case.env = json.loads(case_data['Env'])
+            case.dump = bool(case_data['Dump'])
+
             case_list.append(case)
         return case_list
-    
-    def generate(self, csv_file_path:str, case_list:list[Case])->None:
+
+    def generate(self, csv_file_path: str, case_list: list[Case]) -> None:
         pass

@@ -9,13 +9,16 @@
 # See the Mulan PSL v2 for more details.
 
 
+from functools import lru_cache
 import itertools
 import logging
 import re
 from copy import deepcopy
+from typing import Optional
 
 import torch
 from mkipythontest.constant import OpType, TestType, ErrorType
+from mkipythontest.tensor.generate import gen_tensors, get_generator, get_param
 
 
 class Case:
@@ -38,10 +41,12 @@ class Case:
         self.out_formats: list[str] = []
 
         self.data_generate: str = ""
+
         self.soc_version: list[str] = []
         self.test_type: TestType = TestType.FUNCTION
         self.expected_error: ErrorType = ErrorType.NO_ERROR
         self.env: dict = {}
+        self.dump: bool = False
 
     @property
     def case_name(self):
@@ -64,6 +69,31 @@ class Case:
     @property
     def all_shapes(self):
         return self.in_shapes + self.out_shapes
+
+    @property
+    @lru_cache
+    def in_tensors(self):
+        return [torch.zeros(self.in_shapes[i]).to(self.in_dtypes[i]) for i in range(self.in_num)]
+
+    @property
+    @lru_cache
+    def out_tensors(self):
+        return [torch.zeros(self.out_shapes[i]).to(self.out_dtypes[i]) for i in range(self.out_num)]
+
+    def generate_data(self, generator: Optional[callable] = None) -> list[torch.Tensor]:
+        # stage 1 check write or read
+        if self.data_generate.startswith("binfile"):
+            binfile_params = get_param(self.data_generate)
+            in_bin_path = binfile_params['in']
+            out_bin_path = binfile_params['out']
+            return []
+        if generator is not None and self.data_generate.startswith("custom"):
+            return generator(self.in_tensors, get_param(self.data_generate))
+        else:
+            data_generate_strs = self.data_generate.split(';')
+            data_generators = list(map(get_generator, data_generate_strs))
+            return gen_tensors(
+                self.in_dtypes, self.in_formats, data_generators)
 
 
 class GeneralizedCase(Case):
@@ -130,7 +160,8 @@ class GeneralizedCase(Case):
         :return:
         """
         if generalized_dims is None:
-            generalized_dims = [1,4,15,16,17,32,64,65,128,256,257,131073]
+            generalized_dims = [1, 4, 15, 16, 17,
+                                32, 64, 65, 128, 256, 257, 131073]
         placeholders = self.__discover_placeholders()
         # 生成所有可能的映射表组合
         mapping_combinations = list(itertools.product(
@@ -143,7 +174,8 @@ class GeneralizedCase(Case):
             for shape in self.all_shapes:
                 dynamic_shape = []
                 for s in shape:
-                    dynamic_shape.append(self.__evaluate_expression(str(s), mappings))
+                    dynamic_shape.append(
+                        self.__evaluate_expression(str(s), mappings))
                 new_shapes.append(tuple(dynamic_shape))
             new_param = {}
             for k, v in self.op_param.items():
@@ -157,10 +189,3 @@ class GeneralizedCase(Case):
             new_case.test_type = TestType.FUNCTION
             result.append(new_case)
         return result
-
-
-class BinCase(Case):
-    """
-    测试用例，从二进制文件中读取输入输出数据
-    """
-    pass

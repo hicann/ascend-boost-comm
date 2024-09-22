@@ -5,6 +5,12 @@ from typing import Callable, Iterable, Union
 
 import torch_npu
 
+Ascend910B = "Ascend910B"
+Ascend310P = "Ascend310P"
+Ascend910 = "Ascend910"
+Ascend310B = "Ascend310B"
+Ascend910_93 = "Ascend910_93"
+
 
 def get_soc_name() -> str:
     """
@@ -12,7 +18,8 @@ def get_soc_name() -> str:
 
     :return: 芯片名称
     """
-    available_soc_list = ("Ascend910B", "Ascend310P")
+    available_soc_list = (Ascend910B, Ascend310P)
+    # 910注意顺序
     device_name = torch_npu.npu.get_device_name()
     for soc_name in available_soc_list:
         if re.search(soc_name, device_name, re.I):
@@ -21,7 +28,7 @@ def get_soc_name() -> str:
     return None
 
 
-def only_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
+def on_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
     """
     芯片限制装饰器
 
@@ -38,5 +45,5 @@ def only_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
     )
 
 
-only_910b = only_soc("Ascend910B")
-only_310p = only_soc("Ascend310P")
+only_910b = on_soc(Ascend910B)
+only_310p = on_soc(Ascend310P)

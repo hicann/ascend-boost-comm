@@ -9,7 +9,6 @@
 # See the Mulan PSL v2 for more details.
 import ast
 from functools import partial
-from typing import Union
 
 import numpy
 import torch

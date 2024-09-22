@@ -23,18 +23,16 @@ import torch_npu
 from mkipythontest import TestType
 from mkipythontest.case import Case
 from mkipythontest.constant import OpType
-from mkipythontest.tensor.generate import (gen_empty_tensors, gen_tensors,
-                                           get_generator, get_param)
-from mkipythontest.utils.precision import (DoubleCompare, SingleCompare,
-                                           get_compare)
+from mkipythontest.tensor.compare import (DoubleCompare, SingleCompare,
+                                          get_compare)
 from mkipythontest.utils.profiler import get_profiler_time
 
 
 class OpTest(unittest.TestCase):
     # 这里放成员
-    test_cases = {}
-    test_results = {}
-    op_type = OpType.NA
+    test_cases: dict[str, Case] = {}
+    test_results: dict[str, dict[str]] = {}
+    op_type: OpType = OpType.NA
 
     def setUpClass(self):
         logging.basicConfig(
@@ -63,26 +61,37 @@ class OpTest(unittest.TestCase):
         self.multiplex = False
         self.out_flag = False
         self.support_soc = []
+        self._mki: torch.ClassDef = None
+        self._op_desc: dict = {}
         # set random seed
-        self.random_seed = randint(0, 1000000)
-        numpy.random.seed(self.random_seed)
-        torch.manual_seed(self.random_seed)
-        
+        self._random_seed = randint(0, 1000000)
+        numpy.random.seed(self._random_seed)
+        torch.manual_seed(self._random_seed)
+
+    def tearDown(self):
+        self.test_results[self._testMethodName] = {
+            "RandomSeed": self._random_seed
+        }
+
     def tearDownClass(self):
+        # 把那个dict写csv里
         pass
-        # 写回
 
     def set_param(self, op_name, op_param):
-        self.op_desc = {"opName": op_name, "specificParam": op_param}
-        self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self.op_desc))
+        self._op_desc = {"opName": op_name, "specificParam": op_param}
+        self._mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self._op_desc))
 
     def set_param_perf(self, op_name, run_times, op_param):
-        self.op_desc = {
+        self._op_desc = {
             "opName": op_name,
             "runTimes": run_times,
             "specificParam": op_param,
         }
-        self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self.op_desc))
+        self._mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self._op_desc))
+
+    @property
+    def _op_param(self):
+        return self._op_desc["specificParam"]
 
     def set_support_910b(self):
         warnings.warn(
@@ -113,12 +122,12 @@ class OpTest(unittest.TestCase):
         self.support_soc = ["Ascend310P"]
 
     def set_input_formats(self, formats):
-        self.op_desc["input_formats"] = formats
-        self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self.op_desc))
+        self._op_desc["input_formats"] = formats
+        self._mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self._op_desc))
 
     def set_output_formats(self, formats):
-        self.op_desc["output_formats"] = formats
-        self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self.op_desc))
+        self._op_desc["output_formats"] = formats
+        self._mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self._op_desc))
 
     def execute(self, in_tensors, out_tensors, envs=None):
         npu_device = self.__get_npu_device()
@@ -146,10 +155,10 @@ class OpTest(unittest.TestCase):
             in_tensors_npu[i] if isinstance(i, int) else i.npu() for i in out_tensors
         ]
         calculate_times = self.calculate_times(
-            self.op_desc["specificParam"], in_tensors)
+            self._op_param, in_tensors)
 
         self.__set_envs(envs)
-        self.mki.execute(in_tensors_npu, out_tensors_npu)
+        self._mki.execute(in_tensors_npu, out_tensors_npu)
         self.__unset_envs(envs)
 
         if out_tensors_npu:
@@ -201,7 +210,7 @@ class OpTest(unittest.TestCase):
             in_tensors_npu[i] if isinstance(i, int) else i.npu() for i in out_tensors
         ]
         self.__set_envs(envs)
-        self.run_result = self.mki.execute(in_tensors_npu, out_tensors_npu)
+        self.run_result = self._mki.execute(in_tensors_npu, out_tensors_npu)
         self.__unset_envs(envs)
 
         if out_tensors_npu:
@@ -253,17 +262,8 @@ class OpTest(unittest.TestCase):
         # set param
         self.set_param(case.op_name, case.op_param)
 
-        if case.data_generate.startswith("custom"):
-            in_tensors = gen_empty_tensors(case.in_dtypes, case.in_shapes)
-            in_tensors = self.data_generate(in_tensors=in_tensors,
-                                            **get_param(case.data_generate))
-        else:
-            data_generate_strs = case.data_generate.split(';')
-            data_generators = list(map(get_generator, data_generate_strs))
-            in_tensors = gen_tensors(
-                case.in_dtypes, case.in_formats, data_generators)
-
-        out_tensors = gen_empty_tensors(case.out_dtypes, case.out_shapes)
+        in_tensors = case.generate_data(self.data_generate)
+        out_tensors = case.out_tensors
 
         # format convert
 
@@ -271,6 +271,11 @@ class OpTest(unittest.TestCase):
         #     in_tensors[i] = convert_format(in_tensors[i], ND, case.in_formats[i])
 
         self.execute(in_tensors, out_tensors, case.env)
+
+        if case.dump:
+            # dump
+            pass
+
         if case.test_type == TestType.PERFORMANCE:
             total_times = 20
             warmup_times = total_times/10
@@ -351,14 +356,13 @@ class OpTest(unittest.TestCase):
         :return:
         """
         result = []
-        calculate_times = self.calculate_times(
-            self.op_desc["specificParam"], out_tensors)
         for i in range(len(out_tensors)):
-            compare = get_compare(
+            comparer = get_compare(
                 self.op_type, out_tensors[i].dtype, calculate_times, bool(golden_out_tensors_gpu))
-            if isinstance(compare, SingleCompare):
-                result.append(compare(out_tensors[i], golden_out_tensors[i]))
-            elif isinstance(compare, DoubleCompare):
+            if isinstance(comparer, SingleCompare):
+                result.append(comparer.compare(
+                    out_tensors[i], golden_out_tensors[i]))
+            elif isinstance(comparer, DoubleCompare):
                 result.append(
-                    compare(out_tensors[i], golden_out_tensors[i], golden_out_tensors_gpu[i]))
+                    comparer.compare(out_tensors[i], golden_out_tensors[i], golden_out_tensors_gpu[i]))
         return all(result)

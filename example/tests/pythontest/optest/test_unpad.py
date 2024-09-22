@@ -9,15 +9,12 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 # 
-import os
 import unittest
 import numpy as np
 import torch
-import sys
 import logging
 
-sys.path.insert(0, f"{os.environ['MKI_HOME_PATH']}/tests/pythontest")
-import op_test
+from mkipythontest import OpTest
 
 
 OP_NAME = "UnpadOperation"
@@ -43,7 +40,7 @@ cum_offsets_now = zeros_num
 cum_offsets_now = np.cumsum(zeros_num)        
 token_num = np.sum(seq_len)
 
-class TestUnpad(op_test.OpTest):
+class TestUnpad(OpTest):
     def golden_calc(self, in_tensors):
 
         batch = in_tensors[0].shape[0]

@@ -69,22 +69,22 @@ tests/pythontest/
 
 ## 样例字段说明
 
-| 名称               | 描述          | 形式                                                                                      |
-|------------------|-------------|-----------------------------------------------------------------------------------------|
-| CaseNum          | 用例编号        | `递增的int`                                                                                |
-| CaseName         | 用例名称        | `str`                                                                                   |
-| OpName           | Operation名称 | `str`                                                                                   |
-| OpType           | 算子类型        | 参考`constant.py`                                                                         |
-| OpParam          | Operation参数 | `dict`/`json`                                                                           |
-| In(Out)Num       | 输入/输出数量     | `int`                                                                                   |
-| In(Out)DType     | 输入/输出数据类型   | 参见`constant.py`，多个Tensor间用;分隔                                                           |
-| In(Out)Shape     | 输入/输出形状     | `tuple[str, int]`，多个Tensor间用;分隔                                                         |
-| In(Out)Format    | 输入/输出格式     | 保留字段，尚不支持nd以外的格式，可留空                                                                    |
-| In(Out)TensorBin | 输入/输出二进制文件  | `str`，文件名，会自动读取文件。不为空时，直接忽略之前的参数，转而读取二进制文件。                                             |       ||
-| DataGenerate     | 数据生成方式      | 可使用`torch`，`numpy`或`numpy.random`中的函数，会自动应用shape；若留空或输入无效内容，则使用测试类中重载的`data_generate`函数 |
-| TestType         | 测试类型        | `"Function"`/`"Generalization"`                                                         |
-| SocVersion       | 芯片型号        | `Ascend310P`/`Ascend910B`                                                               |
-| ExpectedError    | 期望错误类型      | 保留字段，尚未支持                                                                               |
+| 名称             | 描述                | 形式                                                                                                                           |
+| ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| CaseNum          | 用例编号            | `递增的int`                                                                                                                    |
+| CaseName         | 用例名称            | `str`                                                                                                                          |
+| OpName           | Operation名称       | `str`                                                                                                                          |
+| OpType           | 算子类型            | 参考`constant.py`                                                                                                              |
+| OpParam          | Operation参数       | `dict`/`json`                                                                                                                  |
+| In(Out)Num       | 输入/输出数量       | `int`                                                                                                                          |
+| In(Out)DType     | 输入/输出数据类型   | 参见`constant.py`，多个Tensor间用;分隔                                                                                         |
+| In(Out)Shape     | 输入/输出形状       | `tuple[str, int]`，多个Tensor间用;分隔                                                                                         |
+| In(Out)Format    | 输入/输出格式       | 保留字段，尚不支持nd以外的格式，可留空                                                                                         |
+| In(Out)TensorBin | 输入/输出二进制文件 | `str`，文件名，会自动读取文件。不为空时，直接忽略之前的参数，转而读取二进制文件。                                              |  |  |
+| DataGenerate     | 数据生成方式        | 可使用`torch`，`numpy`或`numpy.random`中的函数，会自动应用shape；若留空或输入无效内容，则使用测试类中重载的`data_generate`函数 |
+| TestType         | 测试类型            | `"Function"`/`"Generalization"`/`Performance`                                                                                  |
+| SocVersion       | 芯片型号            | `Ascend310P`/`Ascend910B`/`Ascend310B`/`Ascend910`                                                                             |
+| ExpectedError    | 期望错误类型        | 保留字段，尚未支持                                                                                                             |
 
 ## 进阶使用
 

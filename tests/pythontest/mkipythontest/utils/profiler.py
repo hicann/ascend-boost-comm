@@ -2,13 +2,17 @@ import glob
 import os
 
 import pandas
-import torch_npu
 
 PROFILE_TEMP_PATH = os.path.dirname(os.path.abspath(__file__))+'/tmp/'
 
 DEVICE_PROFILE_PATH = '/ASCEND_PROFILER_OUTPUT/kernel_details.csv'
 
 def get_profiler_time(profiling_file_path:str)->float:
+    """获取最新的profiling运行时间
+
+    :param profiling_file_path: _description_
+    :return: _description_
+    """
     task_time_sum = 0
     profile_path = os.listdir(PROFILE_TEMP_PATH)
     task_time_path = os.path.join(PROFILE_TEMP_PATH, profile_path[0],DEVICE_PROFILE_PATH)

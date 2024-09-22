@@ -14,24 +14,17 @@ from typing import Type, Union
 
 from mkipythontest.case import Case, GeneralizedCase
 from mkipythontest.optest import OpTest
-from mkipythontest.utils.soc import only_soc
+from mkipythontest.utils.soc import on_soc
 
 from .parser import BaseParser, DefaultCsvParser
 
 
-def run(case_name: str) -> callable:
+def run_case(self: OpTest):
+    """运行函数
+
+    :param self: 测试类
     """
-    获取运行函数
-
-    :param case_name: 用例名称
-    :return: 运行函数对象
-    """
-
-    def inner(self: OpTest):
-        case = self.test_cases[case_name]
-        self.run_case(case)
-
-    return inner
+    self.run_case(self._testMethodName.replace("test_", "", 1))
 
 
 def add_case(test_class: Type[OpTest], case: Union[Case, list[Case]]) -> None:
@@ -50,9 +43,9 @@ def add_case(test_class: Type[OpTest], case: Union[Case, list[Case]]) -> None:
             logging.info("found duplicate case name. ignored.")
         test_class.test_cases[case.case_name] = case
 
-        __test_func = run(case.case_name)
+        __test_func = run_case
         if case.soc_version:
-            __test_func = only_soc(soc_name=case.soc_version)(__test_func)
+            __test_func = on_soc(soc_name=case.soc_version)(__test_func)
         if case.expected_error:
             pass
         setattr(test_class,

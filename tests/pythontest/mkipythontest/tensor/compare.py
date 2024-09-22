@@ -9,6 +9,7 @@
 # See the Mulan PSL v2 for more details.
 
 from abc import ABCMeta
+from typing import Any
 
 import numpy
 import pandas
@@ -40,22 +41,31 @@ class CompareResult:
     """
 
     # todo 这里会之后照搬perftest
-    def __init__(self, pass_: bool, pass_ratio: float, eb: float, other_info: dict = {}):
-        self.pass_: bool = pass_
-        self.pass_ratio: float = pass_ratio
+    def __init__(self, pass_num: int, total_num: int, eb: float, other_info: dict = {}):
+        self.pass_num: int = pass_num
+        self.total_num: float = total_num
         self.eb: float = eb
         self.other_info: dict = other_info
 
     def to_dataframe(self):
         return pandas.DataFrame(
-            {'Pass':[self.pass_],
-             'PassRatio':[self.pass_ratio],
-             'EB':self.eb,
-             'OtherInfo':self.other_info}
+            {'Pass': [self.pass_],
+             'PassRatio': [self.pass_ratio],
+             'EB': self.eb,
+             'OtherInfo': self.other_info}
         )
 
     def __bool__(self):
-        return self.pass_
+        return self.pass_num == self.total_num
+
+    @property
+    def pass_ratio(self):
+        return self.pass_num/self.total_num
+
+    def __add__(self, other: Any):
+        if isinstance(other, CompareResult):
+            return CompareResult(self.pass_num+other.pass_num,
+                                 self.total_num+other.total_num)
 
 
 class BaseCompare(metaclass=ABCMeta):
@@ -129,7 +139,7 @@ class BaseCompare(metaclass=ABCMeta):
             result[i] = err_value
         return result
 
-    def __call__(self, *args, **kwargs):
+    def compare(self, *args, **kwargs):
         pass
 
 
@@ -138,7 +148,7 @@ class SingleCompare(BaseCompare, metaclass=ABCMeta):
     单标杆比较器
     """
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
         pass
 
 
@@ -147,8 +157,8 @@ class DoubleCompare(BaseCompare, metaclass=ABCMeta):
     双标杆比较器
     """
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor,
-                 gpu_golden_out_tensor: torch.Tensor) -> CompareResult:
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor,
+                gpu_golden_out_tensor: torch.Tensor) -> CompareResult:
         pass
 
 
@@ -157,10 +167,7 @@ class BinaryMatchCompare(SingleCompare):
     二进制一致比较器，用于MOVE/CAST/COMPUTE_INTEGER
     """
 
-    def __init__(self) -> None:
-        pass
-
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
         pass_ratio = torch.sum(
             out_tensor == golden_out_tensor).item() / out_tensor.numel()
         return CompareResult(pass_ratio == 1, pass_ratio, 0, "")
@@ -171,7 +178,7 @@ class RandomCompare(SingleCompare):
     随机算子比较器
     """
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor = []) -> CompareResult:
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor = []) -> CompareResult:
         alpha = 0.01
         z = -3.0902
         case_pass_percent = ((1 - alpha) + z * numpy.sqrt(alpha * (1 - alpha)))
@@ -191,10 +198,11 @@ class EBCompare(SingleCompare):
     """
 
     def __init__(self, err, eb):
+        super().__init__(self)
         self.ERR = err
         self.EB = eb
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
         # 通过计数
         pass_count = 0
         result = self.err(out_tensor, golden_out_tensor)
@@ -215,7 +223,7 @@ class DualGoldenCompare(DoubleCompare):
     def __init__(self, err: float, eb: float):
         super().__init__(err, eb)
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gpu_golden_out_tensor: torch.Tensor):
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gpu_golden_out_tensor: torch.Tensor):
         result = {}
         npu_mare = self.mare(out_tensor, golden_out_tensor)
         gpu_mare = self.mare(out_tensor, golden_out_tensor)
@@ -231,12 +239,6 @@ class DualGoldenCompare(DoubleCompare):
         result['rmse'] = rmse_result
         err = self.err(out_tensor, golden_out_tensor)
         eb = self.eb(out_tensor, golden_out_tensor)
-        pass_ = all(mare_result <= self.MARE, mere_result <=
-                    self.MERE, rmse_result <= self.RMSE)
-        compare_result
-        if not pass_:
-            compare_result.pass_ = False
-        return compare_result
 
 
 class FloatHighPrecisionDualGoldenCompare(DoubleCompare):
@@ -244,11 +246,11 @@ class FloatHighPrecisionDualGoldenCompare(DoubleCompare):
     高精度浮点计算的双标杆对比
     """
 
-    def __call__(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gpu_golden_out_tensor: torch.Tensor):
+    def compare(self, out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gpu_golden_out_tensor: torch.Tensor):
         result_npu = self.err(out_tensor, golden_out_tensor)
         result_gpu = self.err(out_tensor, gpu_golden_out_tensor)
         result = result_npu / \
-                 torch.max(result_gpu, torch.full(result_npu.shape, self.ERR))
+            torch.max(result_gpu, torch.full(result_npu.shape, self.ERR))
         pass_count = 0
         for err_value in result:
             if err_value < 2:
@@ -256,7 +258,9 @@ class FloatHighPrecisionDualGoldenCompare(DoubleCompare):
         return CompareResult(pass_count / result.shape[0], self.eb(out_tensor, golden_out_tensor), "")
 
 
-def get_compare(op_type: OpType, tensor_dtype: torch.dtype, compute_times: int = 1024,
+def get_compare(op_type: OpType,
+                tensor_dtype: torch.dtype,
+                compute_times: int = 1024,
                 use_gpu: bool = False) -> BaseCompare:
     """根据算子类型和其它参数,  获取比较方法
 
