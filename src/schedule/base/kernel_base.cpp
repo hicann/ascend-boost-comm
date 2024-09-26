@@ -87,7 +87,7 @@ public:
     }
 
 private:
-    Status UpdateHwsyncArgs(void **args, uint64_t argsNum, int64_t hwsyncIdx)
+    Status UpdateHwsyncArgs(void **args, uint64_t argsNum, int64_t hwsyncIdx) const
     {
         if (hwsyncIdx >= 0 && static_cast<uint64_t>(hwsyncIdx) < argsNum) {
             uint64_t *addr = nullptr;
@@ -102,7 +102,7 @@ private:
     }
 
     Status UpdateInOutWkspArgs(void **args, uint64_t argsNum, const MiniVector<uint64_t> &workspaces,
-                               const LaunchParam &launchParam, uint8_t *workspaceAddr)
+                               const LaunchParam &launchParam, uint8_t *workspaceAddr) const
     {
         size_t inputNum = launchParam.GetInTensorCount();
         uint64_t idx = 0;
@@ -135,7 +135,7 @@ private:
     }
 
     Status MemsetTensorArgs(void **args, uint64_t argsNum, void *stream,
-                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo)
+                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo) const
     {
         if (memsetInfo.size() != 0) {
             Status status = ClearTensors(args, argsNum, memsetInfo, stream);
@@ -145,7 +145,7 @@ private:
     }
 
     Status UpdateConstTensorArgs(void **args, RtHostInputInfoT *info, uint64_t constTensorOffset,
-                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos)
+                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos) const
     {
         uint64_t offset = constTensorOffset;
         for (uint64_t i = 0; i < constTensorInfos.size(); i++) {
@@ -160,7 +160,7 @@ private:
     }
 
     Status UpdateConstTensorArgs(void **args, uint8_t *tilingDeviceAddr, uint64_t constTensorOffset,
-                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos)
+                                 const MiniVector<KernelInfo::ConstTensorInfo> &constTensorInfos) const
     {
         uint64_t offset = constTensorOffset;
         for (size_t i = 0; i < constTensorInfos.size(); i++) {
