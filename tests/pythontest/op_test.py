@@ -94,13 +94,8 @@ class OpTest(unittest.TestCase):
         torch_npu.npu.set_device(npu_device)
 
         if self.support_soc:
-            device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
-                soc_version = "Ascend910B"
-            elif re.search("Ascend310P", device_name, re.I):
-                soc_version = "Ascend310P"
-            else:
-                logging.error("device_name %s is not supported", device_name)
+            soc_version = get_soc_name()
+            if (soc_version == None):
                 quit(1)
 
             if soc_version not in self.support_soc:
@@ -138,13 +133,8 @@ class OpTest(unittest.TestCase):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
         if self.support_soc:
-            device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
-                soc_version = "Ascend910B"
-            elif re.search("Ascend310P", device_name, re.I):
-                soc_version = "Ascend310P"
-            else:
-                logging.error("device_name %s is not supported", device_name)
+            soc_version = get_soc_name()
+            if (soc_version == None):
                 quit(1)
 
             if soc_version not in self.support_soc:
@@ -197,13 +187,25 @@ class OpTest(unittest.TestCase):
 
 
 def get_soc_name():
-    available_soc_list = ("Ascend910B", "Ascend310P")
     device_name = torch_npu.npu.get_device_name()
-    for soc_name in available_soc_list:
-        if re.search(soc_name, device_name, re.I):
-            return soc_name
-    logging.error("device_name %s is not supported", device_name)
-    return None
+    if re.search("Ascend910B", device_name, re.I) and len(device_name) > 10:
+        soc_version = "Ascend910B"
+    elif re.search("Ascend310P", device_name, re.I):
+        soc_version = "Ascend310P"
+    elif re.search("Ascend910ProB", device_name, re.I):
+        soc_version = "Ascend910A"
+    elif re.search("Ascend910B", device_name, re.I):
+        soc_version = "Ascend910A"
+    elif re.search("Ascend910PremiumA", device_name, re.I):
+        soc_version = "Ascend910A"
+    elif re.search("Ascend910ProA", device_name, re.I):
+        soc_version = "Ascend910A"
+    elif re.search("Ascend910A", device_name, re.I):
+        soc_version = "Ascend910A"
+    else:
+        logging.error("device_name %s is not supported", device_name)
+        soc_version = None
+    return soc_version
 
 
 def only_soc(soc_name):
@@ -212,3 +214,4 @@ def only_soc(soc_name):
 
 only_910b = only_soc("Ascend910B")
 only_310p = only_soc("Ascend310P")
+skip_910a = unittest.skipIf(get_soc_name() == "Ascend910A","don't support 910a")
