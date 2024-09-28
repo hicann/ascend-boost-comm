@@ -17,10 +17,8 @@ import torch
 import torch_npu
 import warnings
 
-
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 MKI_HOME_PATH = os.environ.get("MKI_HOME_PATH")
 if MKI_HOME_PATH is None:
@@ -95,10 +93,16 @@ class OpTest(unittest.TestCase):
 
         if self.support_soc:
             device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
+            if re.search("Ascend910ProB", device_name, re.I):
+                soc_version = "Ascend910A"
+            elif re.search("Ascend910B", device_name, re.I):
                 soc_version = "Ascend910B"
             elif re.search("Ascend310P", device_name, re.I):
                 soc_version = "Ascend310P"
+            elif re.search("Ascend910PremiumA", device_name, re.I):
+                soc_version = "Ascend910A"
+            elif re.search("Ascend910ProA", device_name, re.I):
+                soc_version = "Ascend910A"
             else:
                 logging.error("device_name %s is not supported", device_name)
                 quit(1)
@@ -139,10 +143,16 @@ class OpTest(unittest.TestCase):
         torch_npu.npu.set_device(npu_device)
         if self.support_soc:
             device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
+            if re.search("Ascend910ProB", device_name, re.I):
+                soc_version = "Ascend910A"
+            elif re.search("Ascend910B", device_name, re.I):
                 soc_version = "Ascend910B"
             elif re.search("Ascend310P", device_name, re.I):
                 soc_version = "Ascend310P"
+            elif re.search("Ascend910PremiumA", device_name, re.I):
+                soc_version = "Ascend910A"
+            elif re.search("Ascend910ProA", device_name, re.I):
+                soc_version = "Ascend910A"
             else:
                 logging.error("device_name %s is not supported", device_name)
                 quit(1)
@@ -197,7 +207,8 @@ class OpTest(unittest.TestCase):
 
 
 def get_soc_name():
-    available_soc_list = ("Ascend910B", "Ascend310P")
+    available_soc_list = (
+        "Ascend910B", "Ascend310P", "Ascend910ProB", "Ascend910A", "Ascend910PremiumA", "Ascend910", "Ascend910ProA")
     device_name = torch_npu.npu.get_device_name()
     for soc_name in available_soc_list:
         if re.search(soc_name, device_name, re.I):
@@ -212,3 +223,6 @@ def only_soc(soc_name):
 
 only_910b = only_soc("Ascend910B")
 only_310p = only_soc("Ascend310P")
+skip_910a = unittest.skipIf(
+    get_soc_name() == "Ascend910A" or get_soc_name() == "Ascend910ProB" or get_soc_name() == "Ascend910PremiumA" or get_soc_name() == "Ascend910ProA",
+    "don't support 910a")
