@@ -17,7 +17,6 @@
 #include "mki/kernel.h"
 #include "mki/kernel_info.h"
 #include "mki/run_info.h"
-#include "mki/utils/rt/rt.h"
 #include "mki/bin_handle.h"
 
 namespace Mki {
@@ -53,15 +52,7 @@ protected:
     KernelInfo kernelInfo_;
 
 private:
-    uint64_t GetKernelParamNum(const LaunchParam &launchParam);
-    Status UpdateHwsyncArgs(void **args, uint64_t argsNum);
-    Status UpdateConstTensorArgs(void **args, uint64_t argsNum,
-                                 RtHostInputInfoT *info, uint64_t infoNum);
-    Status UpdateConstTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo);
-    Status UpdateInOutWkspArgs(void **args, uint64_t argsNum, const LaunchParam &launchParam, const RunInfo &runInfo);
-    Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum, const RunInfo &runInfo) const;
-    Status UpdateTilingArgs(void **args, uint64_t argsNum, RunInfo &runInfo) const;
-    Status MemsetTensorArgs(void **args, uint64_t argsNum, const RunInfo &runInfo);
+    uint64_t GetKernelArgsNum(const LaunchParam &launchParam);
 
 private:
     std::string kernelName_;

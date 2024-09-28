@@ -10,6 +10,7 @@
  * See the Mulan PSL v2 for more details.
  */
 #include "mki_loader/ops.h"
+#include "mki_loader/op_register.h"
 
 int main()
 {

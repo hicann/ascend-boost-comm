@@ -19,24 +19,26 @@
 #include "mki/utils/log/log_sink_stdout.h"
 #include "mki/utils/log/log_sink_file.h"
 #include "mki/utils/log/log.h"
+#include "mki/utils/env/env.h"
 
 namespace Mki {
 static bool GetLogToStdoutFromEnv()
 {
     const char *envLogToStdout = std::getenv("ASDOPS_LOG_TO_STDOUT");
-    return envLogToStdout != nullptr && strcmp(envLogToStdout, "1") == 0;
+    return envLogToStdout != nullptr && strlen(envLogToStdout) <= MAX_ENV_STRING_LEN &&
+           strcmp(envLogToStdout, "1") == 0;
 }
 
 static bool GetLogToFileFromEnv()
 {
     const char *envLogToFile = std::getenv("ASDOPS_LOG_TO_FILE");
-    return envLogToFile != nullptr && strcmp(envLogToFile, "1") == 0;
+    return envLogToFile != nullptr && strlen(envLogToFile) <= MAX_ENV_STRING_LEN && strcmp(envLogToFile, "1") == 0;
 }
 
 static LogLevel GetLogLevelFromEnv()
 {
     const char *env = std::getenv("ASDOPS_LOG_LEVEL");
-    if (env == nullptr) {
+    if (env == nullptr || strlen(env) > MAX_ENV_STRING_LEN) {
         return LogLevel::WARN;
     }
     std::string envLogLevel(env);

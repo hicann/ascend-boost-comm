@@ -23,6 +23,7 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/file_system/file_system.h"
 #include "mki/utils/inifile/ini_file.h"
+#include "mki/utils/env/env.h"
 
 namespace Mki {
 std::mutex g_pcLock;
@@ -290,7 +291,9 @@ uint32_t PlatformManager::ParsePlatformInfo(std::map<std::string, std::map<std::
     for (it = contentMap.begin(); it != contentMap.end(); it++) {
         if (it->first == STR_VERSION) {
             ParseVersion(it->second, socVersion);
-        } else if (it->first == STR_AI_CORE_INTRINSIC_DTYPE_MAP) {
+        }
+
+        if (it->first == STR_AI_CORE_INTRINSIC_DTYPE_MAP) {
             MKI_CHECK(ParseAICoreintrinsicDtypeMap(it->second, platformConfigsTemp),
                 "failed to parse aicore intrinsic dtype map", return PLATFORM_FAILED);
         } else if (it->first == STR_VECTOR_CORE_INTRINSIC_DTYPE_MAP) {
@@ -303,64 +306,15 @@ uint32_t PlatformManager::ParsePlatformInfo(std::map<std::string, std::map<std::
     return PLATFORM_SUCCESS;
 }
 
-std::string PlatformManager::RealPath(const std::string &path) const
-{
-    if (path.empty()) {
-        MKI_LOG(ERROR) << "path string is NULL";
-        return "";
-    }
-
-    if (path.size() >= PATH_MAX) {
-        MKI_LOG(ERROR) << "file path " << path.c_str() << " is too long!";
-        return "";
-    }
-
-    char resolvedPath[PATH_MAX] = {0};
-    std::string res = "";
-
-    if (realpath(path.c_str(), resolvedPath) != nullptr) {
-        res = resolvedPath;
-    } else {
-        MKI_LOG(ERROR) << "path " << path.c_str() << " is not exist";
-    }
-    return res;
-}
-
-std::string PlatformManager::GetSoFilePath() const
-{
-    Dl_info dlInfo;
-    std::string realFilePath = "";
-    PlatformManager &(*instancePtr)() = &PlatformManager::Instance;
-    if (dladdr(reinterpret_cast<void *>(instancePtr), &dlInfo) == 0) {
-        MKI_LOG(ERROR) << "Failed to read the so file path";
-        return realFilePath;
-    } else {
-        std::string soPath = dlInfo.dli_fname;
-        if (soPath.empty()) {
-            MKI_LOG(ERROR) << "So file path is empty";
-            return realFilePath;
-        }
-        realFilePath = FileSystem::PathCheckAndRegular(soPath);
-        MKI_CHECK(!realFilePath.empty(), "File path is invalid", return "");
-        size_t pos = realFilePath.rfind('/');
-        if (pos >= SIZE_MAX) {
-            MKI_LOG(ERROR) << "The path of current so file does not contain /";
-            return realFilePath;
-        }
-        realFilePath = realFilePath.substr(0, pos + 1);
-    }
-    return realFilePath;
-}
-
 uint32_t PlatformManager::InitializePlatformManager()
 {
     std::lock_guard<std::mutex> lockGuard(g_pcLock);
     if (initFlag_) {
         return PLATFORM_SUCCESS;
     }
-    const char *mkiHomePath = getenv("ASDOPS_HOME_PATH");
+    const char *mkiHomePath = Mki::GetEnv("ASDOPS_HOME_PATH");
     if (mkiHomePath == nullptr) {
-        MKI_LOG(ERROR) << "env ASDOPS_HOME_PATH not exists";
+        MKI_LOG(ERROR) << "env ASDOPS_HOME_PATH is invalid";
         return PLATFORM_FAILED;
     }
     std::string mkiHomePathStr = mkiHomePath;

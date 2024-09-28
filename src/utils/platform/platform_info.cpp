@@ -41,29 +41,28 @@ void PlatformInfo::Init()
     std::string socVersion(version);
     MKI_LOG(INFO) << "PlatformInfo get soc version: " << socVersion;
 
-    if (socVersion.find("Ascend310P") == 0) {
-        platformType_ = PlatformType::ASCEND_310P;
-        platformName_ = "ascend310p";
-    } else if (socVersion.find("Ascend910A") == 0) {
-        platformType_ = PlatformType::ASCEND_910A;
-        platformName_ = "ascend910";
-    } else if (socVersion.find("Ascend910B") == 0) {
-        platformType_ = PlatformType::ASCEND_910B;
-        platformName_ = "ascend910b";
-    } else if (socVersion.find("Ascend910_93") == 0) {    // 910_93 按 910B 处理
-        platformType_ = PlatformType::ASCEND_910B;
-        platformName_ = "ascend910b";
-    } else {
-        MKI_LOG(ERROR) << "Unsupport soc";
-        platformName_ = "unrecognized";
-        return;
-    }
-
     Mki::PlatformManager &platformManager = Mki::PlatformManager::Instance();
     MKI_CHECK(platformManager.InitializePlatformManager() == PLATFORM_SUCCESS,
                  "Initialize platform manager failed", return);
     MKI_CHECK(platformManager.GetPlatformConfigs(socVersion, platformConfigs_) == PLATFORM_SUCCESS,
                  "Get platform Information failed", return);
+
+    const std::unordered_map<std::string, std::pair<PlatformType, std::string>> supportedPlatform = {
+        {"Ascend310P",   {PlatformType::ASCEND_310P, "ascend310p"}},
+        {"Ascend910",    {PlatformType::ASCEND_910A, "ascend910"}},
+        {"Ascend910B",   {PlatformType::ASCEND_910B, "ascend910b"}},
+        {"Ascend910_93", {PlatformType::ASCEND_910B, "ascend910b"}}};
+
+    (void)platformConfigs_.GetPlatformSpec("version", "Short_SoC_version", platformName_);
+    const auto it = supportedPlatform.find(platformName_);
+    if (it == supportedPlatform.cend()) {
+        MKI_LOG(ERROR) << "Unsupport soc";
+        platformName_ = "unrecognized";
+        return;
+    }
+
+    platformType_ = it->second.first;
+    platformName_ = it->second.second;
     inited_ = true;
 }
 

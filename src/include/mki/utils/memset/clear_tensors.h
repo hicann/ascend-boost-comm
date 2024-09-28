@@ -17,7 +17,7 @@
 #include "mki/utils/status/status.h"
 
 namespace Mki {
-Status ClearTensors(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream);
+Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream);
 } // namespace Mki
 
 #endif // MKI_UTILS_MEMSET_CLEAR_TENSORS_H

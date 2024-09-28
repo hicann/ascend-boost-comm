@@ -81,6 +81,7 @@ public:
 
     size_t GetConstTensorCount() const;
     const ConstTensorInfo &GetConstTensorInfo(size_t id) const;
+    const MiniVector<ConstTensorInfo> &GetConstTensorInfos() const;
 
     // LaunchWithTiling
     void SetLaunchWithTiling(bool flag);
@@ -88,11 +89,12 @@ public:
 
     // Scratch
     MiniVector<uint64_t> &GetScratchSizes();
+    const MiniVector<uint64_t> &GetScratchSizes() const;
     uint64_t GetTotalScratchSize() const;
 
     // Memset
     void SetMemsetInfo(uint64_t argIdx, uint64_t size);
-    MiniVector<KernelInfo::MemsetInfo> &GetMemsetInfo();
+    const MiniVector<KernelInfo::MemsetInfo> &GetMemsetInfo() const;
 
 private:
     void ResetArgs();

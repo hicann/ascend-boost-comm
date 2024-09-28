@@ -120,6 +120,7 @@ bool Loader::OpBaseAddKernels() const
 void Loader::Load()
 {
     loadSuccess_ = false;
+    MKI_LOG(INFO) << "register flag: " << g_opsRegisterFlag << " is set";
 
     MKI_CHECK(LoadKernelBinarys(), "Load kernel binarys fail", return);
     MKI_CHECK(CreateOperations(), "Load operations fail", return);

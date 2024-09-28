@@ -62,7 +62,7 @@ public:
         return Status::FailStatus(1);
     }
 
-    uint32_t MemsetTiling(MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MemsetTilingData &tilingData) const
+    uint32_t MemsetTiling(const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MemsetTilingData &tilingData) const
     {
         uint32_t blockDim = 0;
         uint32_t maxUb = 0;
@@ -98,7 +98,7 @@ public:
         return blockDim;
     }
 
-    Status Run(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream) const
+    Status Run(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream) const
     {
         MemsetArgs memsetArgs;
         (void)memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
@@ -147,7 +147,7 @@ static MemsetKernel *MemsetInit()
     return new MemsetKernel(kernelName, &binHandle);
 }
 
-Status ClearTensors(void **args, uint64_t argsNum, MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream)
+Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream)
 {
     static std::atomic_bool initedFlag = false;
     static MemsetKernel* memsetKernel = nullptr;

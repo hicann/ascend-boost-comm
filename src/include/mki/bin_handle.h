@@ -14,7 +14,6 @@
 #include <string>
 #include <atomic>
 #include "mki/tensor.h"
-#include "mki/utils/rt/base/base.h"
 #include "mki/utils/non_copyable/non_copyable.h"
 
 namespace Mki {
@@ -32,7 +31,7 @@ struct KernelMetaInfo {
     uint32_t version = 0;
     uint32_t tilingSize = 0;
     uint32_t coreType = 0;
-    uint32_t magic = MKIRT_DEV_BINARY_MAGIC_ELF_AICUBE;
+    uint32_t magic = 0;
     const void *codeBuf = nullptr;
     uint32_t codeBufLen = 0;
 };
@@ -51,8 +50,6 @@ private:
     bool CheckBinaryValid() const;
     bool CheckKernelInfo(const std::string &kernelName) const;
     bool RegisterBin(const std::string &kernelName);
-    bool RegisterBinWithSingleKernel(const std::string &kernelName, MkiRtModuleInfo &moduleInfo);
-    bool RegisterBinWithMultiKernel(const std::string &kernelName, MkiRtModuleInfo &moduleInfo);
 
 private:
     KernelMetaInfo metaInfo_;

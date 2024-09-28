@@ -168,7 +168,7 @@ void KernelInfo::SetMemsetInfo(uint64_t argIdx, uint64_t size)
     memsetInfo_.push_back({argIdx, size});
 }
 
-MiniVector<KernelInfo::MemsetInfo> &KernelInfo::GetMemsetInfo()
+const MiniVector<KernelInfo::MemsetInfo> &KernelInfo::GetMemsetInfo() const
 {
     return memsetInfo_;
 }
@@ -224,6 +224,11 @@ const KernelInfo::ConstTensorInfo &KernelInfo::GetConstTensorInfo(size_t id) con
     return constTensorInfo_.at(id);
 }
 
+const MiniVector<KernelInfo::ConstTensorInfo> &KernelInfo::GetConstTensorInfos() const
+{
+    return constTensorInfo_;
+}
+
 void KernelInfo::SetLaunchWithTiling(bool flag)
 {
     if (launchWithTiling_ == flag) {
@@ -237,6 +242,11 @@ void KernelInfo::SetLaunchWithTiling(bool flag)
 bool KernelInfo::GetLaunchWithTiling() const { return launchWithTiling_; }
 
 MiniVector<uint64_t> &KernelInfo::GetScratchSizes()
+{
+    return scratchSizes_;
+}
+
+const MiniVector<uint64_t> &KernelInfo::GetScratchSizes() const
 {
     return scratchSizes_;
 }
