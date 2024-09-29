@@ -11,7 +11,7 @@
  */
 #include <securec.h>
 #include <memory>
-#include <atomic>
+#include <mutex>
 #include "mki/utils/memset/clear_tensors.h"
 #include "mki/base/kernel_base.h"
 #include "mki_loader/op_register.h"
@@ -149,12 +149,11 @@ static MemsetKernel *MemsetInit()
 
 Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream)
 {
-    static std::atomic_bool initedFlag = false;
+    static std::once_flag initedFlag;
     static MemsetKernel* memsetKernel = nullptr;
-    if (!initedFlag) {
-        initedFlag = true;
-        memsetKernel = MemsetInit();
-    }
+
+    std::call_once(initedFlag, [&]() { memsetKernel = MemsetInit(); });
+
     MKI_CHECK(memsetKernel != nullptr, "memset kernel is nullptr", return Mki::Status::FailStatus(1));
     return memsetKernel->Run(args, argsNum, memsetInfo, stream);
 }
