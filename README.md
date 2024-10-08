@@ -13,58 +13,68 @@
 
 #### 使用说明
 三种典型使用场景：
-场景1. 与算子库、加速库一起编译出包使用
+
+- 场景1. 与算子库、加速库一起编译出包使用
 下面假设 Mind-KernelInfra、算子库（本例中是ascend-op-common-lib）、加速库（本例中是ascend-transformer-boost）代码都已经准备好，且处于统一级目录下。
-1.  使用算子命名空间作为参数， 编译MKI, 并将编译产物拷贝到算子库和加速库的3rdparty目录：在这里例子中， 命名空间参数是AtbOps 
+1.  使用算子命名空间作为参数， 编译MKI, 并将编译产物拷贝到算子库和加速库的3rdparty目录：在这里例子中， 命名空间参数是AtbOps
 
--     cd Mind-KerenlInfra
--     bash scripts/build.sh --namespace=AtbOps testframework
--     cp -r output/mki ../ascend-op-common-lib/3rdparty/
--     cp -r output/mki ../ascend-transformer-boost/3rdparty/
+    ```shell
+    cd Mind-KerenlInfra
+    bash scripts/build.sh testframework --namespace=AtbOps
+    cp -r output/mki ../ascend-op-common-lib/3rdparty/
+    cp -r output/mki ../ascend-transformer-boost/3rdparty/
+    ```
 
+3.  编译算子库， 并将编译产物拷贝到加速库的3rdparty目录
 
-2.  编译算子库， 并将编译产物拷贝到加速库的3rdparty目录
+    ```shell
+    cd ascend-op-common-lib
+    bash scripts/build.sh  testframework --no_werror
+    cd output/
+    cp -r output/atbops ../ascend-transformer-boost/3rdparty/
+    cp -r output/asdops ../ascend-transformer-boost/3rdparty/
+    ```
 
--     cd ascend-op-common-lib
--     bash scripts/build.sh  testframework --no_werror
--     cd output/
--     cp -r output/atbops ../ascend-transformer-boost/3rdparty/
--     cp -r output/asdops ../ascend-transformer-boost/3rdparty/
+4.  编译加速库
 
+    ```shell
+    cd ascend-transformer-boost/
+    source scripts/set_env.sh
+    bash scripts/build.sh  testframework
+    cd output/
+    ls
+    cd atb
+    source set_env.sh
+    ```
 
-3.  编译加速库
+5.  运行模型或算子测试用例
 
--     cd ascend-transformer-boost/
--     source scripts/set_env.sh
--     bash scripts/build.sh  testframework
--     cd output/
--     ls
--     cd atb
--     source set_env.sh
-
-4.  运行模型或算子测试用例
-
-场景2：仅与算子库一起编译后， 在算子层面进行调用
+- 场景2：仅与算子库一起编译后， 在算子层面进行调用
 下面假设 Mind-KernelInfra、算子库（本例中是ascend-op-common-lib）代码都已经准备好，且处于统一级目录下。
 1.  使用算子命名空间作为参数， 编译MKI, 并将编译产物拷贝到算子库目录：在这里例子中， 命名空间参数是AtbOps 
 
--     cd Mind-KerenlInfra
--     bash scripts/build.sh --namespace=AtbOps testframework
--     cp -r output/mki ../ascend-op-common-lib/3rdparty/
+    ```shell
+    cd Mind-KerenlInfra
+    bash scripts/build.sh testframework --namespace=AtbOps
+    cp -r output/mki ../ascend-op-common-lib/3rdparty/
+    ```
 
 2.  编译算子库
 
--     cd ascend-op-common-lib/
--     bash scripts/build.sh  testframework --no_werror
+    ```shell
+    cd ascend-op-common-lib/
+    bash scripts/build.sh  testframework --no_werror
+    ```
 
 3.  设施算子库环境， 并开始测试
 
--     source output/asdops/set_env.sh
--     cd tests/pythontest/optest/
--     msprof --application="python3 mix/test_kvcache.py"
+    ```shell
+    source output/asdops/set_env.sh
+    cd tests/pythontest/optest/
+    msprof --application="python3 mix/test_kvcache.py"
+    ```
 
-
-场景3：单算子工程（待补充）
+- 场景3：单算子工程（待补充）
 适用于仅简单测试新写的单个算子， 而不想构建完整算子库的用户。
 1. 参照example中的算子用例， 实现算子并编写测试用例
 2. 编译带example的MKI

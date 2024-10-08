@@ -13,6 +13,7 @@ macro(add_kernel kernel soc channel srcs tac)
         string(LENGTH ${soc} soc_length)
         string(SUBSTRING "${CHIP_TYPE}" 0 ${soc_length} chip_type_prefix)
         if ((NOT USE_MSDEBUG) OR (USE_MSDEBUG AND ("${soc_lower}" STREQUAL "${chip_type_prefix}")))
+            # build target: op_kernels/soc/op/kernel/kernel.o
             set(${kernel}_${soc}_output
                 ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${tac}/${kernel}.o)
             set(PYTHON_ARGS 
@@ -23,6 +24,7 @@ macro(add_kernel kernel soc channel srcs tac)
                 "--code_root" "${OPS_THIRD_PARTY_DIR}/.."
                 "--kernel" "${kernel}"
                 "--use_msdebug" "${USE_MSDEBUG}"
+                "--no_warning"
             )
             add_custom_command(
                 OUTPUT ${${kernel}_${soc}_output}
@@ -33,9 +35,24 @@ macro(add_kernel kernel soc channel srcs tac)
             add_custom_target(ascendc_${kernel}_${soc} ALL
                 DEPENDS ${${kernel}_${soc}_output}
             )
-            set(LOCAL_BINARY_SRC_LIST ${LOCAL_BINARY_SRC_LIST} $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
+            # build target: obj/soc/op/kernel.cpp
+            set(${kernel}_${soc}_cpp_output
+                $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
+            add_custom_command(
+                OUTPUT ${${kernel}_${soc}_cpp_output}
+                DEPENDS ${${kernel}_${soc}_output}
+                WORKING_DIRECTORY ${MKI_SCRIPT_DIR}
+                COMMAND python3 -c "import build_util;build_util.compile_ascendc_code('${${kernel}_${soc}_output}','${${kernel}_${soc}_cpp_output}')"
+                VERBATIM
+            )
+            add_custom_target(ascendc_cpp_${kernel}_${soc} ALL
+                DEPENDS ${${kernel}_${soc}_cpp_output}
+            )
+            add_dependencies(ascendc_cpp_${kernel}_${soc} ascendc_${kernel}_${soc})
+            # collect targets
+            set(LOCAL_BINARY_SRC_LIST ${LOCAL_BINARY_SRC_LIST} ${${kernel}_${soc}_cpp_output})
             set(BINARY_SRC_LIST ${BINARY_SRC_LIST} ${LOCAL_BINARY_SRC_LIST} PARENT_SCOPE)
-            set(LOCAL_BINARY_TARGET_LIST ${LOCAL_BINARY_TARGET_LIST} ascendc_${kernel}_${soc})
+            set(LOCAL_BINARY_TARGET_LIST ${LOCAL_BINARY_TARGET_LIST} ascendc_cpp_${kernel}_${soc})
             set(BINARY_TARGET_LIST ${BINARY_TARGET_LIST} ${LOCAL_BINARY_TARGET_LIST} PARENT_SCOPE)
         endif()
     endif()

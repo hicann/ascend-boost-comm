@@ -24,12 +24,3 @@ add_kernel(memory_set ascend310p vector
 
 add_kernel(memory_set ascend910b vector
     memset.cc MemsetKernel)
-
-add_custom_command(
-    OUTPUT ${LOCAL_BINARY_SRC_LIST}
-    DEPENDS ${LOCAL_BINARY_TARGET_LIST}
-    COMMAND python3 $ENV{CODE_ROOT}/scripts/build_util.py --binary_dir ${CMAKE_BINARY_DIR} --op_type ascendc
-)
-add_custom_target(binary_encode_srcs ALL
-    DEPENDS ${LOCAL_BINARY_SRC_LIST}
-)

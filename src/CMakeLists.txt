@@ -7,12 +7,12 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/utils/memset/kernel)
 
 set_source_files_properties(${BINARY_SRC_LIST} PROPERTIES GENERATED TRUE)
 add_library(mki_static STATIC ${SOURCE_FILES} ${BINARY_SRC_LIST})
-add_dependencies(mki_static binary_encode_srcs)
+add_dependencies(mki_static ${BINARY_TARGET_LIST})
 target_link_libraries(mki_static PUBLIC dl pthread c_sec mmpa runtime)
 target_compile_definitions(mki_static PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki SHARED ${SOURCE_FILES} ${BINARY_SRC_LIST})
-add_dependencies(mki binary_encode_srcs)
+add_dependencies(mki ${BINARY_TARGET_LIST})
 target_link_libraries(mki PUBLIC dl pthread c_sec mmpa profapi runtime)
 target_compile_definitions(mki PRIVATE ${NAMESPACE}=Mki)
 

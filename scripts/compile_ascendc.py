@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument('--code_root', type=str, required=True)
     parser.add_argument('--kernel', type=str, required=True)
     parser.add_argument('--use_msdebug', type=str)
+    parser.add_argument('--no_warning', action='store_true')
     return parser.parse_args()
 
 
@@ -146,6 +147,9 @@ def get_common_options(args):
     options.append("-I" + os.path.join(tikcpp_path, "tikcfw"))
     options.append("-I" + os.path.join(tikcpp_path, "tikcfw", "impl"))
     options.append("-I" + os.path.join(tikcpp_path, "tikcfw", "interface"))
+    if args.no_warning:
+        options.append("-Wno-deprecated-declarations")
+        options.append("-Wno-array-bounds")
     return options
 
 
