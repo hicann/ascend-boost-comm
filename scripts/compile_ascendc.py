@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument('--code_root', type=str, required=True)
     parser.add_argument('--kernel', type=str, required=True)
     parser.add_argument('--use_msdebug', type=str)
+    parser.add_argument('--use_mssanitizer', type=str, required=True)
     parser.add_argument('--no_warning', action='store_true')
     return parser.parse_args()
 
@@ -42,6 +43,10 @@ def gen_compile_cmd(args, dst: str, sub_arch: str, compile_options):
     compile_cmd += [args.srcs, "--cce-aicore-arch=%s" % sub_arch,
                     "--cce-aicore-only", "-o", dst,
                     "-mllvm", "-cce-aicore-fp-ceiling=2"]
+    if args.use_mssanitizer == "ON" and args.soc in ["ascend310p", "ascend910b"]:
+        compile_cmd += ["-g", "--cce-enable-sanitizer",
+                        "-mllvm", "-cce-aicore-long-call",
+                        "-mllvm", "-cce-aicore-jump-expand=true"]
     compile_cmd += ["-std=c++17"]
     compile_cmd += ["--cce-mask-opt"]
     return compile_cmd
@@ -63,6 +68,10 @@ def gen_compile_cmd_v220(args, dst: str, sub_arch: str, compile_options):
                     "-mllvm", "-cce-aicore-record-overflow=true",
                     "-mllvm", "-cce-aicore-addr-transform",
                     "-mllvm", "-cce-aicore-dcci-insert-for-scalar=false"]
+    if args.use_mssanitizer == "ON":
+        compile_cmd += ["-g", "--cce-enable-sanitizer",
+                        "-mllvm", "-cce-aicore-long-call",
+                        "-mllvm", "-cce-aicore-jump-expand=true"]
     compile_cmd += ["-std=c++17"]
     return compile_cmd
 
@@ -194,6 +203,8 @@ def compile_ascendc_operation(args):
     arch = get_arch(args.soc, args.channel)
     compile_cmd = ""
     link_cmd = ""
+    ascend_home_path = os.getenv("ASCEND_HOME_PATH", "ASCEND_HOME_PATH does not exist.")
+    mssanitizer_path = os.path.join(ascend_home_path, "tools", "mssanitizer", "lib64")
 
     if arch == "None":
         return -1
@@ -207,6 +218,9 @@ def compile_ascendc_operation(args):
             if(exe_cmd(compile_cmd)) != 0:
                 return -1
             dsts.append(dst)
+            if args.use_mssanitizer == "ON" and args.soc == "ascend310p":
+                dsts.append("--dependent-libraries")
+                dsts.append(os.path.join(mssanitizer_path, "libsanitizer_stub_dav-m200.a"))
         elif args.soc == "ascend910b":
             if args.channel != "mix":
                 dst = os.path.splitext(args.dst)[0] + f"_{key}.o"
@@ -215,6 +229,10 @@ def compile_ascendc_operation(args):
                 if(exe_cmd(compile_cmd)) != 0:
                     return -1
                 dsts.append(dst)
+                if args.use_mssanitizer == "ON":
+                    dsts.append("--dependent-libraries")
+                    dsts.append(os.path.join(mssanitizer_path, "libsanitizer_stub_dav-c220-cube.a"))
+                    dsts.append(os.path.join(mssanitizer_path, "libsanitizer_stub_dav-c220-vec.a"))
             else:
                 dst = os.path.splitext(args.dst)[0] + f"_mix_aic_{key}.o"
                 aic_opt = options + [f'-D{args.kernel}={args.kernel}_{key}_mix_aic', f'-DTILING_KEY_VAR={key}']
@@ -222,12 +240,18 @@ def compile_ascendc_operation(args):
                 if(exe_cmd(compile_cmd)) != 0:
                     return -1
                 dsts.append(dst)
+                if args.use_mssanitizer == "ON":
+                    dsts.append("--dependent-libraries")
+                    dsts.append(os.path.join(mssanitizer_path, "libsanitizer_stub_dav-c220-cube.a"))
                 dst = os.path.splitext(args.dst)[0] + f"_mix_aiv_{key}.o"
                 aiv_opt = options + [f'-D{args.kernel}={args.kernel}_{key}_mix_aiv', f'-DTILING_KEY_VAR={key}']
                 compile_cmd = ' '.join(gen_compile_cmd_v220(args, dst, "dav-c220-vec", aiv_opt))
                 if(exe_cmd(compile_cmd)) != 0:
                     return -1
                 dsts.append(dst)
+                if args.use_mssanitizer == "ON":
+                    dsts.append("--dependent-libraries")
+                    dsts.append(os.path.join(mssanitizer_path, "libsanitizer_stub_dav-c220-vec.a"))
         elif args.soc == "ascend310b":
             dst = os.path.splitext(args.dst)[0] + f"_{key}.o"
             opt = options + [f'-D{args.kernel}={args.kernel}_{key}', f'-DTILING_KEY_VAR={key}']
