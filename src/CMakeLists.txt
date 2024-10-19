@@ -23,7 +23,18 @@ target_compile_definitions(mki_loader PRIVATE __LOADER)
 add_executable(sym_check ${CMAKE_CURRENT_LIST_DIR}/sym_check.cpp)
 target_link_libraries(sym_check PRIVATE mki_loader mki)
 
-# install libs
+string(TOUPPER ${NAMESPACE} NAMESPACE_UPPER)
+add_custom_command(
+    OUTPUT ops.h
+    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/include/mki_loader/ops.h
+    COMMAND sh -c "sed -e 's/OpSpace/${NAMESPACE}/g' -e 's/MKI_LOADER_OPS_H/${NAMESPACE_UPPER}_LOADER_OPS_H/' ${CMAKE_CURRENT_LIST_DIR}/include/mki_loader/ops.h > ops.h"
+    VERBATIM)
+
+add_custom_target(${NAMESPACE}_ops_h ALL DEPENDS ops.h)
+
+# install libs and includes
 install(TARGETS mki_static DESTINATION lib)
 install(TARGETS mki DESTINATION lib)
 install(TARGETS mki_loader DESTINATION lib)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/include DESTINATION . PATTERN "mki_loader/ops.h" EXCLUDE)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ops.h DESTINATION ./include/mki_loader)

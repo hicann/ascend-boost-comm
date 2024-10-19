@@ -62,4 +62,3 @@ list(APPEND SCRIPTS_FILES
     ${PROJECT_SOURCE_DIR}/scripts/build_ops.sh
 )
 install(FILES ${SCRIPTS_FILES} DESTINATION ./scripts)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/include DESTINATION .)

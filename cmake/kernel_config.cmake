@@ -33,9 +33,6 @@ macro(add_kernel kernel soc channel srcs tac)
                 WORKING_DIRECTORY ${OPS_PROJECT_ROOT_DIR}
                 COMMAND python3 ${MKI_SCRIPT_DIR}/compile_ascendc.py ${PYTHON_ARGS}
             )
-            add_custom_target(ascendc_${kernel}_${soc} ALL
-                DEPENDS ${${kernel}_${soc}_output}
-            )
             # build target: obj/soc/op/kernel.cpp
             set(${kernel}_${soc}_cpp_output
                 $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
@@ -43,13 +40,12 @@ macro(add_kernel kernel soc channel srcs tac)
                 OUTPUT ${${kernel}_${soc}_cpp_output}
                 DEPENDS ${${kernel}_${soc}_output}
                 WORKING_DIRECTORY ${MKI_SCRIPT_DIR}
-                COMMAND python3 -c "import build_util;build_util.compile_ascendc_code('${${kernel}_${soc}_output}','${${kernel}_${soc}_cpp_output}')"
+                COMMAND python3 -c "import build_util; build_util.compile_ascendc_code('${${kernel}_${soc}_output}', '${${kernel}_${soc}_cpp_output}')"
                 VERBATIM
             )
             add_custom_target(ascendc_cpp_${kernel}_${soc} ALL
                 DEPENDS ${${kernel}_${soc}_cpp_output}
             )
-            add_dependencies(ascendc_cpp_${kernel}_${soc} ascendc_${kernel}_${soc})
             # collect targets
             set(LOCAL_BINARY_SRC_LIST ${LOCAL_BINARY_SRC_LIST} ${${kernel}_${soc}_cpp_output})
             set(BINARY_SRC_LIST ${BINARY_SRC_LIST} ${LOCAL_BINARY_SRC_LIST} PARENT_SCOPE)
