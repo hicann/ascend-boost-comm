@@ -83,16 +83,16 @@ typedef struct {
 } MkiRtModuleInfo;
 
 typedef struct {
-    uint16_t addrOffset{0};
-    uint16_t dataOffset{0};
+    uint32_t addrOffset{0};
+    uint32_t dataOffset{0};
 } RtHostInputInfoT;
 
 typedef struct {
     void *args{nullptr};
     RtHostInputInfoT *hostInputInfoPtr{nullptr};
     uint32_t argsSize{0};
-    uint16_t tilingAddrOffset{0};
-    uint16_t tilingDataOffset{0};
+    uint32_t tilingAddrOffset{0};
+    uint32_t tilingDataOffset{0};
     uint16_t hostInputInfoNum{0};
     uint8_t hasTiling{0};
     uint8_t isNoNeedH2DCopy{0};
