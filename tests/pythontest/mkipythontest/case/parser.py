@@ -16,6 +16,8 @@ from mkipythontest.case import Case, GeneralizedCase
 from mkipythontest.constant import TENSOR_DTYPES, OpType, TestType
 from mkipythontest.tensor.format import TENSOR_FORMATS, TensorFormat
 
+from numpy import nan
+
 
 class BaseParser(metaclass=ABCMeta):
     @abstractmethod
@@ -54,6 +56,7 @@ class DefaultCsvParser(BaseParser):
     def parse(self, csv_file_path: str) -> list[Case]:
         case_list = []
         csv_case = pd.read_csv(csv_file_path, sep='|')
+        csv_case = csv_case.replace(nan, '')
         for case_row in csv_case.iterrows():
             case_data = case_row[1]
             test_type = TestType[case_data['TestType']]

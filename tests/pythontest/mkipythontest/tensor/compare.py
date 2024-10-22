@@ -9,12 +9,9 @@
 # See the Mulan PSL v2 for more details.
 import logging
 from functools import partial
-from itertools import count
-
-import pandas
-from typing import Any
 
 import numpy
+import pandas
 import torch
 from mkipythontest.constant import OpType
 
@@ -50,18 +47,18 @@ class CompareResult:
         self.total_num: float = total_num
         self.other_info: dict = {}
 
-    def add_item(self, item_name: str, item_actual_value: float, item_expected_value: float, pass_: bool = True):
+    def add_item(self, item_name: str, item_actual_value: float, item_expected_value: float, pass_: bool = True) -> None:
         self.other_info[item_name] = {
             'actual_value': item_actual_value,
             'expected_value': item_expected_value,
             'pass': pass_
         }
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.pass_num == self.total_num
 
     @property
-    def pass_ratio(self):
+    def pass_ratio(self) -> float:
         return self.pass_num / self.total_num
 
     @property
@@ -76,9 +73,15 @@ class CompareResult:
 
 def results_to_dataframe(results: list[CompareResult]) -> pandas.DataFrame:
     f_pass_all = "YES" if all(results) else "NO"
-    f_pass = ';'.join(map(str, results))
-    f_pass_ratio = ';'.join(map(str, results))
-    f_other_info = ';'.join(map(str, EB_EXP.keys()))
+    f_pass = ';'.join(map(lambda r: r.status, results))
+    f_pass_ratio = ';'.join(map(lambda r: "%.3f" % r.pass_ratio, results))
+    f_other_info = ';'.join(map(lambda r: r.other_info, results))
+    return pandas.DataFrame([{
+        'AllPass': f_pass_all,
+        'Pass': f_pass,
+        'PassRatio': f_pass_ratio,
+        'OtherInfo': f_other_info}]
+    )
 
 
 def mare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
@@ -139,16 +142,20 @@ def err(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, epsi: float =
     :param golden_out_tensor:
     :return:
     """
-    # golden绝对值 去0
-    golden_out_tensor_abs_epsi = torch.torch.where(golden_out_tensor == 0, epsi, golden_out_tensor)
+    # golden取绝对值并去0
+    golden_out_tensor_abs_epsi = torch.where(
+        golden_out_tensor == 0, epsi, golden_out_tensor)
     # 查找使用相对误差的index tensor
-    use_relative_err_tensor = torch.gt(golden_out_tensor, torch.full(out_tensor.shape, 1.0))
+    use_relative_err_tensor = torch.gt(
+        golden_out_tensor, torch.full(out_tensor.shape, 1.0))
     # 计算各点绝对误差
     absolute_err_tensor = torch.abs(torch.sub(golden_out_tensor, out_tensor))
     # 计算各点相对误差
-    relative_err_tensor = torch.div(absolute_err_tensor, golden_out_tensor_abs_epsi)
+    relative_err_tensor = torch.div(
+        absolute_err_tensor, golden_out_tensor_abs_epsi)
     # 根据index tensor 将相对误差替换上去
-    err_tensor = torch.where(use_relative_err_tensor == 1, relative_err_tensor, absolute_err_tensor)
+    err_tensor = torch.where(use_relative_err_tensor ==
+                             1, relative_err_tensor, absolute_err_tensor)
     # 原文档中 是除了再乘 可能有精度损失
     return err_tensor
 
@@ -162,7 +169,8 @@ def binary_match_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tens
 def err_eb_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, err_value: float,
                    eb_value: float) -> CompareResult:
     err_result = err(out_tensor, golden_out_tensor)
-    pass_count = torch.lt(err_result, torch.full(out_tensor.shape, err_value)).to(torch.int32).sum().item()
+    pass_count = torch.lt(err_result, torch.full(
+        out_tensor.shape, err_value)).to(torch.int32).sum().item()
     result = CompareResult(pass_count, golden_out_tensor.numel())
     eb_result = eb(out_tensor, golden_out_tensor)
     result.add_item('eb', eb_result, eb_value, eb_result < eb_value)
@@ -187,7 +195,8 @@ def dual_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gold
     rmse_pass = rmse_result < rmse_value
     eb_result = eb(out_tensor, golden_out_tensor)
     eb_pass = eb_result < eb_value
-    result = CompareResult([mare_pass, mere_pass, rmse_pass, eb_pass].count(True), 4)
+    result = CompareResult(
+        [mare_pass, mere_pass, rmse_pass, eb_pass].count(True), 4)
     result.add_item('mare', mare_result, mare_value, mare_pass)
     result.add_item('mere', mere_result, mere_value, mere_pass)
     result.add_item('rmse', rmse_result, rmse_value, rmse_pass)
@@ -199,8 +208,10 @@ def float_high_precision_compare(out_tensor: torch.Tensor, golden_out_tensor: to
                                  gpu_golden_out_tensor: torch.Tensor, err_value: float, eb_value: float):
     err_result_cpu = err(out_tensor, golden_out_tensor)
     err_result_gpu = err(out_tensor, gpu_golden_out_tensor)
-    err_result = torch.div(err_result_cpu, torch.max(err_result_gpu, torch.full(out_tensor.shape, err_value)))
-    pass_count = torch.sum(torch.lt(err_result, torch.full(out_tensor.shape, 2)).to(torch.int32)).item()
+    err_result = torch.div(err_result_cpu, torch.max(
+        err_result_gpu, torch.full(out_tensor.shape, err_value)))
+    pass_count = torch.sum(torch.lt(err_result, torch.full(
+        out_tensor.shape, 2)).to(torch.int32)).item()
     result = CompareResult(pass_count, out_tensor.numel())
     eb_result = eb(out_tensor, golden_out_tensor)
     result.add_item('eb', eb_result, eb_value, eb_result < eb_value)

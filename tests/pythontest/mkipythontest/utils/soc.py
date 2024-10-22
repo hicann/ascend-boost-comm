@@ -11,6 +11,10 @@ Ascend910 = "Ascend910"
 Ascend310B = "Ascend310B"
 Ascend910_93 = "Ascend910_93"
 
+ALL_SOC_SET = set(
+    Ascend910B, Ascend310P, Ascend310B, Ascend910, Ascend910_93
+)
+
 
 def get_soc_name() -> str:
     """
@@ -30,7 +34,7 @@ def get_soc_name() -> str:
 
 def on_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
     """
-    芯片限制装饰器
+    限制运行在某芯片上的装饰器
 
     :param soc_name: 芯片名称
     :return: 芯片限制装饰器
@@ -41,11 +45,20 @@ def on_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
         )
     return unittest.skipIf(
         get_soc_name(
-        ) not in soc_name, f"This case only runs on {str(soc_name)}"
+        ) not in soc_name, f"This case only runs on {', '.join(soc_name)}"
     )
+    
+def skip_soc(soc_name: Union[str, Iterable[str]]) ->callable:
+    if isinstance(soc_name, str):
+        soc_name = (soc_name)
+    return on_soc(ALL_SOC_SET - set(soc_name))
 
 
 only_910b = on_soc(Ascend910B)
 only_310p = on_soc(Ascend310P)
 only_310b = on_soc(Ascend310B)
 only_910 = on_soc(Ascend910)
+
+skip_310p = skip_soc(Ascend310P)
+skip_310b = skip_soc(Ascend310B)
+skip_910 = skip_soc(Ascend910)
