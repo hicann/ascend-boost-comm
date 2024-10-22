@@ -68,30 +68,28 @@ class OpTest(unittest.TestCase):
         self.out_flag = False
         self.support_soc = []
         self._op_desc: dict = {}
-        # set random seed
-        self._random_seed = randint(0, 1000000)
-        numpy.random.seed(self._random_seed)
-        torch.manual_seed(self._random_seed)
 
     def tearDown(self):
-        self.test_results[self._testMethodName] = {
-            "RandomSeed": self._random_seed
-        }
+        self.test_results[self._testMethodName]['RandomSeed'] = self._random_seed
 
     @classmethod
     def tearDownClass(cls):
-        cls.test_results
-        pass
+        test_results_list = []
+        for case_name, test_result in cls.test_results.items():
+            test_result_with_case_name = test_result.update(
+                {'CaseName', case_name})
+            test_results_list.append(test_result_with_case_name)
+        test_results_df = pandas.DataFrame(test_results_list)
+        result_file_name = f"test_{cls.get_op_name().lower()}_result.csv"
+        test_results_df.to_csv(result_file_name)
 
-    # 把那个dict写csv里
-    # write self.test_results int ocsv
-    # the key is CaseName, and follows other result
-    # results_dataframe = pandas.DataFrame.from_dict(
-    #     self.test_cases, orient="index")
-    # results_dataframe = pandas.DataFrame(self.test_results)
-    # results_dataframe.to_csv(f"{self.__class__.__name__}.csv")
+    def set_rand_seed(self, rand_seed: int):
+        # set random seed
+        self._random_seed = rand_seed
+        numpy.random.seed(self._random_seed)
+        torch.manual_seed(self._random_seed)
 
-    def get_op_name(self):
+    def get_op_name(self) -> str:
         class_name = self.__name__
         match_result = re.findall(
             r'Test([A-Z]{1}[A-Za-z0-9]+Operation)([A-Za-z0-9]+)', class_name)
