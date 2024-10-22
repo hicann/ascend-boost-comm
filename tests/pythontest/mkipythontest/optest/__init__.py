@@ -54,10 +54,9 @@ class OpTest(unittest.TestCase):
         torch.classes.load_library(LIB_PATH)
 
     def setUp(self):
-        # 这里放context
         logging.info(
             "running testcase " f"{self.__class__.__name__}.{
-            self._testMethodName}"
+                self._testMethodName}"
         )
         self.format_default = -1
         self.format_nz = 29
@@ -68,7 +67,6 @@ class OpTest(unittest.TestCase):
         self.multiplex = False
         self.out_flag = False
         self.support_soc = []
-        self._mki: torch.ClassDef = None
         self._op_desc: dict = {}
         # set random seed
         self._random_seed = randint(0, 1000000)
@@ -82,6 +80,7 @@ class OpTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.test_results
         pass
 
     # 把那个dict写csv里
@@ -94,10 +93,13 @@ class OpTest(unittest.TestCase):
 
     def get_op_name(self):
         class_name = self.__name__
-        if not re.match(r'Test[A-Z]{1}[A-Za-z0-9]+Operation[A-Za-z0-9]+', class_name):
-            logging.info("The class name is not good. Please rename it to 'Test{OpName}Operation{KernelName}'.")
+        match_result = re.findall(
+            r'Test([A-Z]{1}[A-Za-z0-9]+Operation)([A-Za-z0-9]+)', class_name)
+        if not match_result:
+            logging.info(
+                "The class name is not good. Please rename it to 'Test{OpName}Operation{KernelName}'.")
             return class_name
-        return class_name.split("Operation")[0].replace("Test", "", 1) + "Operation"
+        return match_result[0]
 
     def set_param(self, op_param, op_name=None):
         if not op_name:
@@ -114,34 +116,6 @@ class OpTest(unittest.TestCase):
     def get_param(self):
         return self._op_desc["specificParam"]
 
-    def set_support_910b(self):
-        warnings.warn(
-            "It is useless and will be removed recently, please use soc decorator instead",
-            DeprecationWarning,
-        )
-        self.support_soc.append("Ascend910B")
-
-    def set_support_310p(self):
-        warnings.warn(
-            "It is useless and will be removed recently, please use soc decorator instead",
-            DeprecationWarning,
-        )
-        self.support_soc.append("Ascend310P")
-
-    def set_support_910b_only(self):
-        warnings.warn(
-            "It is useless and will be removed recently, please use soc decorator instead",
-            DeprecationWarning,
-        )
-        self.support_soc = ["Ascend910B"]
-
-    def set_support_310p_only(self):
-        warnings.warn(
-            "It is useless and will be removed recently, please use soc decorator instead",
-            DeprecationWarning,
-        )
-        self.support_soc = ["Ascend310P"]
-
     def set_input_formats(self, formats):
         self._op_desc["input_formats"] = formats
 
@@ -151,23 +125,6 @@ class OpTest(unittest.TestCase):
     def execute(self, in_tensors, out_tensors, perf_times=1, envs=None):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
-        if self.support_soc:
-            device_name = torch_npu.npu.get_device_name()
-            if re.search("Ascend910B", device_name, re.I):
-                soc_version = "Ascend910B"
-            elif re.search("Ascend310P", device_name, re.I):
-                soc_version = "Ascend310P"
-            else:
-                logging.error("device_name %s is not supported", device_name)
-                quit(1)
-
-            if soc_version not in self.support_soc:
-                logging.info(
-                    "Current soc is %s is not supported for this case: %s",
-                    soc_version,
-                    str(self.support_soc),
-                )
-                return
 
         # for special compute
         self._in_tensors = in_tensors
@@ -208,9 +165,11 @@ class OpTest(unittest.TestCase):
             for idx, tensor in enumerate(golden_out_tensors_gpu):
                 logging.debug("PythonTest GpuGolden Tensor[%s]:", idx)
                 logging.debug(tensor)
-            compare_result = self.golden_compare(out_tensors, golden_out_tensors, golden_out_tensors_gpu)
+            compare_result = self.golden_compare(
+                out_tensors, golden_out_tensors, golden_out_tensors_gpu)
         else:
-            compare_result = self.golden_compare(out_tensors, golden_out_tensors)
+            compare_result = self.golden_compare(
+                out_tensors, golden_out_tensors)
 
         self.test_results[self._testMethodName.replace(
             "test_", "")] = compare_result
@@ -371,10 +330,14 @@ class OpTest(unittest.TestCase):
             compare_factory.set_calculate_times(calculate_times)
 
             if self.use_gpu_golden:
-                comparer = compare_factory.get_double_golden_comparer(out_tensor.dtype)
-                compare_result = comparer.compare(out_tensor, golden_out_tensor, golden_out_tensors_gpu[i])
+                comparer = compare_factory.get_double_golden_comparer(
+                    out_tensor.dtype)
+                compare_result = comparer.compare(
+                    out_tensor, golden_out_tensor, golden_out_tensors_gpu[i])
             else:
-                comparer = compare_factory.get_single_golden_comparer(out_tensor.dtype)
-                compare_result = comparer.compare(out_tensor, golden_out_tensors[i])
+                comparer = compare_factory.get_single_golden_comparer(
+                    out_tensor.dtype)
+                compare_result = comparer.compare(
+                    out_tensor, golden_out_tensors[i])
             results.append(compare_result)
         return all(results)

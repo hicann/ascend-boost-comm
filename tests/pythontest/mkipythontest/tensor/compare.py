@@ -11,7 +11,6 @@ import logging
 from functools import partial
 
 import numpy
-import pandas
 import torch
 from mkipythontest.constant import OpType
 
@@ -71,17 +70,16 @@ class CompareResult:
         return "FAILED"
 
 
-def results_to_dataframe(results: list[CompareResult]) -> pandas.DataFrame:
+def results_to_dataframe(results: list[CompareResult]) -> dict[str, str]:
     f_pass_all = "YES" if all(results) else "NO"
     f_pass = ';'.join(map(lambda r: r.status, results))
     f_pass_ratio = ';'.join(map(lambda r: "%.3f" % r.pass_ratio, results))
     f_other_info = ';'.join(map(lambda r: r.other_info, results))
-    return pandas.DataFrame([{
+    return {
         'AllPass': f_pass_all,
         'Pass': f_pass,
         'PassRatio': f_pass_ratio,
-        'OtherInfo': f_other_info}]
-    )
+        'OtherInfo': f_other_info}
 
 
 def mare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
