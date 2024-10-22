@@ -29,7 +29,9 @@ def evaluate_expression(expression: str, mappings: dict[str, int]):
     return eval(expression, {"__builtins__": None}, mappings)
 
 
-def discover_placeholders(shapes: list[tuple], op_param: dict, placeholder_pattern: str = r'^[a-zA-Z_][a-zA-Z0-9_]*$') -> set[str]:
+def discover_placeholders(shapes: list[tuple],
+                          op_param: dict,
+                          placeholder_pattern: str = r'^[a-zA-Z_][a-zA-Z0-9_]*$') -> set[str]:
     """
     获取所有占位符
 

@@ -27,8 +27,8 @@ from mkipythontest import TestType
 from mkipythontest.case import Case
 from mkipythontest.constant import OpType
 from mkipythontest.tensor.compare import ComparerFactory
+from mkipythontest.tensor.generate import gen_tensors, get_generator_param
 from mkipythontest.utils.profiler import get_profiler_time
-from mkipythontest.tensor.generate import gen_tensors, get_generator, get_generator_param
 
 logging.basicConfig(
     level=logging.INFO,
@@ -250,9 +250,8 @@ class OpTest(unittest.TestCase):
             in_tensors = self.data_generate(case.in_tensors, **custom_param)
         else:
             data_generate_strs = case.data_generate.split(';')
-            data_generators = list(map(get_generator, data_generate_strs))
-            return gen_tensors(
-                case.in_dtypes, case.in_shapes, data_generators)
+            in_tensors = gen_tensors(
+                case.in_dtypes, case.in_shapes, data_generate_strs)
 
         out_tensors = case.out_tensors
 

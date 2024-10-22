@@ -219,7 +219,7 @@ def float_high_precision_compare(out_tensor: torch.Tensor, golden_out_tensor: to
 def dummy_compare(op_type: OpType, tensor_dtype: torch.dtype, use_gpu_golden: bool = False, *args,
                   **kwargs) -> CompareResult:
     logging.info(
-        f"Comparer for {op_type.name} in {tensor_dtype} with {['out', ''][int(use_gpu_golden)]} GPU golden result is not implemented. Returns PASS.")
+        f"Comparer for {op_type.name} in {tensor_dtype} with {['out', ''][int(use_gpu_golden)]} GPU golden result is not found. Returns PASS.")
     return CompareResult(1, 1)
 
 

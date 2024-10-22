@@ -16,7 +16,7 @@ import pandas as pd
 from mkipythontest.case import Case
 from mkipythontest.case.generalize import make_generalized_shapes_and_op_param
 from mkipythontest.constant import TENSOR_DTYPES, OpType, TestType
-from mkipythontest.tensor.format import TENSOR_FORMATS, TensorFormat
+from mkipythontest.tensor.format import TensorFormat
 from numpy import nan
 
 
@@ -55,16 +55,17 @@ class DefaultCsvParser(BaseParser):
         if not formats_str:
             return []
         formats = list(
-            map(lambda f: TENSOR_FORMATS[f], tuple(formats_str.split(';'))))
+            map(lambda f: TensorFormat[f], tuple(formats_str.split(';'))))
         if len(formats) == 1 and len(formats) != broadcast_num:
             formats = formats * broadcast_num
         return formats
 
-    def parse(self, csv_file_path: str) -> list[Case]:
+    def parse(self, csv_file_path: str, filter: dict = {}) -> list[Case]:
         case_list = []
         csv_case = pd.read_csv(csv_file_path, sep='|')
         csv_case = csv_case.replace(nan, '')
         for case_row in csv_case.iterrows():
+
             case_data = case_row[1]
             test_type = TestType[case_data['TestType']]
 

@@ -20,6 +20,7 @@ from .parser import BaseParser, DefaultCsvParser
 
 
 def run_case(self: OpTest):
+    
     """运行函数
 
     :param self: 测试类
@@ -77,12 +78,7 @@ def case_inject(csv_path: str = ".",
             logging.error("not csv file")
 
         cases = csv_parser.parse(csv_path)
-        for case in cases:
-            if isinstance(case, GeneralizedCase):
-                for real_case in case.to_case_list():
-                    add_case(test_class, real_case)
-            else:
-                add_case(test_class, case)
+        add_case(test_class, cases)
         return test_class
 
     return decorator

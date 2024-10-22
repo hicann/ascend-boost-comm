@@ -8,49 +8,13 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 from enum import Enum
+import logging
 from typing import Type
 
 import torch
 
 
-class TensorFormat:
-    id_ = -1
-
-    @staticmethod
-    def to_nd(tensor: torch.Tensor) -> torch.Tensor:
-        """
-        将tensor转为ND格式
-        :param tensor:
-        :return:
-        """
-        pass
-
-    @staticmethod
-    def from_nd(tensor: torch.Tensor) -> torch.Tensor:
-        """
-        将ND格式Tensor转为此格式
-        :param tensor:
-        :return:
-        """
-        pass
-
-
-class ND(TensorFormat):
-    id_ = 2
-
-    def to_nd(self):
-        return self
-
-    def from_nd(self):
-        return self
-
-
-class FRACTAL_NZ(TensorFormat):
-    id_ = 29
-    pass
-
-
-class TensorFormats(Enum):
+class TensorFormat(Enum):
     UNDEFINED = -1
     NCHW = 0
     NHWC = 1
@@ -66,13 +30,7 @@ class TensorFormats(Enum):
     FRACTAL_Z_3D = 33
 
 
-TENSOR_FORMATS = {
-    **dict.fromkeys(('nd', ND.id_), ND),
-    **dict.fromkeys(('fractal_nz', FRACTAL_NZ.id_), FRACTAL_NZ),
-}
-
-
-def convert_format(tensor: torch.Tensor, from_format: Type[TensorFormat], to_format: Type[TensorFormat]):
+def from_nd(tensor: torch.Tensor, to_format: Type[TensorFormat], **kwargs) -> torch.Tensor:
     """
     tensor格式转换
 
@@ -81,7 +39,11 @@ def convert_format(tensor: torch.Tensor, from_format: Type[TensorFormat], to_for
     :param to_format:
     :return:
     """
-    if from_format == to_format:
+    shape = tensor.shape
+    if to_format == TensorFormat.ND:
         return tensor
-    nd_tensor = from_format.to_nd(tensor)
-    return to_format.from_nd(nd_tensor)
+    if to_format == TensorFormat.FRACTAL_NZ:
+        return tensor
+        
+    logging.info(f"Format {to_format.name} is not supported now.")
+    return tensor
