@@ -13,7 +13,6 @@ import logging
 import os
 import re
 import unittest
-import warnings
 from abc import abstractmethod
 from random import randint
 
@@ -36,6 +35,9 @@ logging.basicConfig(
     format="%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s",
 )
 
+TORCH_HOME_ENV = "MKI_HOME_PATH"
+TORCH_SO_NAME = "tests/libmki_torch.so"
+TORCH_CLASS_NAME = "MkiTorch"
 
 class OpTest(unittest.TestCase):
     # 这里放成员
@@ -46,11 +48,11 @@ class OpTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        MKI_HOME_PATH = os.environ.get("MKI_HOME_PATH")
+        MKI_HOME_PATH = os.environ.get(TORCH_HOME_ENV)
         if MKI_HOME_PATH is None:
             raise RuntimeError(
-                "env MKI_HOME_PATH not exist, source set_env.sh")
-        LIB_PATH = os.path.join(MKI_HOME_PATH, "tests/libmki_torch.so")
+                f"env {TORCH_HOME_ENV} not exist, source set_env.sh")
+        LIB_PATH = os.path.join(MKI_HOME_PATH, TORCH_SO_NAME)
         torch.classes.load_library(LIB_PATH)
 
     def setUp(self):
@@ -132,7 +134,9 @@ class OpTest(unittest.TestCase):
             in_tensors_npu[i] if isinstance(i, int) else i.npu() for i in out_tensors
         ]
 
-        mki = torch.classes.MkiTorch.MkiTorch(json.dumps(self._op_desc))
+        mki_class_wrapper = getattr(torch.classes, TORCH_CLASS_NAME)
+        mki_class = getattr(mki_class_wrapper, TORCH_CLASS_NAME)
+        mki = mki_class(json.dumps(self._op_desc))
 
         self.__set_envs(envs)
         run_result = mki.execute(in_tensors_npu, out_tensors_npu)
