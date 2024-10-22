@@ -25,6 +25,8 @@ if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     export ASDOPS_LOG_TO_FILE_FLUSH=0
     export ASDOPS_LOG_TO_BOOST_TYPE=atb #算子库对应加速库日志类型，默认transformer
     export ASDOPS_LOG_PATH=~
+    cd $MKI_HOME_PATH/tests/pythontest
+    pip install -e .
 else
     echo "There is no 'set_env.sh' to import"
 fi
