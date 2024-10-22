@@ -12,8 +12,7 @@ Ascend310B = "Ascend310B"
 Ascend910_93 = "Ascend910_93"
 
 ALL_SOC_SET = set(
-    Ascend910B, Ascend310P, Ascend310B, Ascend910, Ascend910_93
-)
+    (Ascend910B, Ascend310P, Ascend310B, Ascend910, Ascend910_93))
 
 
 def get_soc_name() -> str:
@@ -47,8 +46,9 @@ def on_soc(soc_name: Union[str, Iterable[str]]) -> Callable:
         get_soc_name(
         ) not in soc_name, f"This case only runs on {', '.join(soc_name)}"
     )
-    
-def skip_soc(soc_name: Union[str, Iterable[str]]) ->callable:
+
+
+def skip_soc(soc_name: Union[str, Iterable[str]]) -> callable:
     if isinstance(soc_name, str):
         soc_name = (soc_name)
     return on_soc(ALL_SOC_SET - set(soc_name))

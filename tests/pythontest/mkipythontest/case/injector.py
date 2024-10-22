@@ -7,12 +7,12 @@
 # EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
-import inspect
+
 import logging
 from pathlib import Path
 from typing import Type, Union
 
-from mkipythontest.case import Case, GeneralizedCase
+from mkipythontest.case import Case
 from mkipythontest.optest import OpTest
 from mkipythontest.utils.soc import on_soc
 
@@ -41,8 +41,8 @@ def add_case(test_class: Type[OpTest], case: Union[Case, list[Case]]) -> None:
     for case in case_list:
         test_class_op_name = test_class.get_op_name()
         if case.op_name and case.op_name != test_class_op_name:
-            logging.info(f"test class opname {
-                         test_class_op_name} does not match case opname {case.op_name}. ignored.")
+            logging.info(
+                f"test class opname {test_class_op_name} does not match case opname {case.op_name}. ignored.")
             continue
         if case.case_name in test_class.test_cases:
             logging.info("found duplicate case name. ignored.")
@@ -59,8 +59,7 @@ def add_case(test_class: Type[OpTest], case: Union[Case, list[Case]]) -> None:
         logging.info(f"loading case \"{case.case_name}\" OK!")
 
 
-def case_inject(cls: Union[None, Type[OpTest]] = None,
-                csv_path: str = ".",
+def case_inject(csv_path: str = ".",
                 parser: Type[BaseParser] = DefaultCsvParser) -> Union[OpTest, callable]:
     """
     用例注入装饰器
@@ -85,8 +84,5 @@ def case_inject(cls: Union[None, Type[OpTest]] = None,
             else:
                 add_case(test_class, case)
         return test_class
-    
-    if cls is not None:
-        return decorator(cls)
-    else:
-        return decorator
+
+    return decorator

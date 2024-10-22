@@ -203,9 +203,9 @@ def dual_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, gold
 
 
 def float_high_precision_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor,
-                                 gpu_golden_out_tensor: torch.Tensor, err_value: float, eb_value: float):
+                                 golden_out_tensor_gpu: torch.Tensor, err_value: float, eb_value: float):
     err_result_cpu = err(out_tensor, golden_out_tensor)
-    err_result_gpu = err(out_tensor, gpu_golden_out_tensor)
+    err_result_gpu = err(out_tensor, golden_out_tensor_gpu)
     err_result = torch.div(err_result_cpu, torch.max(
         err_result_gpu, torch.full(out_tensor.shape, err_value)))
     pass_count = torch.sum(torch.lt(err_result, torch.full(
@@ -250,7 +250,7 @@ class ComparerFactory:
             if self.calculate_times >= 16384 and tensor_dtype == torch.float32:
                 err_exp += 1
             return partial(err_eb_compare, {'err_value': 2 ** err_exp, 'eb_value': 2 ** eb_exp})
-        return dummy_compare(self.op_type, tensor_dtype, use_gpu_golden=False)
+        return partial(dummy_compare, {'op_type': self.op_type, 'tensor_type': tensor_dtype, 'use_gpu_golden': False})
 
     def get_double_golden_comparer(self, tensor_dtype: torch.dtype) -> callable:
         if self.op_type == OpType.COMPUTE_FLOAT_HIGH_PRECISION:
@@ -259,4 +259,4 @@ class ComparerFactory:
         if self.op_type in (OpType.COMPUTE_FLOAT, OpType.CV_FUSION):
             return partial(dual_compare, {'err_value': 2 ** ERR_EXP[self.op_type, tensor_dtype],
                                           'eb_value': 2 ** EB_EXP[tensor_dtype]})
-        return dummy_compare(self.op_type, tensor_dtype, use_gpu_golden=True)
+        return partial(dummy_compare, {'op_type': self.op_type, 'tensor_type': tensor_dtype, 'use_gpu_golden': True})

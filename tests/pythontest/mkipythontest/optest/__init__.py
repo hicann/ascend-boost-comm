@@ -14,7 +14,6 @@ import os
 import re
 import unittest
 from abc import abstractmethod
-from random import randint
 
 import numpy
 import pandas
@@ -29,6 +28,7 @@ from mkipythontest.case import Case
 from mkipythontest.constant import OpType
 from mkipythontest.tensor.compare import ComparerFactory
 from mkipythontest.utils.profiler import get_profiler_time
+from mkipythontest.tensor.generate import gen_tensors, get_generator, get_generator_param
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,6 +38,7 @@ logging.basicConfig(
 TORCH_HOME_ENV = "MKI_HOME_PATH"
 TORCH_SO_NAME = "tests/libmki_torch.so"
 TORCH_CLASS_NAME = "MkiTorch"
+
 
 class OpTest(unittest.TestCase):
     # 这里放成员
@@ -57,8 +58,7 @@ class OpTest(unittest.TestCase):
 
     def setUp(self):
         logging.info(
-            "running testcase " f"{self.__class__.__name__}.{
-                self._testMethodName}"
+            f"running testcase{self.__class__.__name__}.{self._testMethodName}"
         )
         self.format_default = -1
         self.format_nz = 29
@@ -76,6 +76,8 @@ class OpTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        logging.info(f"==== Test Report for {cls.get_op_name(cls)} ====")
+        print()
         test_results_list = []
         for case_name, test_result in cls.test_results.items():
             test_result_with_case_name = test_result.update(
@@ -91,15 +93,16 @@ class OpTest(unittest.TestCase):
         numpy.random.seed(self._random_seed)
         torch.manual_seed(self._random_seed)
 
-    def get_op_name(self) -> str:
-        class_name = self.__name__
+    @classmethod
+    def get_op_name(cls) -> str:
+        class_name = cls.__name__
         match_result = re.findall(
             r'Test([A-Z]{1}[A-Za-z0-9]+Operation)([A-Za-z0-9]+)', class_name)
         if not match_result:
             logging.info(
                 "The class name is not good. Please rename it to 'Test{OpName}Operation{KernelName}'.")
             return class_name
-        return match_result[0]
+        return match_result[0][0]
 
     def set_param(self, op_param, op_name=None):
         if not op_name:
@@ -238,13 +241,19 @@ class OpTest(unittest.TestCase):
         :return:
         """
         case = self.test_cases[case_name]
-        # if not (isinstance(case, Case) and not issubclass(type(case), Case)):
-        #     logging.error("cannot directly run derived case.")
-        #     return
-        # set param
-        self.set_param(case.op_name, case.op_param)
 
-        in_tensors = case.generate_data(self.data_generate)
+        self.set_param(case.op_param, case.op_name)
+        self.set_rand_seed(case.random_seed)
+
+        if case.data_generate.startswith("custom"):
+            custom_param = get_generator_param(case.data_generate)
+            in_tensors = self.data_generate(case.in_tensors, **custom_param)
+        else:
+            data_generate_strs = case.data_generate.split(';')
+            data_generators = list(map(get_generator, data_generate_strs))
+            return gen_tensors(
+                case.in_dtypes, case.in_shapes, data_generators)
+
         out_tensors = case.out_tensors
 
         # format convert
@@ -334,12 +343,12 @@ class OpTest(unittest.TestCase):
             if self.use_gpu_golden:
                 comparer = compare_factory.get_double_golden_comparer(
                     out_tensor.dtype)
-                compare_result = comparer.compare(
+                compare_result = comparer(
                     out_tensor, golden_out_tensor, golden_out_tensors_gpu[i])
             else:
                 comparer = compare_factory.get_single_golden_comparer(
                     out_tensor.dtype)
-                compare_result = comparer.compare(
+                compare_result = comparer(
                     out_tensor, golden_out_tensors[i])
             results.append(compare_result)
         return all(results)

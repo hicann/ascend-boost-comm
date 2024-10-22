@@ -10,14 +10,9 @@
 
 
 from functools import lru_cache
-import itertools
-import logging
-import re
-from copy import deepcopy
-from typing import Optional
+
 import torch
-from mkipythontest.constant import OpType, TestType, ErrorType
-from mkipythontest.tensor.generate import gen_tensors, get_generator, get_generator_param
+from mkipythontest.constant import ErrorType, OpType, TestType
 
 
 class Case:
@@ -31,11 +26,13 @@ class Case:
         self.op_type: OpType = OpType.NA
         self.op_param: dict = {}
 
-        self.in_dtypes: list[torch.dtype] = [torch.float16 for _ in range(in_num)]
+        self.in_dtypes: list[torch.dtype] = [
+            torch.float16 for _ in range(in_num)]
         self.in_shapes: list[tuple[int]] = [(1,) for _ in range(in_num)]
         self.in_formats: list[str] = ["nd" for _ in range(in_num)]
 
-        self.out_dtypes: list[torch.dtype] = [torch.float16 for _ in range(out_num)]
+        self.out_dtypes: list[torch.dtype] = [
+            torch.float16 for _ in range(out_num)]
         self.out_shapes: list[tuple[int]] = [(1,) for _ in range(out_num)]
         self.out_formats: list[str] = ["nd" for _ in range(out_num)]
 
@@ -46,6 +43,7 @@ class Case:
         self.expected_error: ErrorType = ErrorType.NO_ERROR
         self.env: dict = {}
         self.dump: bool = False
+        self.random_seed = 0
 
     @property
     def case_name(self):
@@ -78,108 +76,3 @@ class Case:
     @lru_cache
     def out_tensors(self):
         return [torch.zeros(self.out_shapes[i]).to(self.out_dtypes[i]) for i in range(self.out_num)]
-
-    def generate_data(self, generator: Optional[callable] = None) -> list[torch.Tensor]:
-        # stage 1 check write or read
-        if self.data_generate.startswith("binfile"):
-            binfile_params = get_generator_param(self.data_generate)
-            in_bin_path = binfile_params['in']
-            out_bin_path = binfile_params['out']
-            return []
-        if generator is not None and self.data_generate.startswith("custom"):
-            return generator(self.in_tensors, get_generator_param(self.data_generate))
-        else:
-            data_generate_strs = self.data_generate.split(';')
-            data_generators = list(map(get_generator, data_generate_strs))
-            return gen_tensors(
-                self.in_dtypes, self.in_shapes, data_generators)
-
-
-class GeneralizedCase(Case):
-    """具有占位符的泛化测试用例"""
-
-    def __init__(self, specific_case_name: str = "", in_num: int = 1, out_num: int = 1) -> None:
-        super().__init__(specific_case_name, in_num, out_num)
-
-    def __evaluate_expression(self, expression: str, mappings: dict[str, int]):
-        """
-        计算数学表达式
-
-        :param expression: 字符串形式的数学表达式
-        :param mappings: 一个字典，包含占位符到具体值的映射
-        :return: 表达式的计算结果
-        """
-        return eval(expression, {"__builtins__": None}, mappings)
-
-
-    def __discover_placeholders(self, placeholder_pattern: str = r'^[a-zA-Z_][a-zA-Z0-9_]*$') -> set[str]:
-        """
-        获取所有占位符
-
-        :param placeholder_pattern: 占位符格式
-        :return: 占位符集合
-        """
-        placeholders = set()
-        all_shapes = self.in_shapes + self.out_shapes
-        for shape in all_shapes:
-            for dim in shape:
-                if isinstance(dim, int):
-                    continue
-                for matched_placeholder in re.finditer(placeholder_pattern, str(dim)):
-                    placeholders.add(matched_placeholder.string)
-        for _, value in self.op_param.items():
-            if isinstance(value, int):
-                continue
-            objs = value
-            if isinstance(value, str):
-                objs = [value]
-            for obj in objs:
-                if match_str := re.match(placeholder_pattern, obj):
-                    placeholders.add(match_str.string)
-        logging.info("found placeholders: %s", placeholders)
-        return placeholders
-
-    def __dict_to_name_postfix(self, mappings: dict[str, int]) -> str:
-        result = []
-        for key in mappings:
-            result.append(str(key))
-            result.append(str(mappings[key]))
-        return "_".join(result)
-
-    def to_case_list(self, generalized_dims=None) -> list[Case]:
-        """
-        生成全排列泛化测试用例
-
-        :param generalized_dims: 泛化维度列表
-        :return:
-        """
-        if generalized_dims is None:
-            generalized_dims = [1, 4, 15, 16, 17,
-                                32, 64, 65, 128, 256, 257, 131073]
-        placeholders = self.__discover_placeholders()
-        # 生成所有可能的映射表组合
-        mapping_combinations = list(itertools.product(
-            generalized_dims, repeat=len(placeholders)))
-        # 替换占位符并生成所有可能的组合
-        result = []
-        for mapping in mapping_combinations:
-            mappings = dict(zip(placeholders, mapping))
-            new_shapes = []
-            for shape in self.all_shapes:
-                dynamic_shape = []
-                for s in shape:
-                    dynamic_shape.append(
-                        self.__evaluate_expression(str(s), mappings))
-                new_shapes.append(tuple(dynamic_shape))
-            new_param = {}
-            for k, v in self.op_param.items():
-                new_param[k] = self.__evaluate_expression(str(v), mappings)
-            new_case = deepcopy(self)
-            new_case.set_name(
-                f"{new_case.case_name}_generalized_{self.__dict_to_name_postfix(mappings)}")
-            new_case.op_param = new_param
-            new_case.in_shapes = new_shapes[0:self.in_num]
-            new_case.out_shapes = new_shapes[self.in_num:]
-            new_case.test_type = TestType.FUNCTION
-            result.append(new_case)
-        return result
