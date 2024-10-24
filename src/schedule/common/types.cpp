@@ -31,7 +31,8 @@ static const std::map<TensorDType, size_t> MAP_OF_DTYPE_SIZE = {
     {TensorDType::TENSOR_DTYPE_UINT64, sizeof(uint64_t)},
     {TensorDType::TENSOR_DTYPE_DOUBLE, sizeof(double)},
     {TensorDType::TENSOR_DTYPE_BOOL, sizeof(bool)},
-    {TensorDType::TENSOR_DTYPE_BF16, HALF_DATA_SIZE}
+    {TensorDType::TENSOR_DTYPE_BF16, HALF_DATA_SIZE},
+    {TensorDType::TENSOR_DTYPE_COMPLEX64, sizeof(double)}
 };
 
 size_t GetTensorElementSize(const TensorDType dtype)
