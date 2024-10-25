@@ -28,7 +28,7 @@
 namespace Mki {
 std::mutex g_pcLock;
 const std::string FIXPIPE_CONFIG_KEY = "Intrinsic_fix_pipe_";
-const std::string PLATFORM_RELATIVE_PATH = "/configs/platform_configs";
+const std::string PLATFORM_RELATIVE_PATH = "/runtime/data/platform_config";
 const std::string INI_FILE_SUFFIX = "ini";
 const std::string STR_SOC_VERSION = "SoC_version";
 const std::string STR_AIC_VERSION = "AIC_version";
@@ -113,7 +113,7 @@ bool IsSpace(char c)
 uint32_t PlatformManager::LoadIniFile(std::string iniFileRealPath)
 {
     std::map<std::string, std::map<std::string, std::string>> contentInfoMap;
-    bool isParseSuccess = IniFile::ParseIniFileToMap(iniFileRealPath, contentInfoMap);
+    bool isParseSuccess = IniFile::ParseIniFileToMap(iniFileRealPath, contentInfoMap, false);
     MKI_CHECK(isParseSuccess, "ParseIniFileToMap failed.", return PLATFORM_FAILED);
     MKI_CHECK(AssemblePlatformInfoVector(contentInfoMap) == PLATFORM_SUCCESS, "Assemble platform info failed.",
         return PLATFORM_FAILED);
@@ -312,17 +312,18 @@ uint32_t PlatformManager::InitializePlatformManager()
     if (initFlag_) {
         return PLATFORM_SUCCESS;
     }
-    const char *mkiHomePath = Mki::GetEnv("ASDOPS_HOME_PATH");
-    if (mkiHomePath == nullptr) {
-        MKI_LOG(ERROR) << "env ASDOPS_HOME_PATH is invalid";
+    const char *ascendHomePath = Mki::GetEnv("ASCEND_HOME_PATH");
+    if (ascendHomePath == nullptr) {
+        MKI_LOG(ERROR) << "env ASCEND_HOME_PATH is invalid";
         return PLATFORM_FAILED;
     }
-    std::string mkiHomePathStr = mkiHomePath;
-    if (mkiHomePathStr == "") {
+    std::string ascendHomePathStr = ascendHomePath;
+    if (ascendHomePathStr == "") {
         MKI_LOG(ERROR) << "getenv failed";
         return PLATFORM_FAILED;
     }
-    std::string cfgFileRealPath = FileSystem::PathCheckAndRegular(mkiHomePathStr + PLATFORM_RELATIVE_PATH, false);
+    std::string cfgFileRealPath =
+        FileSystem::PathCheckAndRegular(ascendHomePathStr + PLATFORM_RELATIVE_PATH, false, false);
     if (cfgFileRealPath.empty()) {
         MKI_LOG(ERROR) << "File path " << cfgFileRealPath.c_str() << " is not valid";
         return PLATFORM_FAILED;

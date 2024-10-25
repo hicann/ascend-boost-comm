@@ -18,7 +18,7 @@ namespace Mki {
 class IniFile {
 public:
     static bool ParseIniFileToMap(const std::string &iniFilePath,
-        std::map<std::string, std::map<std::string, std::string>> &contentInfoMap);
+        std::map<std::string, std::map<std::string, std::string>> &contentInfoMap, bool symCheck = true);
 };
 } // namespace Mki
 #endif
