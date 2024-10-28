@@ -17,21 +17,32 @@
 #include <securec.h>
 #include <functional>
 #include "mki/utils/assert/assert.h"
+#include "mki/utils/env/env.h"
 #include "mki/utils/log/log.h"
 
 namespace {
 constexpr int SEM_TIMEOUT = 300;
+const size_t MAX_ENV_STRING_LEN = 12800;
 }
 
 namespace Mki {
 ShareMemory::ShareMemory(const std::string &name, uint32_t size) : memSize_(size)
 {
-    sem_ = sem_open(name.c_str(), O_CREAT, S_IRUSR | S_IWUSR, 1);
-    MKI_CHECK(sem_ != SEM_FAILED, "share memory open fail, name:" << name, return);
-    MKI_LOG(INFO) << "create share memory begin, name:" << name;
+    fullName_ = name;
+    const char *shareMemoryNameSuffix = Mki::GetEnv("ATB_SHARE_MEMORY_NAME_SUFFIX");
+    if (shareMemoryNameSuffix && strlen(shareMemoryNameSuffix) <= MAX_ENV_STRING_LEN) {
+        MKI_LOG(INFO) << "ATB_SHARE_MEMORY_NAME_SUFFIX is validate, value: " << std::string(shareMemoryNameSuffix);
+        fullName_ += std::string(shareMemoryNameSuffix);
+    }
+    sem_ = sem_open(fullName_.c_str(), O_CREAT, S_IRUSR | S_IWUSR, 1);
+    if (SEM_FAILED == sem_) {
+        MKI_LOG(ERROR) << "share memory open fail, fullName:" << fullName_;
+        return;
+    }
+    MKI_LOG(INFO) << "create share memory begin, fullName:" << fullName_;
 
     SemLock();
-    shareMemory_ = (uint8_t *)CreateShareMemory(name, memSize_);
+    shareMemory_ = (uint8_t *)CreateShareMemory(fullName_, memSize_);
     MKI_LOG(INFO) << "create share memory success";
     SemUnLock();
 }
@@ -71,7 +82,7 @@ void *ShareMemory::CreateShareMemory(const std::string &name, uint32_t size)
     void *memory = nullptr;
     struct shmid_ds buf;
     key_t key = static_cast<key_t>(std::hash<std::string>{}(name));
-    shmid_ = shmget(key, size, IPC_CREAT | 0600); // 0600提供文件所有者读写权限
+    shmid_ = shmget(key, size, IPC_CREAT | 0600); // 0600提供文件所有者有读和写的权限
     MKI_LOG(INFO) << "key: " << key << " shmid: " << shmid_;
     MKI_CHECK(shmid_ != -1, "shmget err, errno is: " << errno, return nullptr);
 
