@@ -20,7 +20,7 @@ using StringifyFunc = std::function<std::string(const Any &)>;
 
 class Stringify {
 public:
-    Stringify(size_t typeHashCode, StringifyFunc func);
+    Stringify(size_t typeHashCode, StringifyFunc func) noexcept;
     static std::string ToString(const Any &param);
 private:
     static std::map<size_t, StringifyFunc> converterMap_;

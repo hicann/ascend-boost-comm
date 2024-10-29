@@ -13,7 +13,7 @@
 namespace Mki {
 std::map<size_t, StringifyFunc> Stringify::converterMap_;
 
-Stringify::Stringify(size_t typeHashCode, StringifyFunc func)
+Stringify::Stringify(size_t typeHashCode, StringifyFunc func) noexcept
 {
     auto it = converterMap_.find(typeHashCode);
     if (it == converterMap_.end()) {
