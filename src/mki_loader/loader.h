@@ -1,29 +1,28 @@
 /*
  * Copyright (c) 2024 Huawei Technologies Co., Ltd.
- * MindKernelInfra is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * This file is a part of the CANN Open Software.
+ * Licensed under CANN Open Software License Agreement Version 1.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
  */
 #ifndef MKI_LOADER_LOADER_H
 #define MKI_LOADER_LOADER_H
 #include <unordered_map>
 #include <memory>
 #include <atomic>
-#include "mki/utils/non_copyable/non_copyable.h"
 #include "mki/operation.h"
 #include "mki/kernel.h"
 #include "mki/bin_handle.h"
 
 namespace OpSpace {
-class Loader : public Mki::NonCopyable {
+class Loader {
 public:
     Loader();
     ~Loader();
+    Loader(const Loader &) = delete;
+    Loader &operator=(const Loader &other) = delete;
     void GetAllOperations(std::unordered_map<std::string, Mki::Operation *> &ops) const;
     void GetOpKernels(const std::string &opName, Mki::KernelMap &kernels) const;
     bool IsValid() const;

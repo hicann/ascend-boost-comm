@@ -1,20 +1,17 @@
 /*
  * Copyright (c) 2024 Huawei Technologies Co., Ltd.
- * MindKernelInfra is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * This file is a part of the CANN Open Software.
+ * Licensed under CANN Open Software License Agreement Version 1.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
  */
 #ifndef MKI_BIN_HANDLE_H
 #define MKI_BIN_HANDLE_H
 #include <string>
 #include <atomic>
 #include "mki/tensor.h"
-#include "mki/utils/non_copyable/non_copyable.h"
 
 namespace Mki {
 using KernelHandle = void *const *;
@@ -36,10 +33,12 @@ struct KernelMetaInfo {
     uint32_t codeBufLen = 0;
 };
 
-class BinHandle : public NonCopyable {
+class BinHandle {
 public:
     explicit BinHandle(const BinaryBasicInfo *binInfo);
     ~BinHandle();
+    BinHandle(const BinHandle &) = delete;
+    BinHandle &operator=(const BinHandle &other) = delete;
     KernelHandle GetHandle() const;
     bool Init(const std::string &kernelName);
     uint32_t GetKernelTilingSize() const;
