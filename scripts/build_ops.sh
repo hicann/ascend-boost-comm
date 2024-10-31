@@ -170,19 +170,6 @@ function fn_compile_and_install()
     make install
 }
 
-function fn_platform_configs_copy()
-{
-    INI_DIR=$CODE_ROOT/configs/platform_configs
-    PLAT_DIR=$OUTPUT_DIR/mki/configs/platform_configs
-    if [ -d "$PLAT_DIR" ];then
-        rm -rf $PLAT_DIR
-    fi
-    mkdir -p $PLAT_DIR
-    for ini_name in $(ls $INI_DIR);do
-        cp $INI_DIR/$ini_name $PLAT_DIR/$ini_name
-    done
-}
-
 function fn_tbe_info_copy()
 {
     INFO_DIR=$CODE_ROOT/configs
