@@ -35,7 +35,7 @@ macro(add_kernel kernel soc channel srcs tac)
             )
             # build target: obj/soc/op/kernel.cpp
             set(${kernel}_${soc}_cpp_output
-                $ENV{CACHE_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
+                ${CMAKE_BINARY_DIR}/obj/${soc}/${op_name}/${kernel}.cpp)
             add_custom_command(
                 OUTPUT ${${kernel}_${soc}_cpp_output}
                 DEPENDS ${${kernel}_${soc}_output}
