@@ -102,7 +102,7 @@ public:
     Mki::Kernel const *GetKernel##kerName(const Mki::BinHandle *binHandle)                                         \
     {                                                                                                              \
         static kerName ker##kerName(#kerName, binHandle);                                                          \
-        SetKernelSelfCreator(ker##kerName, [=](){ return new kerName(#kerName, binHandle); });                     \
+        SetKernelSelfCreator(ker##kerName, [=](){ return new (std::nothrow) kerName(#kerName, binHandle); });      \
         return &ker##kerName;                                                                                      \
     }                                                                                                              \
     static KernelRegister ker##kerName##register = KernelRegister(OperationPlaceHolder, #kerName, GetKernel##kerName)

@@ -50,7 +50,10 @@ public:
 
     Kernel *Clone() const override
     {
-        auto kernel = new MemsetKernel(this->GetName(), this->GetBinHandle());
+        auto kernel = new (std::nothrow) MemsetKernel(this->GetName(), this->GetBinHandle());
+        if (kernel == nullptr) {
+            return nullptr;
+        }
         kernel->Copy(*this);
         return kernel;
     }
@@ -99,7 +102,8 @@ public:
     Status Run(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream) const
     {
         MemsetArgs memsetArgs;
-        (void)memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
+        int ret = memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
+        MKI_CHECK(ret == EOK, "memset_s memsetArgs Error! Error Code: " << ret, return Status::FailStatus(-1));
         for (size_t i = 0; i < MEMSET_MAX_TENSOR_NUM && i < memsetInfo.size() && i < argsNum; ++i) {
             memsetArgs.tensors[i] = args[memsetInfo[i].argIdx];
         }
@@ -108,7 +112,9 @@ public:
         MKI_CHECK(blockDim > 0, "failed to run memset tiling", return Status::FailStatus(1));
 
         RtArgsExT argsEx;
-        (void)memset_s(&argsEx, sizeof(RtArgsExT), 0, sizeof(RtArgsExT));
+        ret = memset_s(&argsEx, sizeof(RtArgsExT), 0, sizeof(RtArgsExT));
+        MKI_CHECK(ret == EOK, "memset_s argsEx Error! Error Code: " << ret, return Status::FailStatus(-1));
+
         argsEx.args = &memsetArgs;
         argsEx.argsSize = sizeof(MemsetArgs);
         argsEx.hasTiling = 1;
@@ -116,7 +122,9 @@ public:
         argsEx.tilingDataOffset = (MEMSET_MAX_TENSOR_NUM + 1) * sizeof(void *);
 
         MkiRtKernelParam kernelParam;
-        (void)memset_s(&kernelParam, sizeof(MkiRtKernelParam), 0, sizeof(MkiRtKernelParam));
+        ret = memset_s(&kernelParam, sizeof(MkiRtKernelParam), 0, sizeof(MkiRtKernelParam));
+        MKI_CHECK(ret == EOK, "memset_s kernelParam Error! Error Code: " << ret, return Status::FailStatus(-1));
+
         kernelParam.blockDim = blockDim;
         kernelParam.argsEx = &argsEx;
 

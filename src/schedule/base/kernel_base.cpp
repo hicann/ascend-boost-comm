@@ -298,6 +298,7 @@ Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
     MKI_CHECK(status.Ok(), "failed to build kernel params", return status);
     const MkiRtKernelParam &kernelParam = paramBuilder.GetKernelParam();
     MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
+    MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
     if (*handle_->GetHandle() != nullptr) {
         MKI_LOG(DEBUG) << "launch function with handle";
         int st = MkiRtFunctionLaunchWithHandle(*handle_->GetHandle(), &kernelParam, runInfo.GetStream(), nullptr);
@@ -345,6 +346,7 @@ Kernel *KernelBase::Clone() const
 {
     MKI_CHECK(creator_ != nullptr, kernelName_ << " creator is nullptr", return nullptr);
     KernelBase *kernel = creator_();
+    MKI_CHECK(kernel != nullptr, kernelName_ << " create kernel failed", return nullptr);
     kernel->Copy(*this);
     return kernel;
 }

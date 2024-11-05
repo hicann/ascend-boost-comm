@@ -30,7 +30,8 @@ protected:
 
 TEST(OperationBaseTest, all)
 {
-    Mki::Operation *op = new OperationBaseTest();
+    Mki::Operation *op = new (std::nothrow) OperationBaseTest();
+    ASSERT_NE(op, nullptr);
     std::unique_ptr<Kernel> kernel{nullptr};
     LaunchParam launchParam;
     Tensor inTensor;
@@ -47,7 +48,8 @@ TEST(OperationBaseTest, all)
 
 TEST(OperationBaseTest, all0)
 {
-    Mki::Operation *op = new OperationBaseTest();
+    Mki::Operation *op = new (std::nothrow) OperationBaseTest();
+    ASSERT_NE(op, nullptr);
     const KernelList &kernelList = op->GetKernelList();
     EXPECT_EQ(kernelList.size(), 0);
     delete op;

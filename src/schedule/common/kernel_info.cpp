@@ -42,7 +42,9 @@ Status KernelInfo::InitArgs(uint64_t len)
 
     args_ = new (std::nothrow) uint8_t[len];
     MKI_CHECK(args_ != nullptr, "failed to new args, len " << len, return Status::FailStatus(-1));
-    (void)memset_s(args_, len, 0, len);
+
+    int ret = memset_s(args_, len, 0, len);
+    MKI_CHECK(ret == EOK, "memset_s args Error! Error Code: " << ret, return Status::FailStatus(-1));
 
     argsSize_ = len;
     MKI_LOG(INFO) << "args inited successfully, len " << len;
@@ -118,7 +120,10 @@ Status KernelInfo::AllocTilingHost(uint64_t len)
     tilingExtInfo_.hostTilingAddr = new (std::nothrow) uint8_t[len];
     MKI_CHECK(tilingExtInfo_.hostTilingAddr != nullptr,
         "failed to new tiling, len " << len, return Status::FailStatus(-1));
-    (void)memset_s(tilingExtInfo_.hostTilingAddr, len, 0, len);
+
+    int ret = memset_s(tilingExtInfo_.hostTilingAddr, len, 0, len);
+    MKI_CHECK(ret == EOK, "memset_s hostTilingAddr Error! Error Code: " << ret, return Status::FailStatus(-1));
+
     MKI_LOG(INFO) << "alloc " << len << " bytes tiling host";
     tilingExtInfo_.hostTilingSize = len;
     tilingExtInfo_.usedSize = len;
