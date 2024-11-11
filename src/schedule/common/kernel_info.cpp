@@ -186,6 +186,8 @@ bool KernelInfo::AddConstTensorData(uint64_t argIdx, const T_CONT &tensorData)
 {
     uint64_t offset = tilingExtInfo_.constTensorOffset;
     for (const auto &info : constTensorInfo_) {
+        MKI_CHECK(info.size <= (std::numeric_limits<uint64_t>::max() - offset),
+                  "total size is too large, size: " << info.size, return false);
         offset += info.size;
     }
     MKI_CHECK(offset < tilingExtInfo_.hostTilingSize,
