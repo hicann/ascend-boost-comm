@@ -38,7 +38,7 @@ def build_op_list(ops_src_root_dir, dst_yaml_path):
             if file == 'CMakeLists.txt':
                 file_path = os.path.join(path, file)
                 with open (file_path) as fd:
-                    context = fd.read().replace('\n', '')
+                    context = fd.read().replace('\n', ' ')
                     match_operation = re.search(pattern_operation, context)
                     if not match_operation:
                         break

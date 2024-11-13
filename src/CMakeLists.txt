@@ -18,7 +18,6 @@ target_compile_definitions(mki PRIVATE ${NAMESPACE}=Mki)
 
 add_library(mki_loader STATIC ${LOADER_SOURCE_FILES})
 target_link_libraries(mki_loader PUBLIC mki dl pthread c_sec mmpa)
-target_compile_definitions(mki_loader PRIVATE __LOADER)
 
 add_executable(sym_check ${CMAKE_CURRENT_LIST_DIR}/sym_check.cpp)
 target_link_libraries(sym_check PRIVATE mki_loader mki)

@@ -21,12 +21,6 @@
 #define MKI_NAMESPACE_LOG(level, spaceName) MKI_LOG(level) << (MACRO_TO_STR(spaceName))
 
 namespace OpSpace {
-#ifndef __LOADER
-__attribute__((weak)) bool g_opsRegisterFlag = true;
-#else
-extern bool g_opsRegisterFlag;
-#endif
-
 using NewOperationFunc = Mki::Operation*(*)();
 using NewKernelFunc = const Mki::Kernel*(*)(const Mki::BinHandle *);
 
