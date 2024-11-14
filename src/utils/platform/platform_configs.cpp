@@ -57,7 +57,7 @@ uint32_t PlatformConfigs::GetCoreNumByType(const std::string &coreType)
         return 1;
     } else {
         uint32_t coreTypeNum = std::strtoul(coreNumStr.c_str(), nullptr, 10); // 10 进制
-        if (coreTypeNum > MAX_CORE_NUM) {
+        if (coreTypeNum == 0 || coreTypeNum > MAX_CORE_NUM) {
             MKI_LOG(ERROR) << "core_num is out of range : " << coreTypeNum;
             return 1;
         }
