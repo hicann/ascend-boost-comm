@@ -195,7 +195,10 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
 
 
 def compile_ascendc_code(obj_path, dst_cpp_path, is_const=True):
-    json_file = obj_path.rsplit('.')[0] + '.json'
+    if not obj_path.endswith('.o'):
+        logging.error("%s is not an obj file.", obj_path)
+        exit(1)
+    json_file = obj_path.rsplit('.', 1)[0] + '.json'
     header, result = get_header_from_file(json_file)
     if not result:
         logging.error("failed to parse file %s.", json_file)
