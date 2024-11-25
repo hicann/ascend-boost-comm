@@ -212,4 +212,5 @@ def only_soc(soc_name):
 
 only_910b = only_soc("Ascend910B")
 only_310p = only_soc("Ascend310P")
+only_910a = only_soc("Ascend910A")
 skip_910a = unittest.skipIf(get_soc_name() == "Ascend910A","don't support 910a")
