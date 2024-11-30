@@ -37,7 +37,7 @@ def get_soc_type(device_name: str = None) -> Optional[SocType]:
         device_name = torch_npu.npu.get_device_name()
     if re.search(r"Ascend910B\w+", device_name, re.I):
         return SocType.Ascend910B
-    if re.search("Ascend910_93",device_name, re.I):
+    if re.search("Ascend910_93", device_name, re.I):
         return SocType.Ascend910B
     # future 910* soc add here
     if re.search("Ascend910", device_name, re.I):

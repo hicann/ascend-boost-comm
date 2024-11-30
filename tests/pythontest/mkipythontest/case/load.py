@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Type
 
 import torch
-
 from mkipythontest.case import Case
 from mkipythontest.constant import ErrorType
 from mkipythontest.optest import OpTest

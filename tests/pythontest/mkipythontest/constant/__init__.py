@@ -11,14 +11,6 @@ from typing import Callable, TypeVar
 
 import torch
 
-K = TypeVar('K')
-V = TypeVar('V')
-
-
-def enum_to_dict(enum: Enum, key: Callable[[Enum], K] = lambda member: member.name,
-                 value: Callable[[Enum], V] = lambda member: member.value) -> dict[K, V]:
-    return {key(member): value(member) for member in enum}
-
 
 class OpType(Enum):
     NA = 0
@@ -70,6 +62,22 @@ class TensorFormat(Enum):
     FRACTAL_Z_3D = 33
 
 
+TENSOR_FORMATS_DICT = {
+    **dict.fromkeys((0, 'nchw'), TensorFormat.NCHW),
+    **dict.fromkeys((1, 'nhwc'), TensorFormat.NHWC),
+    **dict.fromkeys((2, 'nd'), TensorFormat.ND),
+    **dict.fromkeys((3, 'nc1hwc0'), TensorFormat.NC1HWC0),
+    **dict.fromkeys((4, 'fractal_z'), TensorFormat.FRACTAL_Z),
+    **dict.fromkeys((12, 'nc1hwc0_c04'), TensorFormat.NC1HWC0_C04),
+    **dict.fromkeys((16, 'hwcn'), TensorFormat.HWCN),
+    **dict.fromkeys((27, 'ndhwc'), TensorFormat.NDHWC),
+    **dict.fromkeys((29, 'fractal_nz'), TensorFormat.FRACTAL_NZ),
+    **dict.fromkeys((30, 'ncdhw'), TensorFormat.NCDHW),
+    **dict.fromkeys((32, 'nd1hwc0'), TensorFormat.NDC1HWC0),
+    **dict.fromkeys((33, 'fractal_z_3d'), TensorFormat.FRACTAL_Z_3D),
+}
+
+
 class ErrorType(Enum):
     UNDEFINED = -1,
     NO_ERROR = 0,
@@ -83,12 +91,3 @@ class ErrorType(Enum):
     ERROR_SYNC_STREAM_ERROR = 8,
     ERROR_INFERSHAPE_ERROR = 9,
     ERROR_NOT_CONSISTANT = 10
-
-
-ERROR_DICT: dict[str, ErrorType] = enum_to_dict(ErrorType, value=lambda member: member)
-
-ERROR_INFO: dict[int, ErrorType] = enum_to_dict(
-    ErrorType, key=lambda member: member.value, value=lambda member: member)
-
-TENSOR_FORMAT_DICT = enum_to_dict(TensorFormat,
-                                  key=lambda member: member.name.lower(), value=lambda member: member)

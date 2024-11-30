@@ -15,9 +15,8 @@ import pandas as pd
 import torch
 from mkipythontest.case import Case
 from mkipythontest.case.generalize import make_generalized_case_list
-from mkipythontest.constant import (ERROR_DICT, TENSOR_DTYPES_DICT,
-                                    TENSOR_FORMAT_DICT, ErrorType,
-                                    TensorFormat)
+from mkipythontest.constant import (TENSOR_DTYPES_DICT, TENSOR_FORMATS_DICT,
+                                    ErrorType, TensorFormat)
 from mkipythontest.utils.misc import is_sub_dict, split_and_map_dict
 from mkipythontest.utils.soc import SOC_SUPPORT, SocType
 from numpy import nan
@@ -65,7 +64,7 @@ class MkiCsvParser(BaseParser):
         return shapes
 
     def get_formats(self, formats_str: str, broadcast_num: int = 1) -> list[TensorFormat]:
-        formats = split_and_map_dict(formats_str, TENSOR_FORMAT_DICT,
+        formats = split_and_map_dict(formats_str, TENSOR_FORMATS_DICT,
                                      nonexistent_key_default_value=TensorFormat.ND)
         if len(formats) == 1 and len(formats) != broadcast_num:
             formats = formats * broadcast_num
@@ -95,8 +94,10 @@ class MkiCsvParser(BaseParser):
         return soc_version_list
 
     def get_expected_error(self, expected_error_str: str) -> ErrorType:
-        return ERROR_DICT.get(
-            expected_error_str, ErrorType.NO_ERROR)
+        for error_type in ErrorType:
+            if expected_error_str == error_type.name:
+                return error_type
+        return ErrorType.NO_ERROR
 
     def parse(self, csv_file_path: str, filter=None) -> list[Case]:
         if filter is None:

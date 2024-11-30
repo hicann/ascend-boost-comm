@@ -6,6 +6,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
+from enum import Enum
 from functools import lru_cache
 from inspect import getmembers, isfunction
 from typing import Callable, Iterable, Optional, Type, TypeVar
@@ -36,20 +37,6 @@ def is_sub_dict(src_dict: dict, target_dict: dict) -> bool:
     """
     return all(key in target_dict and target_dict[key] == value for key, value in src_dict.items())
 
-
-@lru_cache
-def get_value_partial_match(key: dict, target: dict[dict, T]) -> Optional[T]:
-    """Key is a dict and target is a dict whose key is a dict.
-    If a key(dict) can match the given key, return the corresponding value.
-
-    :param key: given key(dict)
-    :param target: where to find the key
-    :return: return the corresponding value if there is matched key(dict)
-    """
-    for key_target, value in target.items():
-        if is_sub_dict(key_target, key):
-            return value
-    return None
 
 
 def split_and_map(
@@ -82,18 +69,6 @@ def split_and_map_dict(input_string: str,
     return result
 
 
-def iterable_to_dict(iterable: Iterable[T],
-                     key: Callable[[int, T], str] = lambda i, v: str(i),
-                     value: Callable[[int, T], T] = lambda i, v: v):
-    """Convert an iterable to a dict.
-
-    :param iterable: iterable
-    :param key: key, defaults to lambda: get the index
-    :param value: value, defaults to lambda: get the value
-    :return: converted dict
-    """
-    return {key(i, v): value(i, v) for i, v in enumerate(iterable)}
-
 
 def get_test_name_list(test_class: Type[TestCase]) -> list[str]:
     """Get a list of test name in a test class
@@ -119,3 +94,10 @@ def remove_test(test_class: Type[TestCase]) -> Type[TestCase]:
     for test_name in test_name_list:
         delattr(test_class, test_name)
     return test_class
+
+
+def get_enum_by_value(enum: Enum, value: int, default_enum: Enum = None):
+    for member in enum:
+        if member.value == value:
+            return member
+    return default_enum

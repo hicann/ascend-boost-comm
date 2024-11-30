@@ -7,6 +7,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 
 import ast
+import logging
 from functools import lru_cache
 from typing import Callable, Optional
 
@@ -63,49 +64,30 @@ def get_func_and_param_from_generator_str(generator_str: str) -> tuple[Callable,
 def get_generator(generator_str: str) -> Callable:
     func, param = get_func_and_param_from_generator_str(generator_str)
     shape_key = ''
+    # numpy is a C library, so it is not possible to get its param name with inspect
+    # we can only use exception
     for sk in ('shape', 'size'):
-        shape_key = sk
         try:
             shape_param = update_copy(param, {sk: (1,)})
             func(**shape_param)
+            shape_key = sk
             break
         except TypeError as _:
             continue
 
     def generator_wrapper(shape: Optional[tuple[int]] = None) -> torch.Tensor:
-        if shape:
-            param = update_copy(param, {shape_key: shape})
-        return func(**param)
+        if not shape and shape_key:
+            logging.error(f"func {func} accept shape param but not provided")
+        if shape and not shape_key:
+            logging.info(f"func {func} does not accept shape param")
+        param = update_copy(param, {shape_key: shape})
+        data = func(**param)
+        if isinstance(data, numpy.ndarray):
+            return torch.from_numpy(data)
+        else:
+            return data
 
     return generator_wrapper
-
-
-def try_generate_data(func: Callable,
-                      param: dict,
-                      shape: tuple[int] = (),
-                      shape_key: str = '') -> Optional[torch.Tensor]:
-    """`Try` to generate tensor with a function.
-    It will try to call function with a param names `shape_key` and whose value is the shape tuple.
-    If the function does not need `shape_key` input, it returns Nome.
-
-    :param func: generator function
-    :param param: generator param
-    :param shape: shape tuple, defaults to ()
-    :param shape_key: asserted shape param name, defaults to ''
-    :return: generated tensor or None
-    """
-    # numpy is a C library, so it is not possible to get its param name with inspect
-    # we can only use exception
-    if not shape or not shape_key:
-        return func(**param)
-    try:
-        shape_param = update_copy(param, {shape_key: shape})
-        raw_data = func(**shape_param)
-        if isinstance(raw_data, numpy.ndarray):
-            raw_data = torch.from_numpy(raw_data)
-        return raw_data
-    except TypeError as _:
-        return None
 
 
 def gen_tensor(dtype: torch.dtype, shape: tuple[int], generator_str: str) -> torch.Tensor:
@@ -116,11 +98,7 @@ def gen_tensor(dtype: torch.dtype, shape: tuple[int], generator_str: str) -> tor
     :param generator_str: generator string
     :return: generated tensor
     """
-    func, param = get_func_and_param_from_generator_str(generator_str)
-    for k in ('shape', 'size', ''):
-        raw_data = try_generate_data(func, param, shape, k)
-        if raw_data is not None:
-            return raw_data.to(dtype)
+    return get_generator(generator_str)(shape).to(dtype)
 
 
 def gen_tensors(dtypes: list[torch.dtype],

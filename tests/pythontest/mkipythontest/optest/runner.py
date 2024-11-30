@@ -1,9 +1,11 @@
 import json
 import os
-from typing import Type
-import torch
 from abc import ABCMeta
-from mkipythontest.constant import ERROR_INFO, ErrorType
+from typing import Type
+
+import torch
+from mkipythontest.constant import ErrorType
+from mkipythontest.utils.misc import get_enum_by_value
 
 
 class Runner(metaclass=ABCMeta):
@@ -50,7 +52,7 @@ class MkiTorchRunner(Runner):
             run_result_value = ErrorType.NO_ERROR.value
         else:
             run_result_value = ErrorType.UNDEFINED.value
-        run_result = ERROR_INFO.get(run_result_value, ErrorType.UNDEFINED)
+        run_result = get_enum_by_value(run_result_value, ErrorType, ErrorType.UNDEFINED)
         return run_result
 
 def get_runner()->Type[Runner]:
