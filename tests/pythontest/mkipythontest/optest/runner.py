@@ -10,7 +10,7 @@ class Runner(metaclass=ABCMeta):
     def __init__(self, op_desc_json_str: str):
         pass
 
-    def execute(self, at_in_tensors: list[torch.Tensor], at_out_tensors: list[torch.Tensor]):
+    def execute(self, at_in_tensors: list[torch.Tensor], at_out_tensors: list[torch.Tensor]) -> ErrorType:
         pass
 
 

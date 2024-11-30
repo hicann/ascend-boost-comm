@@ -26,24 +26,6 @@ def is_int_type(dtype: torch.dtype) -> bool:
     """
     return dtype in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8)
 
-
-def get_exponent_bits(dtype: torch.dtype) -> int:
-    """Get the exponent bits of a dtype.
-
-    :param dtype: dtype
-    :return: exponent bits
-    """
-    if dtype == torch.float32:
-        return 8
-    elif dtype == torch.float64:
-        return 11
-    elif dtype == torch.float16:
-        return 5
-    elif dtype == torch.bfloat16:
-        return 8
-    return 0
-
-
 def get_higher_precision_dtype(dtype: torch.dtype) -> torch.dtype:
     """Get the higher precision dtype of a dtype.
 

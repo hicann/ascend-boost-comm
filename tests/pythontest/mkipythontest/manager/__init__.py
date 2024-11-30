@@ -24,7 +24,9 @@ class BatchTestManager:
         self._test_classes: dict[str,
                                  dict[frozenset[tuple[str, Any]], Type[OpTest]]] = {}
 
-    def __param_match(self, op_param: dict[str, Any], registered_class_param: frozenset[tuple[str, Any]]) -> bool:
+    def __param_match(self, 
+                      op_param: dict[str, Any], 
+                      registered_class_param: frozenset[tuple[str, Any]]) -> bool:
         for k, v in registered_class_param:
             # 不存在某键时生效
             if v is None and k in op_param:
@@ -131,9 +133,6 @@ def RegisterTestClass(op_name: str, op_param: Union[dict, list[dict]] = {}) -> C
         return cls
 
     return decorator
-
-# 存在某件时生效
-
 
 @Singleton
 class AnyValueClass:

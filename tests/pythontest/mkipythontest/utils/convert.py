@@ -45,20 +45,20 @@ def convert_nd_to_fractal_nz(tensor: torch.Tensor, merge_axis_h: bool = True) ->
     h_pad_num = pad_to_divisible(h, h0)-h
     w_pad_num = pad_to_divisible(w, w0)-w
     # pad
-    tensor_padded = torch.nn.functional.pad(
+    tensor = torch.nn.functional.pad(
         tensor, pad=[0, w_pad_num, 0, h_pad_num])
-    h_padded = tensor_padded.shape[-2]
-    w_padded = tensor_padded.shape[-1]
+    h_padded = tensor.shape[-2]
+    w_padded = tensor.shape[-1]
     # reshape
     h1 = int(h_padded/h0)
     w1 = int(w_padded/w0)
-    tensor_reshaped = tensor_padded.reshape(shape[:-2]+(h1, h0, w1, w0))
+    tensor = tensor.reshape(shape[:-2]+(h1, h0, w1, w0))
     # transpose
-    tensor_transposed = tensor_reshaped.permute(
+    tensor = tensor.permute(
         get_transpose_tuple(origin_ndim=tensor.ndim))
     if merge_axis_h:
-        return tensor_transposed.reshape(tensor_transposed.shape[:-4]+(w1, h_padded, w0))
-    return tensor_transposed
+        return tensor.reshape(tensor.shape[:-4]+(w1, h_padded, w0))
+    return tensor
 
 
 def convert_fractal_nz_to_nd(tensor: torch.Tensor, 

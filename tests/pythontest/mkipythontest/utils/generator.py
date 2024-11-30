@@ -59,6 +59,27 @@ def get_func_and_param_from_generator_str(generator_str: str) -> tuple[Callable,
     return func, func_param
 
 
+@lru_cache
+def get_generator(generator_str: str) -> Callable:
+    func, param = get_func_and_param_from_generator_str(generator_str)
+    shape_key = ''
+    for sk in ('shape', 'size'):
+        shape_key = sk
+        try:
+            shape_param = update_copy(param, {sk: (1,)})
+            func(**shape_param)
+            break
+        except TypeError as _:
+            continue
+
+    def generator_wrapper(shape: Optional[tuple[int]] = None) -> torch.Tensor:
+        if shape:
+            param = update_copy(param, {shape_key: shape})
+        return func(**param)
+
+    return generator_wrapper
+
+
 def try_generate_data(func: Callable,
                       param: dict,
                       shape: tuple[int] = (),

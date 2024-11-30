@@ -7,8 +7,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 
 import logging
-from functools import partial
-from typing import Callable
 
 import numpy
 import torch
@@ -63,7 +61,7 @@ class CompareResult:
         }
 
     def __bool__(self) -> bool:
-        return self.pass_num == self.total_num
+        return all([self.total_num <= 0 or self.pass_num == self.total_num]+list(map(lambda i: i['pass'], self.other_info.values())))
 
     def __str__(self) -> str:
         result = [f"Pass {self.pass_num}/{self.total_num}"]
@@ -74,81 +72,37 @@ class CompareResult:
 
     @property
     def pass_ratio(self) -> float:
+        if self.total_num <= 0:
+            return 1
         return self.pass_num / self.total_num
-
-    @property
-    def status(self) -> str:
-        if self:
-            if all(map(lambda i: i['pass'], self.other_info.values())):
-                return "OK"
-            else:
-                return "WARNING"
-        return "FAILED"
-
-
-def results_to_dict(results: list[CompareResult]) -> dict[str, str]:
-    """Convert a list of results to dict
-
-    :param results: _description_
-    :return: _description_
-    """
-    f_pass_all = "YES" if all(results) else "NO"
-    f_pass = ';'.join(map(lambda r: r.status, results))
-    f_pass_ratio = ';'.join(map(lambda r: "%.3f" % r.pass_ratio, results))
-    f_other_info = ';'.join(map(lambda r: r.other_info, results))
-    return {
-        'AllPass': f_pass_all,
-        'Pass': f_pass,
-        'PassRatio': f_pass_ratio,
-        'OtherInfo': f_other_info}
 
 
 def ae(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> torch.Tensor:
     """Absolute Error
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: Absolute Error Tensor
     """
     return torch.abs(torch.subtract(out_tensor, golden_out_tensor))
 
 
 def re(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> torch.Tensor:
     """Relative Error
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: Relative Error Tensor
     """
     return torch.div(ae(out_tensor, golden_out_tensor), torch.abs(golden_out_tensor))
 
 
 def mare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
     """MAx Relative Error
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: MAx Relative Error
     """
     return torch.max(re(out_tensor, golden_out_tensor)).item()
 
 
 def mere(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
     """MEan Relative Error
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: MEan Relative Error
     """
     return torch.mean(re(out_tensor, golden_out_tensor)).item()
 
 
 def rmse(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
     """Root Mean Square Error
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: Root Mean Square Error
     """
     abs_diff = torch.abs(torch.subtract(out_tensor, golden_out_tensor))
     return numpy.sqrt(torch.sum(torch.mul(abs_diff, abs_diff) / torch.numel(abs_diff)).numpy())
@@ -156,10 +110,6 @@ def rmse(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
 
 def eb(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> float:
     """EB
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: EB
     """
     out_tensor = out_tensor.float()
     golden_out_tensor = golden_out_tensor.float()
@@ -198,116 +148,155 @@ def err(out_tensor: torch.Tensor,
     return err_tensor
 
 
-def binary_match_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor) -> CompareResult:
+class BaseComparer:
+    def __init__(self):
+        pass
+
+
+class SingleComparer(BaseComparer):
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor) -> CompareResult:
+        pass
+
+
+class DoubleComparer(BaseComparer):
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor,
+                golden_out_tensor_gpu: torch.Tensor) -> CompareResult:
+        pass
+
+
+class BinaryMatchComparer(SingleComparer):
     """Binary match compare for MOVE, CAST and COMPUTE_INTEGER
-
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :return: compare result
     """
-    pass_count = torch.sum(torch.eq(out_tensor, golden_out_tensor)).item()
-    result = CompareResult(pass_count, golden_out_tensor.numel())
-    return result
+
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor) -> CompareResult:
+        pass_count = torch.sum(torch.eq(out_tensor, golden_out_tensor)).item()
+        return CompareResult(pass_count, golden_out_tensor.numel())
 
 
-def quant_compare_int(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, max_ae: int = 1) -> CompareResult:
-    ae_tensor = ae(out_tensor, golden_out_tensor)
-    pass_count = torch.sum(
-        torch.le(ae_tensor, torch.full(ae_tensor.shape, max_ae))).item()
-    return CompareResult(pass_count, golden_out_tensor.numel())
+class QuantIntComparer(SingleComparer):
+    def __init__(self, max_ae: int = 1):
+        self.max_ae = max_ae
+
+    def compare(self, out_tensor, golden_out_tensor):
+        ae_tensor = ae(out_tensor, golden_out_tensor)
+        pass_count = torch.sum(
+            torch.le(ae_tensor, torch.full(ae_tensor.shape, self.max_ae))).item()
+        return CompareResult(pass_count, golden_out_tensor.numel())
 
 
-def err_eb_compare(out_tensor: torch.Tensor, golden_out_tensor: torch.Tensor, err_value: float,
-                   eb_value: float) -> CompareResult:
-    err_result = err(out_tensor, golden_out_tensor)
-    pass_count = torch.lt(err_result, torch.full(
-        out_tensor.shape, err_value)).to(torch.int32).sum().item()
-    result = CompareResult(pass_count, golden_out_tensor.numel())
-    eb_result = eb(out_tensor, golden_out_tensor)
-    result.add_item('eb', eb_result, eb_value, eb_result < eb_value)
-    return result
+class ErrEBComparer(SingleComparer):
+    def __init__(self, err_value: float, eb_value: float):
+        self.err_value = err_value
+        self.eb_value = eb_value
+
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor) -> CompareResult:
+        err_result = err(out_tensor, golden_out_tensor)
+        pass_count = torch.lt(err_result, torch.full(
+            out_tensor.shape, self.err_value)).to(torch.int32).sum().item()
+        result = CompareResult(pass_count, golden_out_tensor.numel())
+        eb_result = eb(out_tensor, golden_out_tensor)
+        result.add_item('eb', eb_result, self.eb_value,
+                        eb_result < self.eb_value)
+        return result
 
 
-def dual_compare(out_tensor: torch.Tensor,
-                 golden_out_tensor: torch.Tensor,
-                 golden_out_tensor_gpu: torch.Tensor,
+class DualGoldenComparer(DoubleComparer):
+    def __init__(self,
                  err_value: float,
                  eb_value: float,
                  mare_value: float = 10,
                  mere_value: float = 2,
-                 rmse_value: float = 2) -> CompareResult:
-    """Double golden compare.
+                 rmse_value: float = 2):
+        self.err_value = err_value
+        self.eb_value = eb_value
+        self.mare_value = mare_value
+        self.mere_value = mere_value
+        self.rmse_value = rmse_value
 
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :param golden_out_tensor_gpu: golden output tensor from GPU
-    :param err_value: err standard
-    :param eb_value: eb standard
-    :param mare_value: mare standard, defaults to 10
-    :param mere_value: mere standard, defaults to 2
-    :param rmse_value: rmse standard, defaults to 2
-    :return: compare result
-    """
-    npu_mare = mare(out_tensor, golden_out_tensor)
-    gpu_mare = mare(out_tensor, golden_out_tensor_gpu)
-    npu_mere = mere(out_tensor, golden_out_tensor)
-    gpu_mere = mere(out_tensor, golden_out_tensor_gpu)
-    npu_rmse = rmse(out_tensor, golden_out_tensor)
-    gpu_rmse = rmse(out_tensor, golden_out_tensor_gpu)
-    mare_result = npu_mare / max(gpu_mare, err_value)
-    mere_result = npu_mere / max(gpu_mere, err_value)
-    rmse_result = npu_rmse / max(gpu_rmse, err_value)
-    mare_pass = mare_result < mare_value
-    mere_pass = mere_result < mere_value
-    rmse_pass = rmse_result < rmse_value
-    eb_result = eb(out_tensor, golden_out_tensor)
-    eb_pass = eb_result < eb_value
-    result = CompareResult(
-        [mare_pass, mere_pass, rmse_pass, eb_pass].count(True), 4)
-    result.add_item('mare', mare_result, mare_value, mare_pass)
-    result.add_item('mere', mere_result, mere_value, mere_pass)
-    result.add_item('rmse', rmse_result, rmse_value, rmse_pass)
-    result.add_item('eb', eb_pass, eb_value, eb_pass)
-    return result
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor,
+                golden_out_tensor_gpu: torch.Tensor) -> CompareResult:
+
+        npu_mare = mare(out_tensor, golden_out_tensor)
+        gpu_mare = mare(out_tensor, golden_out_tensor_gpu)
+        npu_mere = mere(out_tensor, golden_out_tensor)
+        gpu_mere = mere(out_tensor, golden_out_tensor_gpu)
+        npu_rmse = rmse(out_tensor, golden_out_tensor)
+        gpu_rmse = rmse(out_tensor, golden_out_tensor_gpu)
+        mare_result = npu_mare / max(gpu_mare, self.err_value)
+        mere_result = npu_mere / max(gpu_mere, self.err_value)
+        rmse_result = npu_rmse / max(gpu_rmse, self.err_value)
+        eb_result = eb(out_tensor, golden_out_tensor)
+        eb_pass = eb_result < self.eb_value
+        result = CompareResult(0, 0)
+        result.add_item('mare', mare_result, self.mare_value,
+                        mare_result < self.mare_value)
+        result.add_item('mere', mere_result, self.mere_value,
+                        mere_result < self.mere_value)
+        result.add_item('rmse', rmse_result, self.rmse_value,
+                        rmse_result < self.rmse_value)
+        result.add_item('eb', eb_pass, self.eb_value, eb_pass)
+        return result
 
 
-def float_high_precision_compare(out_tensor: torch.Tensor,
-                                 golden_out_tensor: torch.Tensor,
-                                 golden_out_tensor_gpu: torch.Tensor,
-                                 err_value: float,
-                                 eb_value: float):
-    """Double golden compare for COMPUTE_FLOAT_HIGH_PRECISION.
+class ComputeFloatHighPrecisionComparer(DoubleComparer):
+    def __init__(self, err_value: float, eb_value: float):
+        self.err_value = err_value
+        self.eb_value = eb_value
 
-    :param out_tensor: output tensor
-    :param golden_out_tensor: golden output tensor
-    :param golden_out_tensor_gpu: golden output tensor from GPU
-    :param err_value: err standard
-    :param eb_value: eb standard
-    :return: compare result
-    """
-    err_result_cpu = err(out_tensor, golden_out_tensor)
-    err_result_gpu = err(out_tensor, golden_out_tensor_gpu)
-    err_result = torch.div(err_result_cpu, torch.max(
-        err_result_gpu, torch.full(out_tensor.shape, err_value)))
-    pass_count = torch.sum(torch.lt(err_result, torch.full(
-        out_tensor.shape, 2)).to(torch.int32)).item()
-    result = CompareResult(pass_count, out_tensor.numel())
-    eb_result = eb(out_tensor, golden_out_tensor)
-    result.add_item('eb', eb_result, eb_value, eb_result < eb_value)
-    return result
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor,
+                golden_out_tensor_gpu: torch.Tensor):
+        """Double golden compare for COMPUTE_FLOAT_HIGH_PRECISION.
+
+        :param out_tensor: output tensor
+        :param golden_out_tensor: golden output tensor
+        :param golden_out_tensor_gpu: golden output tensor from GPU
+        :param err_value: err standard
+        :param eb_value: eb standard
+        :return: compare result
+        """
+        err_result_cpu = err(out_tensor, golden_out_tensor)
+        err_result_gpu = err(out_tensor, golden_out_tensor_gpu)
+        err_result = torch.div(err_result_cpu, torch.max(
+            err_result_gpu, torch.full(out_tensor.shape, self.err_value)))
+        pass_count = torch.sum(torch.lt(err_result, torch.full(
+            out_tensor.shape, 2)).to(torch.int32)).item()
+        result = CompareResult(pass_count, out_tensor.numel())
+        eb_result = eb(out_tensor, golden_out_tensor)
+        result.add_item('eb', eb_result, self.eb_value,
+                        eb_result < self.eb_value)
+        return result
 
 
-def default_compare(out_tensor: torch.Tensor,
-                    golden_out_tensor: torch.Tensor,
-                    golden_out_tensor_gpu: torch.Tensor,
-                    op_type: OpType,
-                    tensor_dtype: torch.dtype,
-                    use_gpu_golden: bool = False,
-                    *args,
-                    **kwargs) -> CompareResult:
-    logging.info(
-        f"Comparer for {op_type.name} in {tensor_dtype} with {['out', ''][int(use_gpu_golden)]} GPU golden result is not found. Use torch.allclose.")
-    return CompareResult(torch.allclose(out_tensor, golden_out_tensor, rtol=0.001, atol=0.001), 1)
+class DefaultSingleComparer(SingleComparer):
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor) -> CompareResult:
+        if is_int_type(out_tensor.dtype):
+            pass_count = torch.eq(out_tensor, golden_out_tensor).sum().item()
+            return CompareResult(pass_count, out_tensor.numel())
+        if is_float_type(out_tensor.dtype):
+            return ErrEBComparer(2**(-11), 2**(-14))(out_tensor, golden_out_tensor)
+
+
+class DefaultDoubleComparer(DoubleComparer):
+    def compare(self,
+                out_tensor: torch.Tensor,
+                golden_out_tensor: torch.Tensor,
+                golden_out_tensor_gpu: torch.Tensor):
+        return DefaultSingleComparer()(out_tensor, golden_out_tensor)
+
 
 
 class ComparerFactory:
@@ -321,19 +310,13 @@ class ComparerFactory:
     def set_calculate_times(self, calculate_times: int):
         self.calculate_times = calculate_times
 
-    def get_single_golden_comparer(self, tensor_dtype: torch.dtype) -> Callable[
-            [torch.Tensor, torch.Tensor], CompareResult]:
-        """Get single golden compare function.
-
-        :param tensor_dtype: tensor dtype
-        :return: compare function
-        """
+    def get_single_golden_comparer(self, tensor_dtype: torch.dtype) -> SingleComparer:
         if self.op_type in (OpType.COMPUTE_INTEGER, OpType.MOVE, OpType.CAST):
             # 搬运、整数计算、转换要求二进制一致
-            return binary_match_compare
+            return BinaryMatchComparer()
         if self.op_type == OpType.COMPUTE_QUANT and is_int_type(tensor_dtype):
             # 量化为整数
-            return quant_compare_int
+            return QuantIntComparer()
         if (self.op_type in (OpType.COMPUTE_FLOAT, OpType.COMPUTE_FLOAT_HIGH_PRECISION, OpType.VECTOR_FUSION)
                 or (self.op_type == OpType.COMPUTE_QUANT and is_float_type(tensor_dtype))):
             # 浮点计算、V融合、反量化为浮点
@@ -345,22 +328,16 @@ class ComparerFactory:
             # 计算次数大于16384且选用fp32时，再次放开一定范围
             if self.calculate_times >= 16384 and tensor_dtype == torch.float32:
                 err_exp += 1
-            return partial(err_eb_compare, err_value=2 ** err_exp, eb_value=2 ** eb_exp)
-        return partial(default_compare, op_type=self.op_type, tensor_type=tensor_dtype, use_gpu_golden=False)
+            return ErrEBComparer(2 ** err_exp, 2 ** eb_exp)
+        logging.info(f"Comparer for {self.op_type.name} in {tensor_dtype} without GPU golden result is not found. Use default comparer.")
+        return DefaultSingleComparer()
 
-    def get_double_golden_comparer(self, tensor_dtype: torch.dtype) -> Callable[
-            [torch.Tensor, torch.Tensor, torch.Tensor], CompareResult]:
-        """Get double golden compare function.
-
-        :param tensor_dtype: tensor dtype
-        :return: compare function
-        """
+    def get_double_golden_comparer(self, tensor_dtype: torch.dtype) -> DoubleComparer:
         if self.op_type == OpType.COMPUTE_FLOAT_HIGH_PRECISION:
             # 高精度
-            return partial(float_high_precision_compare, err_value=2 ** ERR_BASE[self.op_type, tensor_dtype],
-                           eb_value=2 ** EB_BASE[tensor_dtype])
+            return ComputeFloatHighPrecisionComparer(2 ** ERR_BASE[self.op_type, tensor_dtype], 2 ** EB_BASE[tensor_dtype])
         if self.op_type in (OpType.COMPUTE_FLOAT, OpType.CV_FUSION):
             # 浮点、CV
-            return partial(dual_compare, err_value=2 ** ERR_BASE[self.op_type, tensor_dtype],
-                           eb_value=2 ** EB_BASE[tensor_dtype])
-        return partial(default_compare, op_type=self.op_type, tensor_type=tensor_dtype, use_gpu_golden=True)
+            return DualGoldenComparer(2 ** ERR_BASE[self.op_type, tensor_dtype], 2 ** EB_BASE[tensor_dtype])
+        logging.info(f"Comparer for {self.op_type.name} in {tensor_dtype} with GPU golden result is not found. Use default comparer.")
+        return DefaultDoubleComparer()

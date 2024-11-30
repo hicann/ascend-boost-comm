@@ -28,7 +28,7 @@ from mkipythontest.utils.generator import (gen_tensors,
 from mkipythontest.utils.log import log_tensors
 
 logging.basicConfig(
-    # level=logging.INFO,
+    level=logging.INFO,
     format="%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s",
 )
 
@@ -272,12 +272,12 @@ class OpTest(unittest.TestCase):
             if self.use_gpu_golden:
                 comparer = compare_factory.get_double_golden_comparer(
                     out_tensor.dtype)
-                compare_result = comparer(
+                compare_result = comparer.compare(
                     out_tensor, golden_out_tensor, golden_out_tensors_gpu[i])
             else:
                 comparer = compare_factory.get_single_golden_comparer(
                     out_tensor.dtype)
-                compare_result = comparer(
+                compare_result = comparer.compare(
                     out_tensor, golden_out_tensor)
             results.append(compare_result)
         for i, result in enumerate(results):
