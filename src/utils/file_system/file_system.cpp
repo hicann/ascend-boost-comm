@@ -85,13 +85,13 @@ std::string FileSystem::BaseName(const std::string &filePath)
     std::string fileName;
     std::string realPath = FileSystem::PathCheckAndRegular(filePath);
     MKI_CHECK(!realPath.empty(), "file path is invalid", return "");
-    const char *str = strrchr(realPath.c_str(), '/');
-    if (str) {
-        fileName = str + 1;
-    } else {
-        fileName = realPath;
+    const size_t pos = realPath.find_last_of('/');
+    if (pos == std::string::npos) {
+        return realPath;
+    } else if (pos < realPath.size() - 1) {
+        return realPath.substr(pos + 1);
     }
-    return fileName;
+    return "";
 }
 
 std::string FileSystem::DirName(const std::string &path)
