@@ -5,16 +5,18 @@
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
+
+import json
+import logging
 import os
 import unittest
-import logging
-import json
-import re
+import warnings
+
 import numpy
 import torch
 import torch_npu
-import warnings
 
+from mkipythontest.utils.soc import get_soc_type,only_910b,only_310p,only_910,skip_310p,skip_910
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,7 +42,6 @@ class OpTest(unittest.TestCase):
         self.format_nd = 2
         self.multiplex = False
         self.out_flag = False
-        self.support_soc = []
 
     def set_param(self, op_name, op_param):
         self.op_desc = {
@@ -60,22 +61,18 @@ class OpTest(unittest.TestCase):
     def set_support_910b(self):
         warnings.warn(
             "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
-        self.support_soc.append("Ascend910B")
 
     def set_support_310p(self):
         warnings.warn(
             "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
-        self.support_soc.append("Ascend310P")
 
     def set_support_910b_only(self):
         warnings.warn(
             "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
-        self.support_soc = ["Ascend910B"]
 
     def set_support_310p_only(self):
         warnings.warn(
             "It is useless and will be removed recently, please use soc decorator instead", DeprecationWarning)
-        self.support_soc = ["Ascend310P"]
 
     def set_input_formats(self, formats):
         self.op_desc["input_formats"] = formats
@@ -90,16 +87,6 @@ class OpTest(unittest.TestCase):
     def execute(self, in_tensors, out_tensors, envs=None):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
-
-        if self.support_soc:
-            soc_version = get_soc_name()
-            if (soc_version == None):
-                quit(1)
-
-            if soc_version not in self.support_soc:
-                logging.info("Current soc is %s is not supported for this case: %s",
-                             soc_version, str(self.support_soc))
-                return
 
         in_tensors_npu = [tensor.npu() for tensor in in_tensors]
         out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
@@ -130,15 +117,6 @@ class OpTest(unittest.TestCase):
     def execute_perf(self, in_tensors, out_tensors, envs=None):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
-        if self.support_soc:
-            soc_version = get_soc_name()
-            if (soc_version == None):
-                quit(1)
-
-            if soc_version not in self.support_soc:
-                logging.info("Current soc is %s is not supported for this case: %s",
-                             soc_version, str(self.support_soc))
-                return
 
         in_tensors_npu = [tensor.npu() for tensor in in_tensors]
         out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
@@ -182,35 +160,3 @@ class OpTest(unittest.TestCase):
         if format != -1:
             npu_input = torch_npu.npu_format_cast(npu_input, format)
         return cpu_input, npu_input
-
-
-def get_soc_name():
-    device_name = torch_npu.npu.get_device_name()
-    if re.search("Ascend910B", device_name, re.I) and len(device_name) > 10:
-        soc_version = "Ascend910B"
-    elif re.search("Ascend310P", device_name, re.I):
-        soc_version = "Ascend310P"
-    elif re.search("Ascend910ProB", device_name, re.I):
-        soc_version = "Ascend910A"
-    elif re.search("Ascend910B", device_name, re.I):
-        soc_version = "Ascend910A"
-    elif re.search("Ascend910PremiumA", device_name, re.I):
-        soc_version = "Ascend910A"
-    elif re.search("Ascend910ProA", device_name, re.I):
-        soc_version = "Ascend910A"
-    elif re.search("Ascend910A", device_name, re.I):
-        soc_version = "Ascend910A"
-    else:
-        logging.error("device_name %s is not supported", device_name)
-        soc_version = None
-    return soc_version
-
-
-def only_soc(soc_name):
-    return unittest.skipIf(soc_name != get_soc_name(), f"This case only runs on {soc_name}")
-
-
-only_910b = only_soc("Ascend910B")
-only_310p = only_soc("Ascend310P")
-only_910a = only_soc("Ascend910A")
-skip_910a = unittest.skipIf(get_soc_name() == "Ascend910A","don't support 910a")
