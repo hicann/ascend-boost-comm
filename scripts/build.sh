@@ -291,7 +291,7 @@ function fn_main()
     COMPILE_OPTIONS="${COMPILE_OPTIONS} -DUSE_CXX11_ABI=$USE_CXX11_ABI -DENABLE_COVERAGE=$ENABLE_COVERAGE"
     case "${arg1}" in
         "testframework")
-            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Debug -DBUILD_TEST_FRAMEWORK=ON"
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DCMAKE_BUILD_TYPE=Release -DBUILD_TEST_FRAMEWORK=ON"
             fn_init_pytorch_env
             fn_build
             ;;
