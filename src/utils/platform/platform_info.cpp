@@ -47,6 +47,7 @@ void PlatformInfo::Init()
 
     const std::unordered_map<std::string, std::pair<PlatformType, std::string>> supportedPlatform = {
         {"Ascend310P",   {PlatformType::ASCEND_310P, "ascend310p"}},
+        {"Ascend310B",   {PlatformType::ASCEND_310B, "ascend310b"}},
         {"Ascend910",    {PlatformType::ASCEND_910A, "ascend910"}},
         {"Ascend910B",   {PlatformType::ASCEND_910B, "ascend910b"}},
         {"Ascend910_93", {PlatformType::ASCEND_910B, "ascend910b"}}};

@@ -200,6 +200,8 @@ def get_soc_name():
         soc_version = "Ascend910A"
     elif re.search("Ascend910A", device_name, re.I):
         soc_version = "Ascend910A"
+    elif re.search("Ascend310B", device_name, re.I) and len(device_name) > 10:
+        soc_version = "Ascend310B"
     else:
         logging.error("device_name %s is not supported", device_name)
         soc_version = None
@@ -214,3 +216,5 @@ only_910b = only_soc("Ascend910B")
 only_310p = only_soc("Ascend310P")
 only_910a = only_soc("Ascend910A")
 skip_910a = unittest.skipIf(get_soc_name() == "Ascend910A","don't support 910a")
+only_310b = only_soc("Ascend310B")
+skip_310b = unittest.skipIf(get_soc_name() == "Ascend310B", "don't support 310b")

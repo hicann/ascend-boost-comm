@@ -124,7 +124,7 @@ def gen_json(args, kernels):
     json_template["binFileName"] = args.kernel
     for kernel in kernels:
         json_template["kernelList"].append({"kernelName": kernel})
-    if args.soc == "ascend910" or args.soc == "ascend310p":
+    if args.soc == "ascend910" or args.soc == "ascend310p" or args.soc == "ascend310b":
         json_template["coreType"] = "AiCore"
         json_template["core_type"] = "AIC"
         json_template["magic"] = "RT_DEV_BINARY_MAGIC_ELF"
