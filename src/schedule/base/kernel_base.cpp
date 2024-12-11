@@ -24,7 +24,8 @@ public:
     {
         uint8_t *argsPtr = kernelInfo.GetArgs();
         uint64_t argsSize = kernelInfo.GetArgsSize();
-        MKI_CHECK(argsPtr != nullptr, "args size invalid", return Status::FailStatus(-1));
+        MKI_CHECK(argsPtr != nullptr, "kernel info args is nullptr, please check first error before.",
+                  return Status::FailStatus(-1));
         MKI_CHECK(argsNum * sizeof(void *) <= argsSize, "args size invalid", return Status::FailStatus(-1));
         auto ret = memset_s(argsPtr, argsSize, 0, argsNum * sizeof(void *));
         MKI_CHECK(ret == EOK, "memory set failed", return Status::FailStatus(ERROR_INVALID_VALUE));
