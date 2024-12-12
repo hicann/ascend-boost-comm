@@ -157,6 +157,8 @@ def get_common_options(args):
     if args.no_warning:
         options.append("-Wno-deprecated-declarations")
         options.append("-Wno-array-bounds")
+        if args.soc == "ascend310b":
+            options.append("-Wno-#warnings")
     return options
 
 
