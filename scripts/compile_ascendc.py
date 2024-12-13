@@ -89,7 +89,6 @@ def gen_compile_cmd_v300(args, dst: str, sub_arch: str, compile_options):
                     "-mllvm", "-cce-aicore-addr-transform",
                     "-mllvm", "--cce-aicore-or-combine=false",
                     "-mllvm", "-instcombine-code-sinking=false",
-                    "-Xclang", "-fcce-vf-vl=256",
                     "-mllvm", "-cce-aicore-jump-expand=false",
                     "-mllvm", "-cce-aicore-mask-opt=false"]
     compile_cmd += ["-std=c++17"]
