@@ -43,9 +43,12 @@ function fn_install_cann_and_kernel()
         ./CANN-opp-*.run --full --quiet --nox11 --install-path=${cann_install_path}
         ./CANN-toolkit-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}
         ./CANN-aoe-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend310P-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
+        chmod 750 $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe
+        mkdir -p $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe/kernel/{ascend910b,ascend910,ascend310p}
+        ./Ascend910B-opp_kernel-*.run --noexec --extract=ascend910b && cp -rf ascend910b/opp_kernel/* $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe/kernel/ascend910b
+        ./Ascend910-opp_kernel-*.run --noexec --extract=ascend910 && cp -rf ascend910/opp_kernel/* $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe/kernel/ascend910
+        ./Ascend310P-opp_kernel-*.run --noexec --extract=ascend310p && cp -rf ascend310p/opp_kernel/* $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe/kernel/ascend310p
+        tree -L 2 $ASCEND_HOME_PATH/opp/built-in/op_impl/ai_core/tbe/kernel
         ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}
     fi
     set +e
