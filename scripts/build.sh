@@ -46,6 +46,7 @@ function fn_install_cann_and_kernel()
         ./Ascend910B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
         ./Ascend310P-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
         ./Ascend910-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
+        ./Ascend310B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
         ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}
     fi
     set +e
