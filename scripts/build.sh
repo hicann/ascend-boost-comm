@@ -38,16 +38,28 @@ function fn_install_cann_and_kernel()
     chmod +x *.run
     cann_install_path="/home/slave1/Ascend/ascend-toolkit"
     if [ ! -d "$cann_install_path" ];then
-        ./CANN-runtime-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-compiler-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-opp-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-toolkit-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-aoe-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend310P-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend310B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}
+        ./CANN-runtime-*.run --full --quiet --nox11 --install-path=${cann_install_path}/runtime
+        ./CANN-compiler-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}/compiler & \
+        ./CANN-opp-*.run --full --quiet --nox11 --install-path=${cann_install_path}/opp & \
+        ./CANN-toolkit-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}/toolkit & \
+        ./CANN-aoe-*.run --full --quiet --nox11 --install-path=${cann_install_path}/aoe & \
+        ./Ascend910B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}/910b_opp_kernel & \
+        ./Ascend310P-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}/310p_opp_kernel & \
+        ./Ascend910-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}/910_opp_kernel & \
+        ./Ascend310B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}/310b_opp_kernel & \
+        ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}/hccl
+        wait
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/compiler/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/opp/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/toolkit/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/aoe/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/910b_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/310p_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/910_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files ${cann_install_path}/310b_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only --remove-source-files  ${cann_install_path}/hccl/ ${cann_install_path}/runtime/
+        wait
+        mv ${cann_install_path}/runtime ${cann_install_path}/ascend-toolkit
     fi
     set +e
     source /home/slave1/Ascend/ascend-toolkit/latest/bin/setenv.bash
