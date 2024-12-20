@@ -26,6 +26,10 @@ int MkiRtFunctionLaunchWithHandle(void *handle, const MkiRtKernelParam *launchPa
     const RtTaskCfgInfoT *cfgInfo);
 int MkiRtFunctionLaunchWithFlag(const void *func, const MkiRtKernelParam *launchParam, MkiRtStream stream,
     const RtTaskCfgInfoT *cfgInfo);
+int MkiRtAicpuFunctionLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream);
+int MkiRtAicpuFunctionLaunchExWithArgs(const char * const opName, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream);
 }
 #ifdef __cplusplus
 }

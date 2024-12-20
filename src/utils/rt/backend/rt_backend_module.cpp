@@ -192,6 +192,32 @@ int RtBackend::FunctionLaunchWithFlag(const void *func, const MkiRtKernelParam *
                                   "rt KernelLaunch With Flag");
 }
 
+int RtBackend::AicpuFunctionLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream)
+{
+    CHECK_FUN_PARA_RETURN(launchNames);
+    CHECK_FUN_PARA_RETURN(param);
+    CHECK_FUN_PARA_RETURN(param->argsEx);
+    CHECK_STATUS_WITH_DESC_RETURN(rtAicpuKernelLaunchWithFlag(launchNames, param->blockDim,
+                                                              param->argsEx, nullptr,
+                                                              stream, 0U),
+                                  "rt Aicpu KernelLaunch With Flag");
+}
+
+int RtBackend::AicpuFunctionLaunchExWithArgs(const char * const opName, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream)
+{
+    CHECK_FUN_PARA_RETURN(opName);
+    CHECK_FUN_PARA_RETURN(param);
+    CHECK_FUN_PARA_RETURN(param->aicpuArgsEx);
+    constexpr uint32_t KERNEL_TYPE_AICPU_CUSTOM = 4;
+    constexpr uint32_t RT_KERNEL_CUSTOM_AICPU = 8;
+    CHECK_STATUS_WITH_DESC_RETURN(rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_CUSTOM, opName, param->blockDim,
+                                                                param->aicpuArgsEx, nullptr,
+                                                                stream, RT_KERNEL_CUSTOM_AICPU),
+                                  "rt Aicpu KernelLaunch Ex With Args");
+}
+
 int RtBackend::GetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
 {
     CHECK_STATUS_WITH_DESC_RETURN(rtGetC2cCtrlAddr(addr, len), "rt Get C2cCtrl Addr");

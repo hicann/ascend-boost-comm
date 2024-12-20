@@ -49,4 +49,16 @@ int MkiRtFunctionLaunchWithFlag(const void *func, const MkiRtKernelParam *launch
 {
     return BackendFactory::GetBackend()->FunctionLaunchWithFlag(func, launchParam, stream, cfgInfo);
 }
+
+int MkiRtAicpuFunctionLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream)
+{
+    return BackendFactory::GetBackend()->AicpuFunctionLaunchWithFlag(launchNames, param, stream);
+}
+
+int MkiRtAicpuFunctionLaunchExWithArgs(const char * const opName, const MkiRtAicpuKernelParam *param,
+    MkiRtStream stream)
+{
+    return BackendFactory::GetBackend()->AicpuFunctionLaunchExWithArgs(opName, param, stream);
+}
 }

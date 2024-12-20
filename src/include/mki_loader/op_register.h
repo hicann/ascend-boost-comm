@@ -13,13 +13,15 @@
 #include <map>
 #include <vector>
 #include "mki/base/kernel_base.h"
+#include "mki/base/aicpu_kernel_base.h"
 #include "mki/base/operation_base.h"
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/log/log.h"
 #include "mki_loader/op_schedule_base.h"
 
-#define MACRO_TO_STR(name) #name
-#define MKI_NAMESPACE_LOG(level, spaceName) MKI_LOG(level) << (MACRO_TO_STR(spaceName))
+#define MACRO_TO_STR_INTERNAL(name) #name
+#define MACRO_TO_STR(name) MACRO_TO_STR_INTERNAL(name)
+#define MKI_NAMESPACE_LOG(level, spaceName) MKI_LOG(level) << (MACRO_TO_STR_INTERNAL(spaceName))
 
 namespace OpSpace {
 using namespace Mki;
@@ -58,6 +60,24 @@ public:
     }
 };
 
+class AicpuKernelRegister {
+public:
+    AicpuKernelRegister(const char *opName, const char *kerName, NewAicpuKernelFunc func) noexcept
+    {
+        MKI_CHECK(opName != nullptr, "opName is nullptr", return);
+        MKI_CHECK(kerName != nullptr, "kerName is nullptr", return);
+        auto &kernelCreators = GetKernelCreators();
+        kernelCreators.push_back({ func, opName, kerName });
+        MKI_NAMESPACE_LOG(DEBUG, OpSpace) << " register aicpu kernel " << kerName << " of operation " << opName;
+    }
+
+    static AicpuKernelCreators &GetKernelCreators()
+    {
+        static AicpuKernelCreators kernelCreators;
+        return kernelCreators;
+    }
+};
+
 class KernelBinaryRegister {
 public:
     KernelBinaryRegister(const char *soc, const char *kernelName, const uint8_t *binary, uint32_t binaryLen) noexcept
@@ -83,6 +103,7 @@ public:
     {
         AddAllOperations(OperationRegister::GetOperationCreators(),
                          KernelRegister::GetKernelCreators(),
+                         AicpuKernelRegister::GetKernelCreators(),
                          KernelBinaryRegister::GetKernelBinaryMap());
     }
     ~OpSchedule() override {}
@@ -105,8 +126,19 @@ public:
     }                                                                                                               \
     static KernelRegister ker##kerName##register = KernelRegister(OperationPlaceHolder, #kerName, GetKernel##kerName)
 
-#define REG_KERNEL(soc, kerName, binary)                                                                            \
-    static KernelBinaryRegister bin##kerName##soc##register =                                                       \
+#define REG_AICPU_KERNEL_BASE(kerName)                                                                             \
+    Mki::Kernel const *GetAicpuKernel##kerName()                                                                   \
+    {                                                                                                              \
+        static std::string aicpuKernelName = MACRO_TO_STR(kerName##AicpuKernelPlaceHolder);                        \
+        static kerName ker##kerName(#kerName, aicpuKernelName.c_str());                                            \
+        SetAicpuKernelSelfCreator(ker##kerName, [=](){ return new kerName(#kerName, aicpuKernelName.c_str()); });  \
+        return &ker##kerName;                                                                                      \
+    }                                                                                                              \
+    static AicpuKernelRegister ker##kerName##register =                                                            \
+        AicpuKernelRegister(OperationPlaceHolder, #kerName, GetAicpuKernel##kerName)
+
+#define REG_KERNEL(soc, kerName, binary)                                                                           \
+    static KernelBinaryRegister bin##kerName##soc##register =                                                      \
            KernelBinaryRegister(#soc, #kerName, binary, sizeof(binary))
 } // namespace OpSpace
 

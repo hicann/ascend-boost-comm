@@ -97,6 +97,42 @@ typedef struct {
     uint8_t reserved[4] = {0};
 } RtArgsExT;
 
+#pragma pack(push, 1)
+
+typedef struct {
+    uint64_t kernelSoBuf;        // the starting address of custom operator so buf
+    uint32_t kernelSoBufLen;     // the length of custom operator so buf
+    uint64_t kernelSoName;       // the starting address of custom operator so name
+    uint32_t kernelSoNameLen;    // the length of custom operator so name
+} RtLoadOpFromBufArgs;
+
+typedef struct  {
+    uint32_t soNum;
+    uint64_t args;
+} RtBatchLoadOpFromBufArgs;
+
+#pragma pack(pop)
+
+typedef struct {
+    const char *soName;      // defined for so name
+    const char *kernelName;  // defined for kernel type name
+    const char *opName;      // defined for operator name
+} RtKernelLaunchNamesT;
+
+typedef struct {
+    void *args{nullptr}; // args host mem addr
+    RtHostInputInfoT *hostInputInfoPtr{nullptr}; // nullptr means no host mem input
+    RtHostInputInfoT *kernelOffsetInfoPtr{nullptr}; // KernelOffsetInfo, it is different for CCE Kernel and fwk kernel
+    uint32_t argsSize{0};
+    uint16_t hostInputInfoNum{0}; // hostInputInfo num
+    uint16_t kernelOffsetInfoNum{0}; // KernelOffsetInfo num
+    uint32_t soNameAddrOffset{0}; // just for CCE Kernel, default value is 0xffff for FWK kernel
+    uint32_t kernelNameAddrOffset{0}; // just for CCE Kernel, default value is 0xffff for FWK kernel
+    bool isNoNeedH2DCopy{0}; // is no need host to device copy: 0 means need H2D copy,
+                               // other means doesn't need H2D copy.
+    uint8_t reserved[3] = {0};
+} RtAicpuArgsExT;
+
 typedef struct {
     uint8_t qos{0};
     uint8_t partId{0};
@@ -111,6 +147,14 @@ typedef struct {
     uint32_t argSize = 0;
     RtArgsExT *argsEx = nullptr;
 } MkiRtKernelParam;
+
+typedef struct {
+    uint32_t blockDim = 0;
+    void *args = nullptr;
+    uint32_t argSize = 0;
+    RtArgsExT *argsEx = nullptr;
+    RtAicpuArgsExT *aicpuArgsEx = nullptr;
+} MkiRtAicpuKernelParam;
 
 #ifdef __cplusplus
 }

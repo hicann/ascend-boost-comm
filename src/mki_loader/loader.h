@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <memory>
 #include <atomic>
+#include <functional>
 #include "mki/operation.h"
 #include "mki/kernel.h"
 #include "mki/bin_handle.h"
@@ -19,9 +20,10 @@
 
 namespace Mki {
 class Loader {
+using RtPtrDeleter = std::function<void(uint8_t *)>;
 public:
     Loader(const OperationCreators &operationCreators, const KernelCreators &kernelCreators,
-           const BinaryBasicInfoMap &binaryMap);
+           const AicpuKernelCreators &aicpuKernelCreators, const BinaryBasicInfoMap &binaryMap);
     ~Loader();
     Loader() = delete;
     Loader(const Loader &) = delete;
@@ -35,17 +37,25 @@ private:
     bool LoadKernelBinarys();
     bool CreateOperations();
     bool CreateKernels();
+
+    bool GetAicpuDeviceKernelSo(uint32_t &fileSize);
+    bool LoadAicpuKernelBinarys();
+    bool CreateAicpuKernels();
+
     bool OpBaseAddKernels() const;
 
 private:
     const OperationCreators &operationCreators_;
     const KernelCreators &kernelCreators_;
+    const AicpuKernelCreators &aicpuKernelCreators_;
     const BinaryBasicInfoMap &binaryMap_;
 
     std::atomic_bool loadSuccess_{false};
     std::unordered_map<std::string, Mki::Operation *> opMap_;
     std::unordered_map<std::string, Mki::KernelMap> opKernelMap_;
     std::unordered_map<std::string, Mki::BinHandle> binHandles_;
+    std::unique_ptr<uint8_t[], RtPtrDeleter> aicpuSoHandle_;
+    std::unique_ptr<uint8_t[], RtPtrDeleter> aicpuSoNameHandle_;
 };
 } // namespace Mki
 #endif

@@ -31,7 +31,7 @@ public:
 
 protected:
     void AddAllOperations(const OperationCreators &opCreators, const KernelCreators &kerCreators,
-                          const BinaryBasicInfoMap &binMap);
+                          const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binMap);
 
 private:
     void AddOperationByName(Operation *op);

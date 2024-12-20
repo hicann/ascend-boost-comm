@@ -72,6 +72,16 @@ int rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, RtArgsExT 
 // rt other
 int rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
 
+// rt Aicpu
+int rtAicpuKernelLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, uint32_t blockDim,
+                                const RtArgsExT *argsInfo, void *smDesc, rtStream_t stm,
+                                uint32_t flags);
+
+int rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char * const opName,
+                                  const uint32_t blockDim, const RtAicpuArgsExT *argsInfo,
+                                  void * const smDesc, const rtStream_t stm,
+                                  const uint32_t flags);
+
 #ifdef __cplusplus
 }
 #endif
@@ -125,6 +135,12 @@ public:
                                  const RtTaskCfgInfoT *cfgInfo) override;
     int FunctionLaunchWithFlag(const void *func, const MkiRtKernelParam *param, MkiRtStream stream,
                                const RtTaskCfgInfoT *cfgInfo) override;
+
+public:
+    int AicpuFunctionLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, const MkiRtAicpuKernelParam *param,
+                                    MkiRtStream stream) override;
+    int AicpuFunctionLaunchExWithArgs(const char * const opName, const MkiRtAicpuKernelParam *param,
+                                      MkiRtStream stream) override;
 
 public:
     int GetC2cCtrlAddr(uint64_t *addr, uint32_t *len) override;

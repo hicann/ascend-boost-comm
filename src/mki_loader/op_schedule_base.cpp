@@ -47,12 +47,14 @@ Kernel *OpScheduleBase::GetKernelInstance(const std::string &kernelName) const
     return it == kernelMap_.end() ? nullptr : (it->second)->Clone();
 }
 
-void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators, const KernelCreators &kerCreators,
+void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators,
+                                      const KernelCreators &kerCreators,
+                                      const AicpuKernelCreators &aicpuKerCreators,
                                       const BinaryBasicInfoMap &binaryMap)
 {
     if (loader_ && loader_->IsValid()) { return; }
 
-    loader_ = std::make_unique<Loader>(opCreators, kerCreators, binaryMap);
+    loader_ = std::make_unique<Loader>(opCreators, kerCreators, aicpuKerCreators, binaryMap);
     if (!loader_->IsValid()) {
         return;
     }

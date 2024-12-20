@@ -8,17 +8,35 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "loader.h"
+#include <fstream>
 #include "mki/base/operation_base.h"
 #include "mki/base/kernel_base.h"
 #include "mki/bin_handle.h"
 #include "mki/utils/assert/assert.h"
+#include "mki/utils/env/env.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/platform/platform_info.h"
+#include "mki/utils/rt/rt.h"
+#include "mki_loader/op_register.h"
+
+namespace {
+void DevPtrDeleter(uint8_t* ptr)
+{
+    if (ptr) {
+        (void)Mki::MkiRtMemFreeDevice(ptr);
+    }
+}
+}
 
 namespace Mki {
-Loader::Loader(const OperationCreators &operationCreators, const KernelCreators &kernelCreators,
+Loader::Loader(const OperationCreators &operationCreators,
+               const KernelCreators &kernelCreators,
+               const AicpuKernelCreators &aicpuKernelCreators,
                const BinaryBasicInfoMap &binaryMap)
-    : operationCreators_(operationCreators), kernelCreators_(kernelCreators), binaryMap_(binaryMap) { Load(); }
+    : operationCreators_(operationCreators),
+      kernelCreators_(kernelCreators),
+      aicpuKernelCreators_(aicpuKernelCreators),
+      binaryMap_(binaryMap) { Load(); }
 
 Loader::~Loader() {}
 
@@ -75,6 +93,120 @@ bool Loader::CreateKernels()
     return true;
 }
 
+bool Loader::GetAicpuDeviceKernelSo(uint32_t &fileSize)
+{
+    int ret = 0;
+    // Parse FileName
+    std::string searchPath = Mki::GetEnv("ASDOPS_HOME_PATH");
+    MKI_CHECK(!searchPath.empty(), "ASDOPS_HOME_PATH not exists!", return false);
+    searchPath += "/lib/libasdops_aicpu_kernels.so";
+
+    // Open .so file
+    std::ifstream istrm(searchPath, std::ios::in | std::ios::binary | std::ios::ate);
+    MKI_CHECK(istrm.is_open(), "failed to open aicpu kernel so", return false);
+
+    MKI_CHECK(istrm.tellg() < std::numeric_limits<uint32_t>::max(),
+              "file size " << istrm.tellg() << " is larger than expected ~4GB", return false);
+    fileSize = static_cast<uint32_t>(istrm.tellg());
+
+    // Alloc mem for .so file
+    std::unique_ptr<char[]> aicpuKernelSo = std::make_unique<char[]>(fileSize);
+    MKI_CHECK(aicpuKernelSo != nullptr, "alloc host mem for aicpu kernel so failed", return false);
+
+    // Load .so file to HOST
+    istrm.seekg(0, std::ios::beg);
+    istrm.read(aicpuKernelSo.get(), fileSize);
+    MKI_CHECK(istrm.good(), "failed to read aicpu kernel so", return false);
+
+    // memcpy .so to DEVICE
+    uint8_t *soDevAddr{nullptr};
+    ret = Mki::MkiRtMemMallocDevice(reinterpret_cast<void **>(&soDevAddr), fileSize, MKIRT_MEM_DEFAULT);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemMallocDevice for aicpuSoHandle_ fail, errCode:" << ret, return false);
+    aicpuSoHandle_ = std::unique_ptr<uint8_t[], RtPtrDeleter>(soDevAddr, DevPtrDeleter);
+
+    ret = Mki::MkiRtMemCopy(aicpuSoHandle_.get(), fileSize, aicpuKernelSo.get(), fileSize,
+                            MKIRT_MEMCOPY_HOST_TO_DEVICE);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for aicpuSoHandle_ fail, errCode:" << ret, return false);
+    return true;
+}
+
+bool Loader::LoadAicpuKernelBinarys()
+{
+    uint32_t fileSize = 0;
+    MKI_CHECK(GetAicpuDeviceKernelSo(fileSize), "Failed to get aicpu kernels binary", return false);
+
+    int ret = 0;
+    // memcpy .so name to DEVICE
+    const char *soName = "libasdops_aicpu_kernels.so";
+    uint32_t soNameLen = strlen(soName);
+    uint8_t *soNameDevAddr{nullptr};
+    ret = Mki::MkiRtMemMallocDevice(reinterpret_cast<void **>(&soNameDevAddr), soNameLen, MKIRT_MEM_DEFAULT);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemMallocDevice for soNameDevAddr fail, errCode:" << ret, return false);
+    aicpuSoNameHandle_ = std::unique_ptr<uint8_t[], RtPtrDeleter>(soNameDevAddr, DevPtrDeleter);
+
+    ret = Mki::MkiRtMemCopy(aicpuSoNameHandle_.get(), soNameLen, soName, soNameLen, MKIRT_MEMCOPY_HOST_TO_DEVICE);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for soDevAddr fail, errCode:" << ret, return false);
+
+    // Prep so loading args
+    RtLoadOpFromBufArgs opArgs;
+    opArgs.kernelSoBuf = reinterpret_cast<uint64_t>(aicpuSoHandle_.get());
+    opArgs.kernelSoBufLen = fileSize;
+    opArgs.kernelSoName = reinterpret_cast<uint64_t>(aicpuSoNameHandle_.get());
+    opArgs.kernelSoNameLen = soNameLen;
+    uint32_t argsSize = sizeof(RtLoadOpFromBufArgs);
+
+    // launch to reg
+    MkiRtStream stream = nullptr;
+    ret = Mki::MkiRtStreamCreate(&stream, 0);
+    MKI_CHECK(ret == MKIRT_SUCCESS && stream != nullptr,
+                "MkiRtStreamCreate for LoadOpFromBuf fail, errCode:" << ret, return false);
+
+    RtArgsExT argsInfo = {};
+    argsInfo.args = &opArgs;
+    argsInfo.isNoNeedH2DCopy = 0;
+    argsInfo.argsSize = argsSize;
+
+    RtKernelLaunchNamesT launchName = {};
+    launchName.soName = nullptr;
+    launchName.kernelName = "loadOpFromBuf";
+    launchName.opName = "";
+
+    MkiRtAicpuKernelParam kernelParam = {};
+    kernelParam.blockDim = 1;
+    kernelParam.argsEx = &argsInfo;
+
+    ret = Mki::MkiRtAicpuFunctionLaunchWithFlag(&launchName, &kernelParam, stream);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtAicpuFunctionLaunchWithFlag for LoadOpFromBuf fail, errCode:" << ret,
+                return false);
+    ret = Mki::MkiRtStreamSynchronize(stream);
+    MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtStreamSynchronize for LoadOpFromBuf fail, errCode:" << ret, return false);
+    Mki::MkiRtStreamDestroy(stream);
+
+    return true;
+}
+
+bool Loader::CreateAicpuKernels()
+{
+    for (const auto &creatorInfo : aicpuKernelCreators_) {
+        const auto &kernelName = creatorInfo.kernelName;
+
+        auto kernelCreator = creatorInfo.func;
+        MKI_CHECK(kernelCreator, kernelName << " creator function is null", continue);
+        const Mki::Kernel *kernel = kernelCreator();
+        MKI_CHECK(kernel != nullptr, "Invalid kernel found in op: " << kernelName, return false);
+
+        const auto &opName = creatorInfo.opName;
+        auto &opKernel = opKernelMap_[opName];
+        opKernel[kernelName] = kernel;
+    }
+
+    if (aicpuKernelCreators_.size() != 0) {
+        return LoadAicpuKernelBinarys();
+    }
+
+    return true;
+}
+
 bool Loader::LoadKernelBinarys()
 {
     std::string deviceVersion = PlatformInfo::Instance().GetPlatformName();
@@ -120,6 +252,7 @@ void Loader::Load()
     MKI_CHECK(LoadKernelBinarys(), "Load kernel binarys fail", return);
     MKI_CHECK(CreateOperations(), "Load operations fail", return);
     MKI_CHECK(CreateKernels(), "Load kernels fail", return);
+    MKI_CHECK(CreateAicpuKernels(), "Load aicpu kernels fail", return);
     MKI_CHECK(OpBaseAddKernels(), "OpBase add kernels fail", return);
 
     loadSuccess_ = true;

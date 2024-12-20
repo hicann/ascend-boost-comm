@@ -76,6 +76,11 @@ macro(add_kernel_bin tac soc)
     )
 endmacro()
 
+macro(add_aicpu_kernel kernel srcs tac)
+    add_compile_definitions(${tac}AicpuKernelPlaceHolder=${kernel})
+    set(AICPU_BINARY_SRC_LIST ${AICPU_BINARY_SRC_LIST} ${CMAKE_CURRENT_LIST_DIR}/${srcs} PARENT_SCOPE)
+endmacro()
+
 macro(return_value_check return_value msg)
     if(NOT return_value EQUAL 0)
         message(FATAL_ERROR ${msg})

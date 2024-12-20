@@ -19,13 +19,20 @@
 namespace Mki {
 using NewOperationFunc = Operation*(*)();
 using NewKernelFunc = const Kernel*(*)(const BinHandle *);
+using NewAicpuKernelFunc = const Mki::Kernel*(*)();
 struct KernelCreatorInfo {
     NewKernelFunc func;
     std::string opName;
     std::string kernelName;
 };
+struct AicpuKernelCreatorInfo {
+    NewAicpuKernelFunc func;
+    std::string opName;
+    std::string kernelName;
+};
 using OperationCreators = std::vector<NewOperationFunc>;
 using KernelCreators = std::vector<KernelCreatorInfo>;
+using AicpuKernelCreators = std::vector<AicpuKernelCreatorInfo>;
 using BinaryBasicInfoMap = std::map<std::string, std::vector<BinaryBasicInfo>>;
 }
 

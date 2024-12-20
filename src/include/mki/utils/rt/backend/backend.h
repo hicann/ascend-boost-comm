@@ -62,6 +62,12 @@ public:
                                        const RtTaskCfgInfoT *cfgInfo) = 0;
 
 public:
+    virtual int AicpuFunctionLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, const MkiRtAicpuKernelParam *param,
+                                            MkiRtStream stream) = 0;
+    virtual int AicpuFunctionLaunchExWithArgs(const char * const opName, const MkiRtAicpuKernelParam *param,
+                                              MkiRtStream stream) = 0;
+
+public:
     virtual int GetC2cCtrlAddr(uint64_t *addr, uint32_t *len) = 0;
 };
 }
