@@ -59,7 +59,7 @@ function fn_install_cann_and_kernel()
         rsync -avh --size-only --remove-source-files ${cann_install_path}/310b_opp_kernel/ ${cann_install_path}/runtime/ & \
         rsync -avh --size-only --remove-source-files  ${cann_install_path}/hccl/ ${cann_install_path}/runtime/
         wait
-        mv ${cann_install_path}/runtime ${cann_install_path}/ascend-toolkit
+        mv ${cann_install_path}/runtime ${cann_install_path}
     fi
     set +e
     source /home/slave1/Ascend/ascend-toolkit/latest/bin/setenv.bash
