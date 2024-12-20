@@ -269,12 +269,6 @@ function fn_main()
             ENABLE_COVERAGE=ON
             ;;
         --namespace=*)
-            arg2=${arg2#*=}
-            if [ -z $arg2 ];then
-                echo "the namespace is not set. This should be set like --namespace=Mki"
-            else
-                COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNAMESPACE:STRING=$arg2"
-            fi
             ;;
         "--no_werror")
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DNO_WERROR=ON"

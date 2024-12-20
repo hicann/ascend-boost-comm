@@ -7,19 +7,24 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "op_schedule.h"
+#include "mki_loader/op_schedule_base.h"
 #include <fstream>
 #include "mki/utils/log/log.h"
+#include "mki/utils/assert/assert.h"
 #include "mki/base/kernel_base.h"
 #include "mki/utils/singleton/singleton.h"
 #include "loader.h"
 
-namespace OpSpace {
-OpSchedule::OpSchedule() { AddAllOperations(); }
+namespace Mki {
+OpScheduleBase::OpScheduleBase()
+{
+    uint32_t i = kernelMap_.size();
+    MKI_LOG(INFO) << "operation count:" << i;
+}
 
-OpSchedule::~OpSchedule() {}
+OpScheduleBase::~OpScheduleBase() {}
 
-std::vector<Operation *> OpSchedule::GetAllOperations() const
+std::vector<Operation *> OpScheduleBase::GetAllOperations() const
 {
     std::vector<Operation *> ops;
     for (const auto &it : opMap_) {
@@ -30,26 +35,28 @@ std::vector<Operation *> OpSchedule::GetAllOperations() const
     return ops;
 }
 
-Operation *OpSchedule::GetOperationByName(const std::string &opName) const
+Operation *OpScheduleBase::GetOperationByName(const std::string &opName) const
 {
     auto it = opMap_.find(opName);
     return it == opMap_.end() ? nullptr : it->second;
 }
 
-Kernel *OpSchedule::GetKernelInstance(const std::string &kernelName) const
+Kernel *OpScheduleBase::GetKernelInstance(const std::string &kernelName) const
 {
     auto it = kernelMap_.find(kernelName);
     return it == kernelMap_.end() ? nullptr : (it->second)->Clone();
 }
 
-void OpSchedule::AddAllOperations()
+void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators, const KernelCreators &kerCreators,
+                                      const BinaryBasicInfoMap &binaryMap)
 {
-    std::unordered_map<std::string, Operation *> ops;
-    auto &loader = GetSingleton<Loader>();
-    if (!loader.IsValid()) {
+    if (loader_ && loader_->IsValid()) { return; }
+
+    loader_ = std::make_unique<Loader>(opCreators, kerCreators, binaryMap);
+    if (!loader_->IsValid()) {
         return;
     }
-    loader.GetAllOperations(ops);
+    auto &ops = loader_->GetAllOperations();
     MKI_LOG(INFO) << "operation count:" << ops.size();
     for (const auto &[opName, op] : ops) {
         MKI_LOG(DEBUG) << "add op name:" << opName;
@@ -58,7 +65,7 @@ void OpSchedule::AddAllOperations()
     }
 }
 
-void OpSchedule::AddOperationByName(Operation *op)
+void OpScheduleBase::AddOperationByName(Operation *op)
 {
     std::string opName = op->GetName();
     auto it = opMap_.find(opName);
@@ -69,7 +76,7 @@ void OpSchedule::AddOperationByName(Operation *op)
     }
 }
 
-void OpSchedule::AddOperationKernels(const Operation *op)
+void OpScheduleBase::AddOperationKernels(const Operation *op)
 {
     KernelList kernelList = op->GetKernelList();
     for (const auto &kernel : kernelList) {
@@ -80,7 +87,7 @@ void OpSchedule::AddOperationKernels(const Operation *op)
     }
 }
 
-void OpSchedule::AddKernel(Kernel const *kernel)
+void OpScheduleBase::AddKernel(Kernel const *kernel)
 {
     std::string kernelName = kernel->GetName();
     auto it = kernelMap_.find(kernelName);
@@ -90,4 +97,4 @@ void OpSchedule::AddKernel(Kernel const *kernel)
         MKI_LOG(WARN) << "kernelName:" << kernelName << " repeat";
     }
 }
-} // namespace OpSpace
+} // namespace Mki

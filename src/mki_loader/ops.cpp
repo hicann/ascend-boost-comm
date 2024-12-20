@@ -8,10 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "mki_loader/ops.h"
-#include "op_schedule.h"
+#include "mki_loader/op_schedule_base.h"
+#include "mki_loader/op_register.h"
 
-namespace OpSpace {
-Ops::Ops() : opSchedule_(std::make_unique<OpSchedule>()) {}
+namespace Mki {
+Ops::Ops() : opSchedule_(std::make_unique<Mki::OpSchedule>()) {}
 
 Ops::~Ops() {}
 
@@ -21,19 +22,19 @@ Ops &Ops::Instance()
     return instance;
 }
 
-std::vector<Operation *> Ops::GetAllOperations() const
+std::vector<Mki::Operation *> Ops::GetAllOperations() const
 {
     return opSchedule_->GetAllOperations();
 }
 
-Operation *Ops::GetOperationByName(const std::string &opName) const
+Mki::Operation *Ops::GetOperationByName(const std::string &opName) const
 {
     return opSchedule_->GetOperationByName(opName);
 }
 
-Kernel *Ops::GetKernelInstance(const std::string &kernelName) const
+Mki::Kernel *Ops::GetKernelInstance(const std::string &kernelName) const
 {
     return opSchedule_->GetKernelInstance(kernelName);
 }
 
-} // namespace OpSpace
+} // namespace Mki

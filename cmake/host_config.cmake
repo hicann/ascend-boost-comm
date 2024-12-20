@@ -15,8 +15,7 @@ add_compile_options(
 )
 
 if(NAMESPACE STREQUAL "")
-    set(NAMESPACE "OpSpaceDefault")
-    message(WARNING "NAMESPACE is not set, please set the namespace option by '--namespace=<namespace-name>'")
+    set(NAMESPACE "Mki")
 endif()
 
 message(STATUS "The namespace for infra would be: ${NAMESPACE}")

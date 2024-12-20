@@ -52,12 +52,10 @@ add_custom_target(BINARY_SRC_TARGET ALL
 #########################
 add_library(atbops SHARED ${BINARY_SRC_LIST})
 add_dependencies(atbops BINARY_SRC_TARGET)
-target_link_libraries(atbops PUBLIC "-Wl,--whole-archive" mki_loader "-Wl,--no-whole-archive")
 target_link_libraries(atbops PRIVATE ${ops_objects} mki)
 
 add_library(atbops_static STATIC ${BINARY_SRC_LIST})
 add_dependencies(atbops_static BINARY_SRC_TARGET)
-target_link_libraries(atbops_static PUBLIC "-Wl,--whole-archive" mki_loader "-Wl,--no-whole-archive")
 target_link_libraries(atbops_static PRIVATE ${ops_objects} mki)
 
 install(TARGETS atbops DESTINATION lib)
