@@ -49,15 +49,15 @@ function fn_install_cann_and_kernel()
         ./Ascend310B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}/310b_opp_kernel & \
         ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}/hccl
         wait
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/compiler/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/opp/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/toolkit/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/aoe/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/910b_opp_kernel/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/310p_opp_kernel/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/910_opp_kernel/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files ${cann_install_path}/310b_opp_kernel/ ${cann_install_path}/runtime/ & \
-        rsync -avh --size-only --remove-source-files  ${cann_install_path}/hccl/ ${cann_install_path}/runtime/
+        rsync -avh --size-only ${cann_install_path}/compiler/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/opp/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/toolkit/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/aoe/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/910b_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/310p_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/910_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/310b_opp_kernel/ ${cann_install_path}/runtime/ & \
+        rsync -avh --size-only ${cann_install_path}/hccl/ ${cann_install_path}/runtime/
         wait
         mv ${cann_install_path}/runtime ${cann_install_path}
     fi
