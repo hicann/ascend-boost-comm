@@ -20,7 +20,7 @@
 
     ```shell
     cd Mind-KerenlInfra
-    bash scripts/build.sh testframework --namespace=AtbOps
+    bash scripts/build.sh testframework
     cp -r output/mki ../ascend-op-common-lib/3rdparty/
     cp -r output/mki ../ascend-transformer-boost/3rdparty/
     ```
@@ -29,9 +29,8 @@
 
     ```shell
     cd ascend-op-common-lib
-    bash scripts/build.sh  testframework --no_werror
+    bash scripts/build.sh testframework --no_werror
     cd output/
-    cp -r output/atbops ../ascend-transformer-boost/3rdparty/
     cp -r output/asdops ../ascend-transformer-boost/3rdparty/
     ```
 
@@ -40,11 +39,8 @@
     ```shell
     cd ascend-transformer-boost/
     source scripts/set_env.sh
-    bash scripts/build.sh  testframework
-    cd output/
-    ls
-    cd atb
-    source set_env.sh
+    bash scripts/build.sh testframework
+    source output/atb/set_env.sh
     ```
 
 5.  运行模型或算子测试用例
@@ -55,7 +51,7 @@
 
     ```shell
     cd Mind-KerenlInfra
-    bash scripts/build.sh testframework --namespace=AtbOps
+    bash scripts/build.sh testframework
     cp -r output/mki ../ascend-op-common-lib/3rdparty/
     ```
 
@@ -63,7 +59,7 @@
 
     ```shell
     cd ascend-op-common-lib/
-    bash scripts/build.sh  testframework --no_werror
+    bash scripts/build.sh testframework --no_werror
     ```
 
 3.  设施算子库环境， 并开始测试
