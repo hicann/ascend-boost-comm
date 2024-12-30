@@ -16,6 +16,7 @@ extern "C" {
 #endif
 namespace Mki {
 int MkiRtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
+int MkiRtCtxGetOverflowAddr(void **overflowAddr);
 }
 #ifdef __cplusplus
 }
