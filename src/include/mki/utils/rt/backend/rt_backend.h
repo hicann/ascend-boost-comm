@@ -71,6 +71,7 @@ int rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, RtArgsExT 
 
 // rt other
 int rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len);
+int rtCtxGetOverflowAddr(void **overflowAddr);
 
 // rt Aicpu
 int rtAicpuKernelLaunchWithFlag(const RtKernelLaunchNamesT *launchNames, uint32_t blockDim,
@@ -144,6 +145,7 @@ public:
 
 public:
     int GetC2cCtrlAddr(uint64_t *addr, uint32_t *len) override;
+    int CtxGetOverflowAddr(void **addr) override;
 
 private:
     RtBackend(const RtBackend &) = delete;
