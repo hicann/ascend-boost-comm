@@ -8,7 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "mki/utils/rt/device/device.h"
+
+#include <acl/acl.h>
+
 #include "mki/utils/rt/backend/backend_factory.h"
+#include "mki/utils/log/log.h"
 
 namespace Mki {
 int MkiRtDeviceGetCount(int32_t *devCount) { return BackendFactory::GetBackend()->DeviceGetCount(devCount); }
@@ -29,9 +33,22 @@ int MkiRtDeviceSetSocVersion(const char *version)
     return BackendFactory::GetBackend()->DeviceSetSocVersion(version);
 }
 
-int MkiRtDeviceGetSocVersion(char *version, uint32_t maxLen)
+int MkiRtDeviceGetSocVersion(std::string &version, uint32_t maxLen)
 {
-    return BackendFactory::GetBackend()->DeviceGetSocVersion(version, maxLen);
+    const char* version2 = aclrtGetSocName();
+    if (version2 == nullptr) {
+        MKI_LOG(ERROR) << "Failed to get SOC name";
+        return MKIRT_ERROR_LOAD_RUNTIME_FAIL;  // 错误码
+    }
+    version = version2;
+
+    MKI_LOG(INFO) << "DeviceVersion1: " << version; // 打印 version
+
+    if (version.empty()) {
+        return MKIRT_ERROR_LOAD_RUNTIME_FAIL;
+    }
+
+    return 0;
 }
 
 int MkiRtDeviceGetBareTgid(uint32_t *pid)

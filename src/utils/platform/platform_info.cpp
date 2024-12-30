@@ -31,18 +31,17 @@ void PlatformInfo::Init()
     }
 
     const uint32_t maxLen = 100;
-    char version[maxLen];
+    std::string version;
     if (MkiRtDeviceGetSocVersion(version, maxLen) != MKIRT_SUCCESS) {
         MKI_LOG(ERROR) << "Failed to get soc version";
         return;
     }
-    std::string socVersion(version);
-    MKI_LOG(INFO) << "PlatformInfo get soc version: " << socVersion;
+    MKI_LOG(INFO) << "PlatformInfo get soc version: " << version;
 
     Mki::PlatformManager &platformManager = Mki::PlatformManager::Instance();
     MKI_CHECK(platformManager.InitializePlatformManager() == PLATFORM_SUCCESS,
                  "Initialize platform manager failed", return);
-    MKI_CHECK(platformManager.GetPlatformConfigs(socVersion, platformConfigs_) == PLATFORM_SUCCESS,
+    MKI_CHECK(platformManager.GetPlatformConfigs(version, platformConfigs_) == PLATFORM_SUCCESS,
                  "Get platform Information failed", return);
 
     const std::unordered_map<std::string, std::pair<PlatformType, std::string>> supportedPlatform = {

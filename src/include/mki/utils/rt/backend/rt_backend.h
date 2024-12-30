@@ -9,6 +9,7 @@
  */
 #ifndef MKI_UTILS_RT_BACKEND_RTBACKEND_H
 #define MKI_UTILS_RT_BACKEND_RTBACKEND_H
+#include <acl/acl_rt.h>
 #include "mki/utils/rt/backend/backend.h"
 
 #ifdef __cplusplus

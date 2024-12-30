@@ -21,7 +21,7 @@ int MkiRtDeviceGetCurrent(int32_t *devId);
 int MkiRtDeviceSetCurrent(int32_t devId);
 int MkiRtDeviceResetCurrent(int32_t devId);
 int MkiRtDeviceSetSocVersion(const char *version);
-int MkiRtDeviceGetSocVersion(char *version, uint32_t maxLen);
+int MkiRtDeviceGetSocVersion(std::string &version, uint32_t maxLen);
 int MkiRtDeviceGetBareTgid(uint32_t *pid);
 int MkiRtDeviceGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t *val);
 }

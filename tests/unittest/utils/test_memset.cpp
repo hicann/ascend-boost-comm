@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <random>
+#include <acl/acl.h>
 
 #include "mki/utils/log/log.h"
 #include "mki/utils/memset/clear_tensors.h"
