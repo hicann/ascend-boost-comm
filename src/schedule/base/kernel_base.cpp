@@ -17,6 +17,11 @@
 #include "mki/utils/math/tensor_utils.h"
 #include "mki/utils/memset/clear_tensors.h"
 
+namespace {
+constexpr uint32_t TILING_ADDR_NEG_IDX = 2;
+constexpr uint32_t OVERFLOW_ADDR_NEG_IDX = 1;
+}
+
 namespace Mki {
 class KernelParamBuilder {
 public:
@@ -143,8 +148,8 @@ private:
         void *overflowAddr = nullptr;
         int32_t st = MkiRtCtxGetOverflowAddr(&overflowAddr);
         MKI_CHECK(st == MKIRT_SUCCESS, "Mki Get RtC2cCtrlAddr failed: %d" << st, return Status::FailStatus(-1));
-        args[argsNum - 1] = overflowAddr;
-        MKI_LOG(DEBUG) << "args info: overflow addr " << argsNum - 1;
+        args[argsNum - OVERFLOW_ADDR_NEG_IDX] = overflowAddr;
+        MKI_LOG(DEBUG) << "args info: overflow addr " << (argsNum - OVERFLOW_ADDR_NEG_IDX);
 
         return Status::OkStatus();
     }
@@ -190,17 +195,17 @@ private:
     Status UpdateTilingArgs(RtArgsExT &argsEx, uint64_t argsNum) const
     {
         MKI_CHECK((argsNum > 2), "argsNum invalid : " << argsNum, return Status::FailStatus(-1));
-        MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - 2);
+        MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - TILING_ADDR_NEG_IDX);
         argsEx.hasTiling = 1;
-        argsEx.tilingAddrOffset = (argsNum - 2) * sizeof(void *);
+        argsEx.tilingAddrOffset = (argsNum - TILING_ADDR_NEG_IDX) * sizeof(void *);
         argsEx.tilingDataOffset = argsNum * sizeof(void *);
         return Status::OkStatus();
     }
 
     Status UpdateTilingArgs(void **args, uint64_t argsNum, uint8_t *tilingDeviceAddr) const
     {
-        MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - 2);
-        args[argsNum - 2] = tilingDeviceAddr;
+        MKI_LOG(DEBUG) << "args info: tiling " << (argsNum - TILING_ADDR_NEG_IDX);
+        args[argsNum - TILING_ADDR_NEG_IDX] = tilingDeviceAddr;
         return Status::OkStatus();
     }
 
@@ -304,7 +309,7 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
     uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
     MKI_LOG(DEBUG) << "kernel param: " << inputOutputNum << " in/out, " << constInputNum << " const in, "
                 << workspaceNum << " workspaces, " << hwsyncNum << " hwsync";
-    return inputOutputNum + constInputNum + workspaceNum + hwsyncNum + 2; // tiling addr and overflow addr
+    return inputOutputNum + constInputNum + workspaceNum + hwsyncNum + 2; // 2 for tiling addr and overflow addr
 }
 
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
