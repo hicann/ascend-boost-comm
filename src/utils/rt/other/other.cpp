@@ -15,4 +15,9 @@ int MkiRtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
 {
     return BackendFactory::GetBackend()->GetC2cCtrlAddr(addr, len);
 }
+
+int MkiRtCtxGetOverflowAddr(void **overflowAddr)
+{
+    return BackendFactory::GetBackend()->CtxGetOverflowAddr(overflowAddr);
+}
 }
