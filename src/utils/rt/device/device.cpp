@@ -42,8 +42,6 @@ int MkiRtDeviceGetSocVersion(std::string &version, uint32_t maxLen)
     }
     version = version2;
 
-    MKI_LOG(INFO) << "DeviceVersion1: " << version; // 打印 version
-
     if (version.empty()) {
         return MKIRT_ERROR_LOAD_RUNTIME_FAIL;
     }
