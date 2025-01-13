@@ -79,7 +79,7 @@ function fn_build_nlohmann_json()
     rm -rf nlohmann
     mkdir nlohmann
     cd nlohmann
-    git clone -b v3.11.2 --depth 1 https://gitee.com/mirrors/json.git
+    git clone -b v3.11.3 --depth 1 https://github.com/nlohmann/json.git
     mkdir -p $THIRD_PARTY_DIR/nlohmannJson
     mv json/include $THIRD_PARTY_DIR/nlohmannJson
     cd $CACHE_DIR
