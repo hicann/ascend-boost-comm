@@ -12,7 +12,7 @@
 #include <securec.h>
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/fp16/fp16_t.h"
-#include "mki/utils/fp16/bf16_t.h"
+#include "mki/utils/bf16/bf16_t.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
 

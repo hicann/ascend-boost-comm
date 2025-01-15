@@ -13,7 +13,7 @@
 #include <cmath>
 #include <complex>
 
-#include "fp16_t.h"
+#include "./fp16/fp16_t.h"
 
 namespace Mki {
 
