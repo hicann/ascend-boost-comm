@@ -461,7 +461,7 @@ public:
     }
 };
 
-} // namespace std
+} // namespace Mki
 
 
 #endif // MKI_UTILS_BF_16_BF_16_T_H
