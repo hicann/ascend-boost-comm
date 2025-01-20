@@ -27,6 +27,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/host_config.cmake)
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/include
     $ENV{ASCEND_HOME_PATH}/include
+    $ENV{ASCEND_HOME_PATH}/include/aclnn
 )
 
 link_directories(

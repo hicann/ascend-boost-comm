@@ -11,6 +11,7 @@
 #include "mki/kernel_info.h"
 #include <securec.h>
 #include "mki/utils/assert/assert.h"
+#include "mki/utils/bf16/bf16_t.h"
 #include "mki/utils/fp16/fp16_t.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
@@ -371,6 +372,7 @@ template bool KernelInfo::AddConstTensorData<fp16_t>(uint64_t, const SVector<fp1
 template bool KernelInfo::AddConstTensorData<float>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, int32_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, fp16_t>(uint64_t, const SVector<float> &);
+template bool KernelInfo::AddConstTensorData<float, bf16_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<int32_t>(uint64_t, const std::vector<int32_t> &);
 template bool KernelInfo::AddConstTensorData<int8_t>(uint64_t, const std::vector<int8_t> &);
 } // namespace Mki
