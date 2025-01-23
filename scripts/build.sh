@@ -34,26 +34,114 @@ BUILD_CONFIGURE_LIST=("--output=.*" "--use_cxx11_abi=0" "--use_cxx11_abi=1"
 # install cann
 function fn_install_cann_and_kernel()
 {
+    echo "start"
+    echo "$(pwd)"
+    # CANN package location
+    CANN_DIR="/usr1/CANN/Mind-KernelInfra/CANN"
+    cann_install_path="/home/slave1/Ascend/ascend-toolkit/latest/"
+    # Record the start time
+    time_before=`date +%s`
+    if [[ -d "$cann_install_path" ]]; then
+        rm -rf $cann_install_path
+    fi
+    mkdir -p ${cann_install_path}
+    mkdir -p ${cann_install_path}/opp/built-in/op_impl/ai_core/tbe/kernel/
+    chmod 755 ${cann_install_path}
+    export ASCEND_HOME_PATH=${cann_install_path}
+
     cd $CANN_DIR
     chmod +x *.run
-    cann_install_path="/home/slave1/Ascend/ascend-toolkit"
-    if [ ! -d "$cann_install_path" ];then
-        ./CANN-runtime-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-compiler-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-opp-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-toolkit-*.run --full --pylocal --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-aoe-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend310P-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend910-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./Ascend310B-opp_kernel-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-        ./CANN-hccl-*.run --full --quiet --nox11 --install-path=${cann_install_path}
-    fi
     set +e
-    source /home/slave1/Ascend/ascend-toolkit/latest/bin/setenv.bash
-    export ASCEND_HOME_PATH=/home/slave1/Ascend/ascend-toolkit/latest
+    for run_file in $(ls *.run);do
+        if [[ ${run_file} =~ "opp_kernel" ]];then
+            kernel_path=$(echo ${run_file%%-*} | tr A-Z a-z)
+            mkdir -p ${kernel_path}/opp_kernel
+            chmod -R 750 ${cann_install_path}/opp/built-in/op_impl/ai_core/tbe
+            ./${run_file} --tar xmf -C ${kernel_path} &
+            ln -s $CANN_DIR/${kernel_path}/opp_kernel ${cann_install_path}/opp/built-in/op_impl/ai_core/tbe/kernel/${kernel_path}
+        else
+            ./${run_file} --tar xmf -C ${cann_install_path} --exclude='latest_manager/*' &
+        fi
+    done
+    wait
+    time_after=`date +%s`
+    echo "并行解压花费时间 $(($time_after - $time_before))秒"
+    # link library
+    export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
+    echo "ASCEND_HOME_PATH is: ${ASCEND_HOME_PATH}"
+    echo "LD LIBRARY PATH is: ${LD_LIBRARY_PATH}"
+    # compiler
+    mkdir ${ASCEND_HOME_PATH}/compiler/tikcpp/tikcfw
+    find "${ASCEND_HOME_PATH}/toolkit/$(arch)-linux/ascendc/include/basic_api/" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/compiler/tikcpp/tikcfw/" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/toolkit/$(arch)-linux/ascendc/include/highlevel_api/" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/compiler/tikcpp/tikcfw/" \; 2>/dev/null
+    ## include
+    rm -rf ${ASCEND_HOME_PATH}/include ${ASCEND_HOME_PATH}/$(arch)-linux/
+    mkdir -p ${ASCEND_HOME_PATH}/include ${ASCEND_HOME_PATH}/$(arch)-linux/include
+    # mki
+    find "${ASCEND_HOME_PATH}/runtime/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/include" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/opp/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/include" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/compiler/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/include" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/hccl/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/include" \; 2>/dev/null
+    ln -s ${ASCEND_HOME_PATH}/opp/built-in/op_impl/ai_core/tbe/op_api/include/aclnnop             ${ASCEND_HOME_PATH}/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/                                     ${ASCEND_HOME_PATH}/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/kernel_tiling/ ${ASCEND_HOME_PATH}/include/ # kernel_tiling
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/tiling/        ${ASCEND_HOME_PATH}/include/ # tiling
+
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/acl/acl_tdt.h                                      ${ASCEND_HOME_PATH}/runtime/include/acl/
+    ln -s ${ASCEND_HOME_PATH}/toolkit/tools/custom_operator_sample/AICPU/Tensorflow/cpukernel/context/inc/cpu_kernel_utils.h ${ASCEND_HOME_PATH}/opp/include/aicpu/
+    ln -s ${ASCEND_HOME_PATH}/toolkit/tools/custom_operator_sample/AICPU/Tensorflow/cpukernel/context/inc/cpu_node_def.h ${ASCEND_HOME_PATH}/opp/include/aicpu/
+    ln -s ${ASCEND_HOME_PATH}/aoe/include/aoe/external ${ASCEND_HOME_PATH}/runtime/include/aoe/
+    rm ${ASCEND_HOME_PATH}/include/experiment
+    ln -s ${ASCEND_HOME_PATH}/toolkit/include/experiment/ ${ASCEND_HOME_PATH}/include/
+    ln -s ${ASCEND_HOME_PATH}/runtime/include/experiment/register/ ${ASCEND_HOME_PATH}/toolkit/include/experiment/
+    rm ${ASCEND_HOME_PATH}/include/ge ${ASCEND_HOME_PATH}/include/graph
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/ge/ ${ASCEND_HOME_PATH}/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/graph/ ${ASCEND_HOME_PATH}/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/proto/caffe.proto ${ASCEND_HOME_PATH}/runtime/include/proto/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/proto/ge_onnx.proto ${ASCEND_HOME_PATH}/runtime/include/proto/
+    ln -s ${ASCEND_HOME_PATH}/toolkit/toolkit/include/proto/ge_ir.proto ${ASCEND_HOME_PATH}/runtime/include/proto/
+    rm ${ASCEND_HOME_PATH}/include/register
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/register/ ${ASCEND_HOME_PATH}/include/
+    mkdir -p ${ASCEND_HOME_PATH}/toolchain/
+    ln -s  ${ASCEND_HOME_PATH}/toolkit/include/experiment/slog/toolchain/ ${ASCEND_HOME_PATH}/include/
+    mkdir -p ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/runtime/cann_version.h ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/compiler/compiler_version.h ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/hccl/hccl_version.h ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/opp/opp_version.h ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/runtime/runtime_version.h ${ASCEND_HOME_PATH}/include/version/
+    ln -s ${ASCEND_HOME_PATH}/toolkit/toolkit_version.h ${ASCEND_HOME_PATH}/include/version/
+    # asdops
+    ln -s ${ASCEND_HOME_PATH}/hccl/include/hccl             ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/opp/include/aicpu             ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/opp/include/aclnn_kernels     ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/parser       ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/amct         ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    find "${ASCEND_HOME_PATH}/runtime/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/$(arch)-linux/include/" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/hccl/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/$(arch)-linux/include/" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/opp/include" -mindepth 1 -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/$(arch)-linux/include/" \; 2>/dev/null
+    rm -rf ${ASCEND_HOME_PATH}/$(arch)-linux/include/experiment
+    ln -s ${ASCEND_HOME_PATH}/opp/built-in/op_impl/ai_core/tbe/op_api/include/aclnnop             ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/                                     ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/flow_graph/                                        ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/kernel_tiling/ ${ASCEND_HOME_PATH}/$(arch)-linux/include/ # kernel_tiling
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/tiling/        ${ASCEND_HOME_PATH}/$(arch)-linux/include/ # tiling
+    ln -s ${ASCEND_HOME_PATH}/toolkit/include/experiment                                          ${ASCEND_HOME_PATH}/$(arch)-linux/include/
+    ln -s ${ASCEND_HOME_PATH}/toolkit/include/experiment/slog/toolchain/                          ${ASCEND_HOME_PATH}/$(arch)-linux/include/experiment/
+    # atb
+    mkdir -p ${ASCEND_HOME_PATH}/$(arch)-linux/ascendc/include/
+    ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/               ${ASCEND_HOME_PATH}/$(arch)-linux/ascendc/include/ # platform_ascendc.h
+    ln -s ${ASCEND_HOME_PATH}/compiler/include/acl/acl_op_compiler.h                              ${ASCEND_HOME_PATH}/$(arch)-linux/include/acl/ # acl_op_compiler.h
+    ## lib64
+    # mki
+    rm -rf ${ASCEND_HOME_PATH}/lib64
+    mkdir -p ${ASCEND_HOME_PATH}/lib64
+    find "${ASCEND_HOME_PATH}/runtime/lib64"  -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/compiler/lib64" -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/aoe/lib64"      -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/hccl/lib64"     -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/toolkit/lib64"  -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
     set -e
-    cd -
 }
 
 function fn_build_googletest()
@@ -176,11 +264,7 @@ function fn_build()
 {
     local_ascend_path="/usr/local/Ascend/ascend-toolkit"
     if [ "$IS_RELEASE" == "True" ];then
-        if [ ! -d "$local_ascend_path" ];then
-            fn_install_cann_and_kernel
-        else
-            . /usr/local/Ascend/ascend-toolkit/set_env.sh
-        fi
+        fn_install_cann_and_kernel
     fi
     if [ -z $ASCEND_HOME_PATH ];then
         echo "env ASCEND_HOME_PATH not exists, build fail"
