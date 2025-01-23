@@ -37,12 +37,13 @@ function fn_install_cann_and_kernel()
     echo "start"
     echo "$(pwd)"
     # CANN package location
-    CANN_DIR="/usr1/CANN/Mind-KernelInfra/CANN"
     cann_install_path="/home/slave1/Ascend/ascend-toolkit/latest/"
     # Record the start time
     time_before=`date +%s`
     if [[ -d "$cann_install_path" ]]; then
-        rm -rf $cann_install_path
+        export ASCEND_HOME_PATH=${cann_install_path}
+        export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
+        return 0
     fi
     mkdir -p ${cann_install_path}
     mkdir -p ${cann_install_path}/opp/built-in/op_impl/ai_core/tbe/kernel/
@@ -264,7 +265,11 @@ function fn_build()
 {
     local_ascend_path="/usr/local/Ascend/ascend-toolkit"
     if [ "$IS_RELEASE" == "True" ];then
-        fn_install_cann_and_kernel
+        if [ ! -d "$local_ascend_path" ];then
+            fn_install_cann_and_kernel
+        else
+            . /usr/local/Ascend/ascend-toolkit/set_env.sh
+        fi
     fi
     if [ -z $ASCEND_HOME_PATH ];then
         echo "env ASCEND_HOME_PATH not exists, build fail"
