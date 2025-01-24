@@ -7,7 +7,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "mki/utils/log/log_sink_file.h"
 #include <string>
 #include <cstdlib>
 #include <cstring>
@@ -24,8 +23,10 @@
 #include <dirent.h>
 #include <sys/statvfs.h>
 #include <securec.h>
+#include "mki/utils/cfg/cfg_core.h"
 #include "mki/utils/log/log_core.h"
 #include "mki/utils/env/env.h"
+#include "mki/utils/log/log_sink_file.h"
 
 namespace Mki {
 constexpr size_t MAX_LOG_FILE_COUNT = 50;                               // 50 回滚管理50个日志文件
@@ -138,10 +139,17 @@ void LogSinkFile::Log(const char *log, uint64_t logLen)
 
 void LogSinkFile::Init()
 {
+    bool controlledByCfg = CfgCore::GetCfgCoreInstance().CfgFileExists();
     const char *env = std::getenv("ASDOPS_LOG_TO_BOOST_TYPE");
+    if (controlledByCfg) {
+        env = CfgCore::GetCfgCoreInstance().GetLogCfg().logToBoostType.c_str();
+    }
     boostType_ = env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : "mki";
 
     env = std::getenv("ASDOPS_LOG_PATH");
+    if (controlledByCfg) {
+        env = CfgCore::GetCfgCoreInstance().GetLogCfg().logPath.c_str();
+    }
     std::string logRootDir =
         env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : GetHomeDir();
     logRootDir = PathCheckAndRegular(logRootDir);
@@ -150,6 +158,9 @@ void LogSinkFile::Init()
 
     env = std::getenv("ASDOPS_LOG_TO_FILE_FLUSH");
     isFlush_ = env && strlen(env) <= MAX_ENV_STRING_LEN ? std::string(env) == "1" : false;
+    if (controlledByCfg) {
+        isFlush_ = CfgCore::GetCfgCoreInstance().GetLogCfg().isLogToFileFlush;
+    }
 }
 
 void LogSinkFile::DeleteOldestFile()

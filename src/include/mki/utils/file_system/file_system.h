@@ -36,6 +36,8 @@ public:
     static bool Makedirs(const std::string &dirPath, const mode_t mode);
     static std::string PathCheckAndRegular(const std::string &path, bool symlinkCheck = true,
                                            bool parentReferenceCheck = true);
+    static std::string PathCheckAndRegularNoLog(const std::string &path, bool symlinkCheck = true,
+                                           bool parentReferenceCheck = true);
 
 private:
     // A symlink with a trailing slash (/) is not recognized as a symlink,

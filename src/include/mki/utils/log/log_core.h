@@ -31,6 +31,7 @@ public:
 private:
     std::vector<std::shared_ptr<LogSink>> sinks_;
     LogLevel level_ = LogLevel::INFO;
+    bool controlledByCfg_ = false;
 };
 } // namespace Mki
 #endif

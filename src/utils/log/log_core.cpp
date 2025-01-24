@@ -7,35 +7,45 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "mki/utils/log/log_core.h"
 #include <cstdlib>
 #include <string>
 #include <cstring>
 #include <unordered_map>
 #include <iostream>
 #include <algorithm>
+#include "mki/utils/env/env.h"
+#include "mki/utils/cfg/cfg_core.h"
 #include "mki/utils/log/log_sink_stdout.h"
 #include "mki/utils/log/log_sink_file.h"
 #include "mki/utils/log/log.h"
-#include "mki/utils/env/env.h"
+#include "mki/utils/log/log_core.h"
 
 namespace Mki {
-static bool GetLogToStdoutFromEnv()
+static bool GetLogToStdoutFromEnvCfg(bool controlledByCfg)
 {
+    if (controlledByCfg) {
+        return CfgCore::GetCfgCoreInstance().GetLogCfg().isLogToStdOut;
+    }
     const char *envLogToStdout = std::getenv("ASDOPS_LOG_TO_STDOUT");
     return envLogToStdout != nullptr && strlen(envLogToStdout) <= MAX_ENV_STRING_LEN &&
            strcmp(envLogToStdout, "1") == 0;
 }
 
-static bool GetLogToFileFromEnv()
+static bool GetLogToFileFromEnvCfg(bool controlledByCfg)
 {
+    if (controlledByCfg) {
+        return CfgCore::GetCfgCoreInstance().GetLogCfg().isLogToFile;
+    }
     const char *envLogToFile = std::getenv("ASDOPS_LOG_TO_FILE");
     return envLogToFile != nullptr && strlen(envLogToFile) <= MAX_ENV_STRING_LEN && strcmp(envLogToFile, "1") == 0;
 }
 
-static LogLevel GetLogLevelFromEnv()
+static LogLevel GetLogLevelFromEnvCfg(bool controlledByCfg)
 {
     const char *env = std::getenv("ASDOPS_LOG_LEVEL");
+    if (controlledByCfg) {
+        env = CfgCore::GetCfgCoreInstance().GetLogCfg().logLevel.c_str();
+    }
     if (env == nullptr || strlen(env) > MAX_ENV_STRING_LEN) {
         return LogLevel::WARN;
     }
@@ -50,11 +60,12 @@ static LogLevel GetLogLevelFromEnv()
 
 LogCore::LogCore()
 {
-    level_ = GetLogLevelFromEnv();
-    if (GetLogToStdoutFromEnv()) {
+    controlledByCfg_ = CfgCore::GetCfgCoreInstance().CfgFileExists();
+    level_ = GetLogLevelFromEnvCfg(controlledByCfg_);
+    if (GetLogToStdoutFromEnvCfg(controlledByCfg_)) {
         AddSink(std::make_shared<LogSinkStdout>());
     }
-    if (GetLogToFileFromEnv()) {
+    if (GetLogToFileFromEnvCfg(controlledByCfg_)) {
         AddSink(std::make_shared<LogSinkFile>());
     }
 }

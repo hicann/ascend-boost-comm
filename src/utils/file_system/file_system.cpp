@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <iostream>
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/strings/str_checker.h"
@@ -288,7 +289,48 @@ std::string FileSystem::PathCheckAndRegular(const std::string &path, bool symlin
     if (realpath(path.c_str(), resolvedPath) != nullptr) {
         res = resolvedPath;
     } else {
-        MKI_LOG(ERROR) << "path " << path.c_str() << " is not exist";
+        MKI_LOG(ERROR) << "path " << path.c_str() << " does not exist";
+    }
+    return res;
+}
+
+std::string FileSystem::PathCheckAndRegularNoLog(const std::string &path, bool symlinkCheck, bool parentReferenceCheck)
+{
+    // 1. check if "path" is empty
+    if (path.empty()) {
+        std::cout << "path string is NULL" << std::endl;
+        return "";
+    }
+
+    // 2. check the length of "path"
+    if (path.size() >= PATH_MAX) {
+        std::cout << "file path " << path.c_str() << " is too long!" << std::endl;
+        return "";
+    }
+
+    // 3. check if "path" contains parent directory reference
+    if (parentReferenceCheck && path.find("..") != std::string::npos) {
+        std::cout << "file path " << path.c_str() << " contains parent directory reference!" << std::endl;
+        return "";
+    }
+
+    // 4. check if is symbolic link
+    if (symlinkCheck) {
+        std::string regularPath = RemoveTrailingSlash(path);
+        if (IsSymLink(regularPath)) {
+            std::cout << "file path " << path.c_str() << " is symbolic link!" << std::endl;
+            return "";
+        }
+    }
+
+    // 5. get the real path
+    char resolvedPath[PATH_MAX] = {0};
+    std::string res = "";
+
+    if (realpath(path.c_str(), resolvedPath) != nullptr) {
+        res = resolvedPath;
+    } else {
+        std::cout << "path " << path.c_str() << " does not exist" << std::endl;
     }
     return res;
 }
