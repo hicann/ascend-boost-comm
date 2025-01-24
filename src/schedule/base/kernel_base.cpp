@@ -101,7 +101,7 @@ private:
             uint64_t *addr = nullptr;
             uint32_t len = 0;
             int st = MkiRtGetC2cCtrlAddr(reinterpret_cast<uint64_t *>(&addr), &len);
-            MKI_CHECK(st == MKIRT_SUCCESS && addr != nullptr,
+            MKI_CHECK(st == MKIRT_SUCCESS,
                 "Mki Get RtC2cCtrlAddr fail", return Status::FailStatus(-1));
             MKI_LOG(INFO) << "args info: hwsync " << hwsyncIdx;
             *(args + static_cast<uint64_t>(hwsyncIdx)) = addr;
