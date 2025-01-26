@@ -39,13 +39,13 @@ void KernelInfo::Reset()
 Status KernelInfo::InitArgs(uint64_t len)
 {
     constexpr uint64_t maxArgsSize = 1024 * 1024; // 1mb
-    MKI_CHECK(len > 0 && len <= maxArgsSize, "failed to check args len " << len, return Status::FailStatus(-1));
+    MKI_CHECK(len <= maxArgsSize, "failed to check args len " << len, return Status::FailStatus(ERROR_INVALID_VALUE));
 
     args_ = new (std::nothrow) uint8_t[len];
-    MKI_CHECK(args_ != nullptr, "failed to new args, len " << len, return Status::FailStatus(-1));
+    MKI_CHECK(args_ != nullptr, "failed to new args, len " << len, return Status::FailStatus(ERROR_INVALID_VALUE));
 
     int ret = memset_s(args_, len, 0, len);
-    MKI_CHECK(ret == EOK, "memset_s args Error! Error Code: " << ret, return Status::FailStatus(-1));
+    MKI_CHECK(ret == EOK, "memset_s args Error! Error Code: " << ret, return Status::FailStatus(ERROR_INVALID_VALUE));
 
     argsSize_ = len;
     MKI_LOG(INFO) << "args inited successfully, len " << len;
@@ -111,19 +111,20 @@ uint64_t KernelInfo::GetTilingUsedSize() const
 Status KernelInfo::AllocTilingHost(uint64_t len)
 {
     MKI_CHECK(launchWithTiling_, "launch with tiling mode off",
-        return Status::FailStatus(-1));
+        return Status::FailStatus(ERROR_ALLOC_HOST));
     constexpr uint64_t maxTilingSize = 1024 * 1024; // 1mb
-    MKI_CHECK(len > 0 && len <= maxTilingSize,
-        "failed to check tiling len " << len, return Status::FailStatus(-1));
+    MKI_CHECK(len <= maxTilingSize,
+        "failed to check tiling len " << len, return Status::FailStatus(ERROR_ALLOC_HOST));
     MKI_CHECK(tilingExtInfo_.hostTilingAddr == nullptr,
-        "Tiling is already alloced", return Status::FailStatus(-1));
+        "Tiling is already alloced", return Status::FailStatus(ERROR_ALLOC_HOST));
 
     tilingExtInfo_.hostTilingAddr = new (std::nothrow) uint8_t[len];
     MKI_CHECK(tilingExtInfo_.hostTilingAddr != nullptr,
-        "failed to new tiling, len " << len, return Status::FailStatus(-1));
+        "failed to new tiling, len " << len, return Status::FailStatus(ERROR_ALLOC_HOST));
 
     int ret = memset_s(tilingExtInfo_.hostTilingAddr, len, 0, len);
-    MKI_CHECK(ret == EOK, "memset_s hostTilingAddr Error! Error Code: " << ret, return Status::FailStatus(-1));
+    MKI_CHECK(ret == EOK, "memset_s hostTilingAddr Error! Error Code: " << ret,
+              return Status::FailStatus(ERROR_ALLOC_HOST));
 
     MKI_LOG(INFO) << "alloc " << len << " bytes tiling host";
     tilingExtInfo_.hostTilingSize = len;

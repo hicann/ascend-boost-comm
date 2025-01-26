@@ -61,7 +61,10 @@ enum ErrorType : int {
     ERROR_LAUNCH_KERNEL_ERROR = 7,
     ERROR_SYNC_STREAM_ERROR = 8,
     ERROR_INFERSHAPE_ERROR = 9,
-    ERROR_NOT_CONSISTANT = 10
+    ERROR_NOT_CONSISTANT = 10,
+    ERROR_ALLOC_HOST = 11,
+    ERROR_MEMERY_COPY_ERROR = 12,
+    ERROR_RUN_TIME_ERROR = 13
 };
 
 size_t GetTensorElementSize(const TensorDType dtype);
