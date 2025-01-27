@@ -285,7 +285,7 @@ def copy_tbe_device_code(args):
             "env CODE_ROOT | ASCEND_KERNEL_PATH not exist!")
             exit(1)
         logging.info(f"tbe_kernel_path: {tbe_kernel_path}")
-        input_path = os.path.join(env_code_root, "configs/tbe_tactic_json.ini")
+        input_path = os.path.join(env_code_root, args.tbe_ini_path)
         if not os.path.exists(input_path):
             logging.error("ini file: %s not exist!", input_path)
             exit(1)
@@ -304,7 +304,6 @@ def copy_tbe_device_code(args):
                                 "tbe_kernel_path": tbe_kernel_path,
                                 "binary_dir": args.binary_dir,
                                 "tbe_ini": tbe_ini})
-        os.remove(input_path)
 
     if (args.op_type == "ascendc" or args.op_type is None):
         copy_ascendc_code_all_version({"target_version_list": target_version_list,
@@ -319,5 +318,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--binary_dir', type=str, required=True)
     parser.add_argument('--op_type', type=str, required=False)
+    parser.add_argument('--tbe_ini_path', type=str, default="configs/tbe_tactic_json.ini", required=False)
     input_args = parser.parse_args()
     copy_tbe_device_code(input_args)
