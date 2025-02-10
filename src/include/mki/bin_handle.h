@@ -29,6 +29,9 @@ struct KernelMetaInfo {
     uint32_t tilingSize = 0;
     uint32_t coreType = 0;
     uint32_t magic = 0;
+    uint32_t intercoreSync = 0;
+    uint32_t cubeRatio = 0;
+    uint32_t vectorRatio = 0;
     const void *codeBuf = nullptr;
     uint32_t codeBufLen = 0;
 };
@@ -43,6 +46,9 @@ public:
     bool Init(const std::string &kernelName);
     uint32_t GetKernelTilingSize() const;
     int32_t GetKernelCoreType() const;
+    uint32_t GetIntercoreSync() const;
+    uint32_t GetCubeRatio() const;
+    uint32_t GetVectorRatio() const;
     const char *GetKernelCompileInfo() const;
 
 private:

@@ -16,9 +16,12 @@ namespace Mki {
 constexpr uint32_t BYTE_SIZE = 8;
 constexpr uint32_t HEADER_LENGTH = 128;
 constexpr uint32_t UINT32_TYPE_LENGTH = sizeof(uint32_t);
+constexpr uint32_t MASK_LOWER16 = 0xFFFFU;
+constexpr uint32_t MASK_HIGHER16 = 0xFFFF0000U;
+constexpr uint32_t SHIFT16 = 16U;
 
 struct KernelHeaderInfo {
-    uint32_t version = 0;;
+    uint32_t version = 0;
     uint32_t magic = 0;
     uint32_t tilingSize = 0;
     uint32_t coreType = 0;
@@ -26,6 +29,8 @@ struct KernelHeaderInfo {
     uint32_t kernelNameOffset = 0;
     uint32_t compileInfoOffset = 0;
     uint32_t kernelBinOffset = 0;
+    uint32_t intercoreSync = 0;
+    uint32_t taskRation = 0;
 };
 
 BinHandle::BinHandle(const BinaryBasicInfo *binInfo) : basicInfo_(binInfo) {}
@@ -74,6 +79,9 @@ bool BinHandle::Init(const std::string &kernelName)
     metaInfo_.magic = header.magic;
     metaInfo_.tilingSize = header.tilingSize;
     metaInfo_.coreType = header.coreType;
+    metaInfo_.intercoreSync = header.intercoreSync;
+    metaInfo_.cubeRatio = (header.taskRation & MASK_HIGHER16) >> SHIFT16;
+    metaInfo_.vectorRatio = header.taskRation & MASK_LOWER16;
     uint32_t kernelNum = header.kernelNum;
     const uint8_t *kernelNameStart = data + header.kernelNameOffset;
     for (size_t count = 0; count < kernelNum; ++count) {
@@ -122,6 +130,30 @@ int32_t BinHandle::GetKernelCoreType() const
         return -1;
     }
     return static_cast<int32_t>(metaInfo_.coreType);
+}
+
+uint32_t BinHandle::GetIntercoreSync() const
+{
+    if (!codeLoadSuccess_) {
+        return 0;
+    }
+    return metaInfo_.intercoreSync;
+}
+
+uint32_t BinHandle::GetCubeRatio() const
+{
+    if (!codeLoadSuccess_) {
+        return 0;
+    }
+    return metaInfo_.cubeRatio;
+}
+
+uint32_t BinHandle::GetVectorRatio() const
+{
+    if (!codeLoadSuccess_) {
+        return 0;
+    }
+    return metaInfo_.vectorRatio;
 }
 
 const char *BinHandle::GetKernelCompileInfo() const

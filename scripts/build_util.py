@@ -109,6 +109,20 @@ def get_header_from_file(file_path):
             offset += (aling_bytes + len(compile_info_str))
             binary_offset = offset
             header = header + struct.pack('I', kernel_name_offset) + struct.pack('I', compile_info_offset) + struct.pack('I', binary_offset)
+
+            # Get ext info for reusing MIX type kernels
+            intercore_sync = text.get("intercoreSync", 0)
+            task_ration_type = text.get("taskRation", "tilingKey")
+            if task_ration_type == "tilingKey":
+                task_ration = 0
+            else:
+                ration = [int(r) for r in task_ration_type.split(":")]
+                if len(ration) != 2:
+                    logging.error(f"ration is invalid: {task_ration_type}")
+                    result = False
+                task_ration = (ration[0] << 16) + ration[1]
+            header = header + struct.pack('I', intercore_sync) + struct.pack('I', task_ration)
+
             header = header.ljust(fixed_header_len - aling_bytes, b'\x00')
             header += struct.pack('I', crc)
             for kernel_name in kernel_list:
