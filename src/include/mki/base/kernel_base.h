@@ -53,6 +53,10 @@ protected:
 
 private:
     uint64_t GetKernelArgsNum(const LaunchParam &launchParam);
+    uint64_t GetTensorListSize(const LaunchParam &launchParam);
+    Status InitTensorList(const LaunchParam &launchParam);
+    void BuildTensorList(uint8_t *startPtr, SVector<int> &lens, SVector<Tensor> &tensors,
+                         uint64_t &useSize, uint64_t idxOffset);
 
 private:
     std::string kernelName_;

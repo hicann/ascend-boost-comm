@@ -38,6 +38,7 @@ public:
         // set const input
         bool launchWithTiling = kernelInfo.GetLaunchWithTiling();
         const auto &constTensorInfos = kernelInfo.GetConstTensorInfos();
+        // size_t hostInputCount = 
         if (launchWithTiling) {
             constexpr size_t maxConstTensorCount = 1024;
             size_t constTensorCount = kernelInfo.GetConstTensorCount();
@@ -60,10 +61,19 @@ public:
             MKI_CHECK(status.Ok(), "failed to update const tensor args, tiling flag: " << launchWithTiling,
                       return status);
         }
-        // set input / output / workspace
+
+        bool launchWithTensorlist = kernelInfo.GetLaunchWithTensorlist();
         const auto &workspaces = kernelInfo.GetScratchSizes();
-        status = UpdateInOutWkspArgs(args, argsNum, workspaces, launchParam, runInfo.GetScratchDeviceAddr());
-        MKI_CHECK(status.Ok(), "failed to update input output wksp args", return status);
+        if (launchWithTensorlist) {
+            status = UpdateArgsWithTensorList(args, argsNum, workspaces,
+                        launchParam, runInfo.GetScratchDeviceAddr());
+            MKI_CHECK(status.Ok(), "failed to update args with tensorlist: " << launchWithTensorlist,
+                        return status);
+        } else {
+            // set input / output / workspace
+            status = UpdateInOutWkspArgs(args, argsNum, workspaces, launchParam, runInfo.GetScratchDeviceAddr());
+            MKI_CHECK(status.Ok(), "failed to update input output wksp args", return status);
+        }
         // set tiling
         status = launchWithTiling ? UpdateTilingArgs(argsEx_, argsNum)
                                   : UpdateTilingArgs(args, argsNum, runInfo.GetTilingDeviceAddr());
@@ -189,6 +199,47 @@ private:
         return Status::OkStatus();
     }
 
+    Status UpdateArgsWithTensorList(void **args, uint64_t argsNum, const MiniVector<uint64_t> &workspaces,
+                            const LaunchParam &launchParam, uint8_t *workspaceAddr)
+    {
+        size_t inputNum = launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
+        size_t outputNum = launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
+        SVector<int> inputLens = launchParam.GetInputLens();
+        size_t tensorId = 0;
+        for (size_t i = 0 ; i < inputNum ; i++) {
+            int len = launchParam.GetInputLenCount() > 0 ? inputLens[i] : 1;
+            if (len > 1) {
+                tensorId += len;
+            } else if (len == 1) {
+                MKI_LOG(DEBUG) << "args info: input " << i << " tensorId: " << tensorId;
+                args[i] = launchParam.GetInTensor(tensorId++).data;
+            }
+        }
+        SVector<int> outputLens = launchParam.GetOutputLens();
+        tensorId = 0;
+        for (size_t i = 0 ; i < outputNum ; i++) {
+            int len = launchParam.GetOutputLenCount() > 0 ? outputLens[i] : 1;
+            if (len > 1) {
+                tensorId += len;
+            } else if (len == 1) {
+                MKI_LOG(DEBUG) << "args info: output " << i + inputNum << " tensorId: " << tensorId;
+                args[i + inputNum] = launchParam.GetOutTensor(tensorId++).data;
+            }
+        }
+        size_t workspaceNum = workspaces.size();
+        uint64_t workspaceOffset = 0;
+        uint64_t idx = inputNum + outputNum;
+        for (size_t i = 0; i < workspaceNum && idx < argsNum; idx++) {
+            if (args[idx] != nullptr) {
+                continue;
+            }
+            MKI_LOG(DEBUG) << "args info: workspace " << idx << " offset " << workspaceOffset;
+            args[idx] = workspaceAddr + workspaceOffset;
+            workspaceOffset += workspaces.at(i++);
+        }
+        return Status::OkStatus();
+    }
+
 private:
     RtArgsExT argsEx_;
     std::unique_ptr<RtHostInputInfoT[]> hostInfo_{nullptr};
@@ -249,8 +300,18 @@ Status KernelBase::Init(const LaunchParam &launchParam)
         MKI_CHECK(st.Ok(), "Failed to alloc host tiling buffer " << st.ToString(), return st);
     }
 
+    if (launchParam.GetInputLenCount() > 0 || launchParam.GetOutputLenCount()) {
+        kernelInfo_.SetLaunchWithTensorlist(true);
+    }
+    bool launchWithTensorlist = kernelInfo_.GetLaunchWithTensorlist();
+    auto tensorListSize = Utils::GetTensorAlignedSize(GetTensorListSize(launchParam));
+    if (launchWithTensorlist) {
+        auto st = kernelInfo_.AllocTensorListHost(tensorListSize);
+    }
     auto status = InitImpl(launchParam);
     MKI_CHECK(status.Ok(), "Failed to init run info " << status.ToString(), return status);
+    status = InitTensorList(launchParam);
+    MKI_CHECK(status.Ok(), "Failed to init tensorList info " << status.ToString(), return status);
 
     auto kernelParamNum = GetKernelArgsNum(launchParam);
     uint64_t baseSize = kernelParamNum * sizeof(void *);
@@ -263,8 +324,9 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     argsSize += tilingUsedSize;
     uint64_t constTensorSize = kernelInfo_.GetTilingSize() - kernelInfo_.GetConstTensorOffset();
     argsSize += constTensorSize;
+    argsSize += tensorListSize;
     MKI_LOG(INFO) << "args num " << kernelParamNum << ", tiling used size " << tilingUsedSize
-                  << ", const tensor size " << constTensorSize;
+                  << ", const tensor size " << constTensorSize << ", tensorList size " << tensorListSize;
     status = kernelInfo_.InitArgs(argsSize);
     MKI_CHECK(status.Ok(), "failed to init args", return status);
     uint8_t *args = kernelInfo_.GetArgs();
@@ -278,12 +340,20 @@ Status KernelBase::Init(const LaunchParam &launchParam)
         MKI_CHECK(ret == EOK, "failed to copy const tensor", return Status::FailStatus(-1));
         MKI_LOG(INFO) << "copy const data " << constTensorSize << " to args offset " << baseSize + tilingUsedSize;
     }
+    if (tensorListSize > 0) {
+        ret = memcpy_s(args + baseSize + tilingUsedSize + constTensorSize, argsSize - baseSize - tilingUsedSize - constTensorSize,
+                       kernelInfo_.GetTensorListHostAddr(), tensorListSize);
+        MKI_CHECK(ret == EOK, "failed to copy tensorList", return Status::FailStatus(-1));
+        MKI_LOG(INFO) << "copy tensorList data " << tensorListSize << " to args offset " << baseSize + kernelInfo_.GetTilingSize();
+    }
     return Status::OkStatus();
 }
 
 uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
 {
-    uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
+    size_t inputNum = launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
+    size_t outputNum = launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
+    uint64_t inputOutputNum = inputNum + outputNum;
     uint64_t constInputNum = kernelInfo_.GetConstTensorCount();
     uint64_t workspaceNum = kernelInfo_.GetScratchSizes().size();
     uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
@@ -335,6 +405,87 @@ uint64_t KernelBase::GetTilingSize(const LaunchParam &launchParam) const
 {
     UNUSED_VALUE(launchParam);
     return launchBufferSize_;
+}
+
+uint64_t KernelBase::GetTensorListSize(const LaunchParam &launchParam)
+{
+    size_t tensorId = 0;
+    uint64_t totalSize = 0;
+    for (auto &len : launchParam.GetInputLens()) {
+        if (len > 1) {
+            uint64_t sigleSize = len + 1;
+            for (size_t i = tensorId; i < tensorId + len; ++i) {
+                sigleSize += launchParam.GetInTensors().at(i).desc.dims.size() + 1;
+            }
+            totalSize += sigleSize;
+            tensorId += len;
+        } else {
+            ++tensorId;
+        }
+    }
+    tensorId = 0;
+    for (auto &len : launchParam.GetOutputLens()) {
+        if (len > 1) {
+            uint64_t sigleSize = len + 1;
+            for (size_t i = tensorId; i < tensorId + len; ++i) {
+                sigleSize += launchParam.GetOutTensors().at(i).desc.dims.size() + 1;
+            }
+            totalSize += sigleSize;
+            tensorId += len;
+        } else {
+            ++tensorId;
+        }
+    }
+    return totalSize * sizeof(uint64_t);
+}
+
+void KernelBase::BuildTensorList(uint8_t *startPtr, SVector<int> &lens, SVector<Tensor> &tensors, uint64_t &useSize, uint64_t idxOffset)
+{
+    size_t tensorId = 0;
+    uint64_t totalSize = 0;
+    uint64_t *basePtr = reinterpret_cast<uint64_t *>(startPtr);
+    for (uint64_t i = 0 ; i < lens.size() ; i++) {
+        int len = lens[i];
+        if (len > 1) {
+            uint64_t sigleSize = len + 1;
+            for (size_t i = tensorId; i < tensorId + len; ++i) {
+                sigleSize += tensors.at(i).desc.dims.size() + 1;
+            }
+            uint64_t dataOffset = sigleSize - len;
+            uint64_t curOffset = 1;
+            *basePtr = dataOffset * 8;
+            for (size_t i = tensorId; i < tensorId + len; ++i) {
+                *reinterpret_cast<uint32_t *>(basePtr + curOffset) = tensors.at(i).desc.dims.size();
+                *(reinterpret_cast<uint32_t *>(basePtr + curOffset) + 1) = i - tensorId;
+                curOffset++;
+                for (size_t j = 0; j < tensors.at(i).desc.dims.size(); ++j) {
+                    *(basePtr + curOffset++) = tensors.at(i).desc.dims[j];
+                }
+                *(basePtr + dataOffset + i - tensorId) = reinterpret_cast<intptr_t>(tensors.at(i).data);
+            }
+            tensorId += len;
+            basePtr = basePtr + sigleSize;
+            totalSize += sigleSize;
+            kernelInfo_.AddTensorListInfo(i + idxOffset, sigleSize * sizeof(uint64_t));
+        } else if (len == 1) {
+            ++tensorId;
+        }
+    }
+    useSize = totalSize * sizeof(uint64_t);
+}
+
+Status KernelBase::InitTensorList(const LaunchParam &launchParam)
+{
+    uint8_t *startPtr = kernelInfo_.GetTensorListHostAddr();
+    uint64_t useSize = 0;
+    SVector<Tensor> inTensors = launchParam.GetInTensors();
+    SVector<int> inputLens = launchParam.GetInputLens();
+    BuildTensorList(startPtr, inputLens, inTensors, useSize, 0);
+    startPtr += useSize;
+    SVector<Tensor> outTensors = launchParam.GetOutTensors();
+    SVector<int> outputLens = launchParam.GetOutputLens();
+    BuildTensorList(startPtr, outputLens, outTensors, useSize, inputLens.size());
+    return Status::OkStatus();
 }
 
 Status KernelBase::InitImpl(const LaunchParam &launchParam)
