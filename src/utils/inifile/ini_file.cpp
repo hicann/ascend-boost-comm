@@ -79,12 +79,12 @@ bool IniFile::ParseIniFileToMapNoLog(const std::string &iniFilePath,
 {
     std::string realPath = FileSystem::PathCheckAndRegularNoLog(iniFilePath, symCheck);
     if (FileSystem::FileSize(realPath) <= 0 || FileSystem::FileSize(realPath) > MAX_FILE_SIZE) {
-        std::cout << "File size is invalid" << std::endl;
+        std::cout << "Warning: File size is invalid" << std::endl;
         return false;
     }
     std::ifstream ifs(realPath);
     if (!ifs.is_open()) {
-        std::cout << "Open ini file failed" << std::endl;
+        std::cout << "Warning: Open ini file failed" << std::endl;
         return false;
     }
 
