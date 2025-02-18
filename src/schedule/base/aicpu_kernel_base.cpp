@@ -156,7 +156,7 @@ Status AicpuKernelBase::Init(const LaunchParam &launchParam)
     return Status::OkStatus();
 }
 
-uint64_t AicpuKernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
+uint64_t AicpuKernelBase::GetKernelArgsNum(const LaunchParam &launchParam) const
 {
     uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
     MKI_LOG(DEBUG) << "aicpu kernel param: " << inputOutputNum << " in/out";

@@ -49,7 +49,7 @@ protected:
     KernelInfo kernelInfo_;
 
 private:
-    uint64_t GetKernelArgsNum(const LaunchParam &launchParam);
+    uint64_t GetKernelArgsNum(const LaunchParam &launchParam) const;
 
 private:
     std::string kernelName_;
