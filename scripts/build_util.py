@@ -18,6 +18,7 @@ import stat
 import struct
 import re
 import argparse
+import subprocess
 
 
 # sycl-target --show-targets
@@ -110,6 +111,20 @@ def get_header_from_file(file_path):
             offset += (aling_bytes + len(compile_info_str))
             binary_offset = offset
             header = header + struct.pack('I', kernel_name_offset) + struct.pack('I', compile_info_offset) + struct.pack('I', binary_offset)
+
+            # Get ext info for reusing MIX type kernels
+            intercore_sync = text.get("intercoreSync", 0)
+            task_ration_type = text.get("taskRation", "tilingKey")
+            if task_ration_type == "tilingKey":
+                task_ration = 0
+            else:
+                ration = [int(r) for r in task_ration_type.split(":")]
+                if len(ration) != 2:
+                    logging.error(f"ration is invalid: {task_ration_type}")
+                    result = False
+                task_ration = (ration[0] << 16) + ration[1]
+            header = header + struct.pack('I', intercore_sync) + struct.pack('I', task_ration)
+
             header = header.ljust(fixed_header_len - aling_bytes, b'\x00')
             header += struct.pack('I', crc)
             for kernel_name in kernel_list:
@@ -129,7 +144,7 @@ def get_header_from_file(file_path):
     return header, result
 
 
-def write_to_cpp(binary_path, header, dst_cpp_path, tactic, target_version):
+def write_to_cpp(binary_path, header, dst_cpp_path, kernel, target_version, is_const=True):
     try:
         with open(binary_path, 'rb') as f:
             data = f.read()
@@ -140,24 +155,24 @@ def write_to_cpp(binary_path, header, dst_cpp_path, tactic, target_version):
         logging.error("file %s is not found!", binary_path)
         return False
     # 将数据写入到cpp文件中
-    name = f'KERNELBIN_{tactic.upper()}_{target_version.upper()}'
+    name = f'KERNELBIN_{kernel.upper()}_{target_version.upper()}'
+    data_type = 'const uint8_t' if is_const else 'uint8_t'
     with open(dst_cpp_path, 'w') as f:
         f.write('#include <cstdint>\n#include "mki_loader/op_register.h"\n')
-        f.write('namespace OpSpace {\nstatic const uint8_t ')
-        f.write(name)
+        f.write('namespace OpSpace {\n')
+        f.write(f'static {data_type} {name}')
         f.write('[] = {')
         for i in range(0, len(data), 16):
             f.write(', '.join('0x{:02x}'.format(b) for b in data[i:i+16]))
             if i + 16 < len(data):
                 f.write(', ')
         f.write('};\n\n')
-        f.write(f'REG_KERNEL({target_version}, {tactic}, {name});\n')
+        f.write(f'REG_KERNEL({target_version}, {kernel}, {name});\n')
         f.write('}\n')
-    print(f"Generate target binary source file: {dst_cpp_path}")
     return True
 
 
-# 目前只支持一个tactic文件夹下一个.o和.json文件
+# 目前只支持一个kernel文件夹下一个.o和.json文件
 def copy_ascendc_code(binary_dir, target_version, output_path):
     op_kernels_version_dir = os.path.join(
         binary_dir, "op_kernels", target_version)
@@ -169,24 +184,24 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
         output_operation_dir = os.path.join(output_path, operation)
         if not os.path.exists(output_operation_dir):
             os.makedirs(output_operation_dir)
-        for tactic in os.listdir(operation_dir):
-            tactic_dir = os.path.join(operation_dir, tactic)
-            for file in os.listdir(tactic_dir):
+        for kernel in os.listdir(operation_dir):
+            kernel_dir = os.path.join(operation_dir, kernel)
+            for file in os.listdir(kernel_dir):
                 if not file.endswith('.json'):
                     continue
-                code_file = os.path.join(tactic_dir, file[:-4] + 'o')
+                code_file = os.path.join(kernel_dir, file[:-4] + 'o')
                 if not os.path.exists(code_file):
                     logging.error("file %s has no object file.", file)
                     exit(1)
 
-                json_file = os.path.join(tactic_dir, file)
+                json_file = os.path.join(kernel_dir, file)
                 header, result = get_header_from_file(json_file)
                 if not result:
                     logging.error("failed to parse file %s.", json_file)
                     exit(1)
 
                 dst_cpp_path = os.path.join(output_operation_dir, file)[:-4] + 'cpp'
-                result = write_to_cpp(code_file, header, dst_cpp_path, tactic, target_version)
+                result = write_to_cpp(code_file, header, dst_cpp_path, kernel, target_version)
                 if not result:
                     logging.error("failed to write into file %s.", dst_cpp_path)
                     exit(1)
@@ -195,20 +210,42 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
     return code_file_count
 
 
+def compile_ascendc_code(obj_path, dst_cpp_path, is_const=True):
+    if not obj_path.endswith('.o'):
+        logging.error("%s is not an obj file.", obj_path)
+        exit(1)
+    json_file = obj_path.rsplit('.', 1)[0] + '.json'
+    header, result = get_header_from_file(json_file)
+    if not result:
+        logging.error("failed to parse file %s.", json_file)
+        exit(1)
+    obj_realpath = os.path.realpath(obj_path)
+    kernel = obj_path.split('/')[-2]
+    target_version = obj_realpath.split('/')[-4]
+    output_dir = os.path.dirname(dst_cpp_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+    result = write_to_cpp(obj_path, header, dst_cpp_path, kernel, target_version, is_const)
+    if not result:
+        logging.error("failed to write into file %s.", dst_cpp_path)
+        exit(1)
+
+
 def copy_tbe_code_all_version(input_paras):
     tbe_sections = input_paras["tbe_ini"].sections()
     for target_version in input_paras["target_version_list"]:
+        binary_id = 0
         output_path = os.path.join(
             input_paras["env_cache_dir"], "obj", target_version)
         if not os.path.exists(output_path):
-            os.makedirs(output_path)
+            os.makedirs(output_path, exist_ok=True)
         target_version_path = os.path.join(
             input_paras["tbe_kernel_path"], target_version)
 
         for op_name in tbe_sections:
             op_dir_path = os.path.join(output_path, op_name)
             if not os.path.exists(op_dir_path):
-                os.mkdir(op_dir_path)
+                os.makedirs(op_dir_path, exist_ok=True)
             items = dict(input_paras["tbe_ini"].items(op_name))
             for op_key, relative_op_path in items.items():
                 if '.' in op_key:
@@ -218,7 +255,7 @@ def copy_tbe_code_all_version(input_paras):
                 code_file = os.path.join(
                     target_version_path, relative_op_path[:-4] + 'o')
                 object_name = os.path.basename(code_file)
-                dst_cpp_path = os.path.join(op_dir_path, object_name[:-1] + 'cpp')
+                dst_cpp_path = os.path.join(op_dir_path, object_name[:-2] + '_' + op_key.lower() + '.cpp')
 
                 header, ret = get_header_from_file(os.path.join(
                     target_version_path, relative_op_path))
@@ -226,7 +263,10 @@ def copy_tbe_code_all_version(input_paras):
                     logging.error("failed to parse json file %s", relative_op_path)
                     exit(1)
 
-                result = write_to_cpp(code_file, header, dst_cpp_path, op_key, target_version)
+                shell_result = subprocess.run(['strings', os.path.realpath(code_file)], capture_output=True, text=True)
+                is_const = False if 'g_opSystemRunCfg' in shell_result.stdout else True
+                result = write_to_cpp(code_file, header, dst_cpp_path, op_key, target_version, is_const)
+                binary_id += 1
                 if not result:
                     logging.error("failed to write into file %s.", dst_cpp_path)
                     exit(1)
@@ -242,7 +282,7 @@ def copy_ascendc_code_all_version(input_paras):
         ascendc_file_count = copy_ascendc_code(
             input_paras["binary_dir"], target_version, output_path)
         logging.info(
-            f"{target_version} has {ascendc_file_count} AscendC tactics.")
+            f"{target_version} has {ascendc_file_count} AscendC kernels.")
 
 
 def copy_tbe_device_code(args):
@@ -255,13 +295,13 @@ def copy_tbe_device_code(args):
 
     if (args.op_type == "tbe" or args.op_type is None):
         env_code_root = os.getenv("CODE_ROOT")
-        tbe_kernel_path = os.getenv("ASCEND_KERNEL_PATH")
+        tbe_kernel_path = os.getenv("ASDOPS_KERNEL_PATH")
         if not (env_code_root and tbe_kernel_path):
             logging.error(
-            "env CODE_ROOT | ASCEND_KERNEL_PATH not exist!")
+            "env CODE_ROOT | ASDOPS_KERNEL_PATH not exist!")
             exit(1)
         logging.info(f"tbe_kernel_path: {tbe_kernel_path}")
-        input_path = os.path.join(env_code_root, "configs/tbe_tactic_json.ini")
+        input_path = os.path.join(env_code_root, args.tbe_ini_path)
         if not os.path.exists(input_path):
             logging.error("ini file: %s not exist!", input_path)
             exit(1)
@@ -280,7 +320,6 @@ def copy_tbe_device_code(args):
                                 "tbe_kernel_path": tbe_kernel_path,
                                 "binary_dir": args.binary_dir,
                                 "tbe_ini": tbe_ini})
-        os.remove(input_path)
 
     if (args.op_type == "ascendc" or args.op_type is None):
         copy_ascendc_code_all_version({"target_version_list": target_version_list,
@@ -295,5 +334,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--binary_dir', type=str, required=True)
     parser.add_argument('--op_type', type=str, required=False)
+    parser.add_argument('--tbe_ini_path', type=str, default="configs/tbe_tactic_json.ini", required=False)
     input_args = parser.parse_args()
     copy_tbe_device_code(input_args)

@@ -12,6 +12,7 @@ import os
 import re
 import logging
 import argparse
+import configparser
 import build_util
 
 pattern_operation = r"add_operation\(.+?\)"
@@ -74,7 +75,7 @@ def input_args_check(src_root_dir, dst_yaml_dir):
         exit(1)
 
 
-def build_cmake_options(yaml_file_path, cmake_option_path):
+def build_cmake_options(yaml_file_path, cmake_option_path, json_ini_path=''):
     logging.basicConfig(level=logging.INFO,
                         format='%(filename)s [line:%(lineno)d] - %(levelname)s: %(message)s')
     if os.path.basename(yaml_file_path) != 'op_list.yaml':
@@ -83,6 +84,23 @@ def build_cmake_options(yaml_file_path, cmake_option_path):
     if not os.path.exists(os.path.dirname(cmake_option_path)):
         logging.error(f'{os.path.dirname(cmake_option_path)} do not exist')
         exit(1)
+
+    tbe_ini = None
+    if not os.path.exists(os.path.dirname(json_ini_path)):
+        logging.warning(f'{os.path.dirname(json_ini_path)} do not exist')
+    else:
+        tbe_ini = configparser.RawConfigParser()
+        tbe_ini.optionxform = lambda option: option
+        try:
+            tbe_ini.read(json_ini_path)
+        except configparser.MissingSectionHeaderError:
+            logging.error("ini file: %s format error!", json_ini_path)
+            exit(1)
+        except configparser.ParsingError:
+            logging.error("ini file: %s format error!", json_ini_path)
+            exit(1)
+
+
     option_list = []
     built_device_list, all_device_list = build_util.get_build_target_list(with_all=True)
     try:
@@ -96,13 +114,21 @@ def build_cmake_options(yaml_file_path, cmake_option_path):
                     assert kernel_list == 'host-only', f'{op_name} kernel parse fail, invalid string: {kernel_list}'
                     continue
                 kernel_built_count = 0
+                reuse_kernels = set()
+                if tbe_ini is not None and op_name in tbe_ini.sections():
+                    reuse_kernels = dict(tbe_ini.items(op_name)).keys()
                 for kernel_name in kernel_list:
                     assert kernel_name.endswith('Kernel'), f'{kernel_name} is an invalid kernel name'
                     soc_list = kernel_list[kernel_name]
                     for soc in soc_list:
                         assert soc in all_device_list, f'{soc} is an invalid soc type'
                         assert isinstance(soc_list[soc], bool), f'{soc_list[soc]} is not bool type'
-                        op_switch = 'ON' if soc_list[soc] and soc in built_device_list else 'OFF'
+
+                        full_name = f'{kernel_name}.{soc}'
+                        op_switch = 'OFF'
+                        if soc_list[soc] and soc in built_device_list and full_name not in reuse_kernels:
+                            op_switch = 'ON'
+
                         option_name = f'BUILD_{op_name}_{kernel_name}_{soc}'
                         option_list.append(f'set({option_name} {op_switch})')
                         if soc_list[soc]:
