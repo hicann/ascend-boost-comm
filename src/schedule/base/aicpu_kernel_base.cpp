@@ -22,7 +22,7 @@ public:
     AicpuKernelParamBuilder(const std::string &soName, const std::string &deviceKernelName)
         : soName_(soName), deviceKernelName_(deviceKernelName) {}
 
-    Status Init(const LaunchParam &launchParam, const RunInfo &runInfo, uint64_t argsNum, const KernelInfo &kernelInfo)
+    Status Init(const LaunchParam &launchParam, uint64_t argsNum, const KernelInfo &kernelInfo)
     {
         uint8_t *argsPtr = kernelInfo.GetArgs();
         uint64_t argsSize = kernelInfo.GetArgsSize();
@@ -40,12 +40,13 @@ public:
         uint32_t tensorOffset = argsNum * sizeof(void *);
         uint32_t soNameSize = soName_.length();
         uint32_t kernelNameSize = deviceKernelName_.length();
-        ret = Mki::MkiRtMemCopy((void*)((uint64_t)args + tensorOffset), soNameSize, soName_.c_str(), soNameSize,
-                                MKIRT_MEMCOPY_HOST_TO_HOST);
+        ret = Mki::MkiRtMemCopy(reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(args) + tensorOffset),
+                                soNameSize, soName_.c_str(), soNameSize, MKIRT_MEMCOPY_HOST_TO_HOST);
         MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for soName fail, errCode:" << ret,
                   return Status::FailStatus(ERROR_INVALID_VALUE));
-        ret = Mki::MkiRtMemCopy((void*)((uint64_t)args + tensorOffset + soNameSize + 1), kernelNameSize,
-                                deviceKernelName_.c_str(), kernelNameSize, MKIRT_MEMCOPY_HOST_TO_HOST);
+        ret = Mki::MkiRtMemCopy(reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(args) +
+                                                         tensorOffset + soNameSize + 1),
+                                kernelNameSize, deviceKernelName_.c_str(), kernelNameSize, MKIRT_MEMCOPY_HOST_TO_HOST);
         MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for kernelName fail, errCode:" << ret,
                   return Status::FailStatus(ERROR_INVALID_VALUE));
 
@@ -156,7 +157,7 @@ Status AicpuKernelBase::Init(const LaunchParam &launchParam)
     return Status::OkStatus();
 }
 
-uint64_t AicpuKernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
+uint64_t AicpuKernelBase::GetKernelArgsNum(const LaunchParam &launchParam) const
 {
     uint64_t inputOutputNum = launchParam.GetInTensorCount() + launchParam.GetOutTensorCount();
     MKI_LOG(DEBUG) << "aicpu kernel param: " << inputOutputNum << " in/out";
@@ -167,7 +168,7 @@ Status AicpuKernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
     AicpuKernelParamBuilder paramBuilder(soName_, deviceKernelName_);
     uint64_t argsNum = GetKernelArgsNum(launchParam);
-    Status status = paramBuilder.Init(launchParam, runInfo, argsNum, kernelInfo_);
+    Status status = paramBuilder.Init(launchParam, argsNum, kernelInfo_);
     MKI_CHECK(status.Ok(), "failed to build kernel params", return status);
     const MkiRtAicpuKernelParam &kernelParam = paramBuilder.GetKernelParam();
     MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
