@@ -40,14 +40,12 @@ public:
         uint32_t tensorOffset = argsNum * sizeof(void *);
         uint32_t soNameSize = soName_.length();
         uint32_t kernelNameSize = deviceKernelName_.length();
-        ret = Mki::MkiRtMemCopy(reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(args) + tensorOffset),
-                                soNameSize, soName_.c_str(), soNameSize, MKIRT_MEMCOPY_HOST_TO_HOST);
-        MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for soName fail, errCode:" << ret,
+        ret = memcpy_s(argsPtr + tensorOffset, soNameSize, soName_.c_str(), soNameSize);
+        MKI_CHECK(ret == EOK, "memcpy for soName fail, errCode:" << ret,
                   return Status::FailStatus(ERROR_INVALID_VALUE));
-        ret = Mki::MkiRtMemCopy(reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(args) +
-                                                         tensorOffset + soNameSize + 1),
-                                kernelNameSize, deviceKernelName_.c_str(), kernelNameSize, MKIRT_MEMCOPY_HOST_TO_HOST);
-        MKI_CHECK(ret == MKIRT_SUCCESS, "MkiRtMemCopy for kernelName fail, errCode:" << ret,
+        ret = memcpy_s(argsPtr + tensorOffset + soNameSize + 1, kernelNameSize, deviceKernelName_.c_str(),
+                       kernelNameSize);
+        MKI_CHECK(ret == EOK, "memcpy for kernelName fail, errCode:" << ret,
                   return Status::FailStatus(ERROR_INVALID_VALUE));
 
         // launch

@@ -149,9 +149,9 @@ bool Loader::LoadAicpuKernelBinarys()
 
     // Prep so loading args
     RtLoadOpFromBufArgs opArgs;
-    opArgs.kernelSoBuf = reinterpret_cast<uint64_t>(aicpuSoHandle_.get());
+    opArgs.kernelSoBuf = aicpuSoHandle_.get();
     opArgs.kernelSoBufLen = fileSize;
-    opArgs.kernelSoName = reinterpret_cast<uint64_t>(aicpuSoNameHandle_.get());
+    opArgs.kernelSoName = aicpuSoNameHandle_.get();
     opArgs.kernelSoNameLen = soNameLen;
     uint32_t argsSize = sizeof(RtLoadOpFromBufArgs);
 
