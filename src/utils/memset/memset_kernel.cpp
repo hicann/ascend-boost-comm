@@ -12,6 +12,7 @@
 #include <securec.h>
 #include <memory>
 #include <mutex>
+#include <acl/acl.h>
 #include "mki/utils/memset/clear_tensors.h"
 #include "mki/base/kernel_base.h"
 #include "mki_loader/op_register.h"
@@ -154,7 +155,16 @@ Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::
 
     std::call_once(initedFlag, [&]() { memsetKernel = MemsetInit(); });
 
-    MKI_CHECK(memsetKernel != nullptr, "memset kernel is nullptr", return Mki::Status::FailStatus(1));
+    if (memsetKernel == nullptr) {
+        MKI_LOG(WARN) << "memset kernel is null, use aclrtmemset instead!";
+        for (size_t i = 0; i < MEMSET_MAX_TENSOR_NUM && i < memsetInfo.size() && i < argsNum; ++i) {
+            void *zeroTensor = args[memsetInfo[i].argIdx];
+            auto aclRet = aclrtMemset(zeroTensor, memsetInfo[i].size, 0, memsetInfo[i].size);
+            MKI_CHECK(aclRet == 0, "memset tensor " << memsetInfo[i].argIdx << " failed, ret: " << aclRet,
+                      return Mki::Status::FailStatus(ERROR_INVALID_VALUE));
+        }
+        return Status::OkStatus();
+    }
     return memsetKernel->Run(args, argsNum, memsetInfo, stream);
 }
 } // namespace Mki
