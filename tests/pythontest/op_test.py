@@ -41,6 +41,7 @@ class OpTest(unittest.TestCase):
         self.multiplex = False
         self.out_flag = False
         self.support_soc = []
+        self.nct = False
 
     def set_param(self, op_name, op_param):
         self.op_desc = {
@@ -106,7 +107,10 @@ class OpTest(unittest.TestCase):
                            for i in out_tensors]
 
         self.__set_envs(envs)
-        self.mki.execute(in_tensors_npu, out_tensors_npu)
+        if self.nct:
+            self.mki.execute_nct(in_tensors_npu, out_tensors_npu)
+        else:
+            self.mki.execute(in_tensors_npu, out_tensors_npu)
         self.__unset_envs(envs)
 
         if out_tensors_npu:
@@ -144,7 +148,10 @@ class OpTest(unittest.TestCase):
         out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
                            for i in out_tensors]
         self.__set_envs(envs)
-        self.run_result = self.mki.execute(in_tensors_npu, out_tensors_npu)
+        if self.nct:
+            self.run_result = self.mki.execute_nct(in_tensors_npu, out_tensors_npu)
+        else:
+            self.run_result = self.mki.execute(in_tensors_npu, out_tensors_npu)
         self.__unset_envs(envs)
 
         if out_tensors_npu:

@@ -77,4 +77,41 @@ TEST(ToStringTest, HandleMultipleElementsDims) {
     td.dims = {1, 2, 3};
     EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[1, 2, 3]");
 }
+
+TEST(ToStringTest, HandleMultipleElementsDimsWithStrideAndOffset) {
+    Mki::TensorDesc td;
+    td.dims = {1, 2, 3};
+    td.strides = {8, 4, 1};
+    td.offset = 10;
+    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[1, 2, 3], strides:[8, 4, 1], offset:10");
+}
+
+TEST(IsContiguousTest, EmptyStridesTest) {
+    Mki::TensorDesc td;
+    td.dims = {1, 2, 3};
+    td.strides = {};
+    EXPECT_TRUE(td.IsContiguous());
+}
+ 
+TEST(IsContiguousTest, ContiguousStridesTest) {
+    Mki::TensorDesc td;
+    td.dims = {1, 2, 3};
+    td.strides = {6, 3, 1};
+    EXPECT_TRUE(td.IsContiguous());
+}
+ 
+TEST(IsContiguousTest, NotContiguousStridesTest) {
+    Mki::TensorDesc td;
+    td.dims = {1, 2, 3};
+    td.strides = {8, 4, 1};
+    EXPECT_TRUE(!td.IsContiguous());
+}
+
+TEST(IsContiguousTest, NotContiguousOffsetTest) {
+    Mki::TensorDesc td;
+    td.dims = {1, 2, 3};
+    td.strides = {6, 3, 1};
+    td.offset = 10;
+    EXPECT_TRUE(!td.IsContiguous());
+}
 } // namespace

@@ -30,7 +30,8 @@ TORCH_LIBRARY(MkiTorch, m)
 {
     m.class_<Mki::Test::MkiTorch>("MkiTorch")
         .def(torch::init<std::string>())
-        .def("execute", &Mki::Test::MkiTorch::Execute);
+        .def("execute", &Mki::Test::MkiTorch::Execute)
+        .def("execute_nct", &Mki::Test::MkiTorch::ExecuteNCT);
 }
 }
 
@@ -333,6 +334,13 @@ Mki::Tensor MkiTorch::AtTensor2MkiTensor(const at::Tensor &atTensor)
 
     mkiTensor.desc.format = static_cast<Mki::TensorFormat>(at_npu::native::get_npu_format(atTensor));
 
+    mkiTensor.desc.strides.resize(atTensor.strides().size());
+    for (uint64_t i = 0; i < atTensor.strides().size(); i++) {
+        mkiTensor.desc.strides[i] = atTensor.stride(i);
+    }
+ 
+    mkiTensor.desc.offset = atTensor.storage_offset();
+
     MKI_LOG(INFO) << "At tensor dtype " << atTensor.scalar_type();
 
     auto it = DTYPE_MAP.find(atTensor.scalar_type());
@@ -381,6 +389,11 @@ std::string MkiTorch::Execute(std::vector<at::Tensor> atInTensors, std::vector<a
 {
     ContiguousAtTensor(atInTensors);
     ContiguousAtTensor(atOutTensors);
+    return ExecuteImpl(atInTensors, atOutTensors);
+}
+
+std::string MkiTorch::ExecuteNCT(std::vector<at::Tensor> atInTensors, std::vector<at::Tensor> atOutTensors)
+{
     return ExecuteImpl(atInTensors, atOutTensors);
 }
 } // namespace Test

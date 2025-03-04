@@ -22,6 +22,7 @@ struct TensorDesc {
     int64_t offset = 0;
     int64_t Numel() const;
     void View(const Mki::SVector<int64_t> &newDims);
+    bool IsContiguous() const;
     std::string ToString() const;
 };
 
@@ -32,6 +33,7 @@ struct Tensor {
     void *hostData = nullptr;
     int64_t Numel() const;
     void View(const Mki::SVector<int64_t> &newDims);
+    bool IsContiguous() const;
     std::string ToString() const;
 };
 } // namespace Mki
