@@ -16,6 +16,7 @@
 #include "mki/utils/any/any.h"
 
 namespace Mki {
+using GetRemapTableFunc = const SVector<size_t> &(*)();
 class LaunchParam {
 public:
     LaunchParam() = default;
@@ -45,6 +46,7 @@ public:
     Tensor &GetOutTensor(size_t pos);
     const SVector<Tensor> &GetOutTensors() const;
     SVector<Tensor> &GetOutTensors();
+    void SetGetRemapTableFunc(GetRemapTableFunc func) const;
 
     std::string ToString() const;
 
@@ -52,6 +54,7 @@ private:
     Any specificParam_;
     SVector<Tensor> inTensors_;
     SVector<Tensor> outTensors_;
+    mutable GetRemapTableFunc getRemapTable_{nullptr};
 };
 } // namespace Mki
 
