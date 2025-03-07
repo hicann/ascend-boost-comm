@@ -50,16 +50,17 @@ bool TensorDesc::IsContiguous() const
     }
 
     if (Numel() <= 0) {
-        MKI_LOG(ERROR) << "Tensor size is overflow or tensor dims is invalid, cannot check contiguous";
+        MKI_LOG(WARN) << "Tensor size is overflow or tensor dims is invalid, regard it as contiguous tensor";
         return true;
     }
 
     if (strides.empty()) {
+        MKI_LOG(WARN) << "Strides is empty, regard it as contiguous tensor";
         return true;
     }
  
     if (strides.size() != dims.size()) {
-        MKI_LOG(ERROR) << "strides size is different from dims size";
+        MKI_LOG(WARN) << "Strides size is different from dims size, regard it as contiguous tensor";
         return true;
     }
  
@@ -82,7 +83,7 @@ void TensorDesc::View(const Mki::SVector<int64_t> &newDims)
 
     int64_t oldElementCount = Numel();
     if (elementCount != oldElementCount) {
-        MKI_LOG(ERROR) << "tesnor view fail, elementCount:" << elementCount << " not equal:" << oldElementCount;
+        MKI_LOG(ERROR) << "tensor view fail, elementCount:" << elementCount << " not equal:" << oldElementCount;
         return;
     }
     dims = newDims;
@@ -99,11 +100,7 @@ std::string TensorDesc::ToString() const
             ss << ", " << dims.at(i);
         }
     }
-    ss << "]";
-    if (IsContiguous()) {
-        return ss.str();
-    }
-    ss << ", strides:[";
+    ss << "], strides:[";
     for (size_t i = 0; i < strides.size(); ++i) {
         if (i == 0) {
             ss << strides.at(i);

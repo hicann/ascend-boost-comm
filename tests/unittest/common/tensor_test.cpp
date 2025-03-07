@@ -63,19 +63,19 @@ TEST(ViewTest, HandleInvalidInput) {
 TEST(ToStringTest, HandleEmptyDims) {
     Mki::TensorDesc td;
     td.dims = {};
-    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[]");
+    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[], strides:[], offset:0");
 }
 
 TEST(ToStringTest, HandleSingleElementDims) {
     Mki::TensorDesc td;
     td.dims = {10};
-    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[10]");
+    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[10], strides:[], offset:0");
 }
 
 TEST(ToStringTest, HandleMultipleElementsDims) {
     Mki::TensorDesc td;
     td.dims = {1, 2, 3};
-    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[1, 2, 3]");
+    EXPECT_EQ(td.ToString(), "dtype:undefined, format:undefined, dims:[1, 2, 3], strides:[], offset:0");
 }
 
 TEST(ToStringTest, HandleMultipleElementsDimsWithStrideAndOffset) {
