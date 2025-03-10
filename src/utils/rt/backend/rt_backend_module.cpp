@@ -51,6 +51,10 @@ int RtBackend::ModuleCreate(MkiRtModuleInfo *moduleInfo, MkiRtModule *module)
         return MKIRT_ERROR_NOT_INITIALIZED;
     }
     MkiRtModuleProxy *moduleProxy = new MkiRtModuleProxy;
+    if (moduleProxy == nullptr) {
+        MKI_LOG(ERROR) << "moduleProxy is nullptr";
+        return MKIRT_ERROR_NOT_INITIALIZED;
+    }
     moduleProxy->type = moduleInfo->type;
     moduleProxy->version = moduleInfo->version;
     *module = moduleProxy;
