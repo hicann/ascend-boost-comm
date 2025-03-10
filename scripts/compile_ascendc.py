@@ -34,9 +34,7 @@ def gen_compile_cmd(args, dst: str, sub_arch: str, compile_options):
                                 'ccec_compiler', 'bin', 'ccec'),
                    '-c']
     if args.use_msdebug == "ON":
-        compile_cmd += ['-O0', '-g', '--cce-ignore-always-inline=true',
-                        "-mllvm", "-cce-aicore-stack-size=0x8000",
-                        "-mllvm", "-cce-aicore-function-stack-size=0x8000"]
+        compile_cmd += ['-O0', '-g', '--cce-ignore-always-inline=true']
     else:
         compile_cmd += ['-O2']
     compile_cmd += compile_options

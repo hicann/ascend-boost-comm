@@ -183,7 +183,7 @@ uint64_t KernelInfo::GetConstTensorOffset() const
     return tilingExtInfo_.constTensorOffset;
 }
 
-template <typename T_SRC, typename T_DST = T_SRC, typename T_CONT = SVector<T_SRC>>
+template <typename T_SRC, typename T_DST, typename T_CONT>
 bool KernelInfo::AddConstTensorData(uint64_t argIdx, const T_CONT &tensorData)
 {
     uint64_t offset = tilingExtInfo_.constTensorOffset;
