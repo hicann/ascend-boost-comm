@@ -43,9 +43,6 @@ Status CfgCore::LoadFromFile(const std::string &fileName)
 {
     cfgFileExixts_ = IniFile::ParseIniFileToMapNoLog(fileName, rawInfoMap_);
     if (!cfgFileExixts_ || rawInfoMap_.empty()) {
-        if (printLog_) {
-            std::cout << "ParseIniFileToMapNpLog failed!" << std::endl;
-        }
         return Status::FailStatus(ERROR_INVALID_VALUE);
     }
     return Status::OkStatus();
@@ -88,7 +85,6 @@ void CfgCore::InitMkiHomePath()
         return;
     }
     if (strlen(envStr) > MKI_MAX_ENV_STRING_LEN && printLog_) {
-        std::cout << "MKI_HOME_PATH length is more than " << MKI_MAX_ENV_STRING_LEN << std::endl;
         return;
     }
     mkiHomePath_ = std::string(envStr);
