@@ -88,7 +88,6 @@ void CfgCore::InitMkiHomePath()
         return;
     }
     if (strlen(envStr) > MKI_MAX_ENV_STRING_LEN && printLog_) {
-        std::cout << "MKI_HOME_PATH length is more than " << MKI_MAX_ENV_STRING_LEN << std::endl;
         return;
     }
     mkiHomePath_ = std::string(envStr);
