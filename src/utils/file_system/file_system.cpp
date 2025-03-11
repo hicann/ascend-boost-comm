@@ -298,19 +298,16 @@ std::string FileSystem::PathCheckAndRegularNoLog(const std::string &path, bool s
 {
     // 1. check if "path" is empty
     if (path.empty()) {
-        std::cout << "Warning: path string is NULL" << std::endl;
         return "";
     }
 
     // 2. check the length of "path"
     if (path.size() >= PATH_MAX) {
-        std::cout << "Warning: file path " << path.c_str() << " is too long!" << std::endl;
         return "";
     }
 
     // 3. check if "path" contains parent directory reference
     if (parentReferenceCheck && path.find("..") != std::string::npos) {
-        std::cout << "Warning: file path " << path.c_str() << " contains parent directory reference!" << std::endl;
         return "";
     }
 
@@ -318,7 +315,6 @@ std::string FileSystem::PathCheckAndRegularNoLog(const std::string &path, bool s
     if (symlinkCheck) {
         std::string regularPath = RemoveTrailingSlash(path);
         if (IsSymLink(regularPath)) {
-            std::cout << "Warning: file path " << path.c_str() << " is symbolic link!" << std::endl;
             return "";
         }
     }
@@ -329,8 +325,6 @@ std::string FileSystem::PathCheckAndRegularNoLog(const std::string &path, bool s
 
     if (realpath(path.c_str(), resolvedPath) != nullptr) {
         res = resolvedPath;
-    } else {
-        std::cout << "Warning: path " << path.c_str() << " does not exist" << std::endl;
     }
     return res;
 }
