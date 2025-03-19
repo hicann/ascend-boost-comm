@@ -16,7 +16,7 @@
 
 #define MKI_LOG(level) MKI_LOG_##level
 
-#define MKI_FLOG(level, format, ...) MKI_FLOG_##level(format, __VA_ARGS__)
+#define MKI_FLOG(level, format, ...) MKI_FLOG_##level(format, ##__VA_ARGS__)
 
 #define MKI_LOG_IF(condition, level)                                                                             \
     if (condition)                                                                                               \
@@ -43,21 +43,21 @@
 
 #define MKI_FLOG_TRACE(format, ...)                                                                              \
     if (Mki::LogLevel::TRACE >= Mki::LogCore::Instance().GetLogLevel())                                          \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::TRACE).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::TRACE).Format(format, ##__VA_ARGS__)
 #define MKI_FLOG_DEBUG(format, ...)                                                                              \
     if (Mki::LogLevel::DEBUG >= Mki::LogCore::Instance().GetLogLevel())                                          \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::DEBUG).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::DEBUG).Format(format, ##__VA_ARGS__)
 #define MKI_FLOG_INFO(format, ...)                                                                               \
     if (Mki::LogLevel::INFO >= Mki::LogCore::Instance().GetLogLevel())                                           \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::INFO).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::INFO).Format(format, ##__VA_ARGS__)
 #define MKI_FLOG_WARN(format, ...)                                                                               \
     if (Mki::LogLevel::WARN >= Mki::LogCore::Instance().GetLogLevel())                                           \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::WARN).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::WARN).Format(format, ##__VA_ARGS__)
 #define MKI_FLOG_ERROR(format, ...)                                                                              \
     if (Mki::LogLevel::ERROR >= Mki::LogCore::Instance().GetLogLevel())                                          \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::ERROR).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::ERROR).Format(format, ##__VA_ARGS__)
 #define MKI_FLOG_FATAL(format, ...)                                                                              \
     if (Mki::LogLevel::FATAL >= Mki::LogCore::Instance().GetLogLevel())                                          \
-    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::FATAL).Format(format, __VA_ARGS__)
+    Mki::LogStream(__FILE__, __LINE__, __FUNCTION__, Mki::LogLevel::FATAL).Format(format, ##__VA_ARGS__)
 
 #endif
