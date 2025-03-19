@@ -10,6 +10,7 @@
 #ifndef MKI_TENSOR_H
 #define MKI_TENSOR_H
 #include <string>
+#include <vector>
 #include "mki/types.h"
 #include "mki/utils/SVector/SVector.h"
 
@@ -18,7 +19,7 @@ struct TensorDesc {
     TensorDType dtype = TENSOR_DTYPE_UNDEFINED;
     TensorFormat format = TENSOR_FORMAT_UNDEFINED;
     Mki::SVector<int64_t> dims;
-    Mki::SVector<int64_t> strides;
+    std::vector<int64_t> strides;
     int64_t offset = 0;
     int64_t Numel() const;
     void View(const Mki::SVector<int64_t> &newDims);
