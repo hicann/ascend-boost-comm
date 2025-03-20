@@ -374,6 +374,7 @@ template bool KernelInfo::AddConstTensorData<float>(uint64_t, const SVector<floa
 template bool KernelInfo::AddConstTensorData<float, int32_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, fp16_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, bf16_t>(uint64_t, const SVector<float> &);
+template bool KernelInfo::AddConstTensorData<float, int8_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<int32_t>(uint64_t, const std::vector<int32_t> &);
 template bool KernelInfo::AddConstTensorData<int8_t>(uint64_t, const std::vector<int8_t> &);
 } // namespace Mki
