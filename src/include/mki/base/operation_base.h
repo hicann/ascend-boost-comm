@@ -32,6 +32,7 @@ public:
 
     const KernelList &GetKernelList() const override;
     Kernel *GetKernelByName(const std::string &kernelName) const override;
+    virtual bool DynamicRegisterKernelByName(const LaunchParam &launchParam, const std::string& kernelName = nullptr);
     void AddKernel(const std::string &kernelName, Kernel const *kernel);
 
 protected:
