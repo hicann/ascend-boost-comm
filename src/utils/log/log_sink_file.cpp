@@ -15,9 +15,9 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 #include <sys/stat.h>
 #include <pwd.h>
-#include <regex>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -26,6 +26,9 @@
 #include "mki/utils/cfg/cfg_core.h"
 #include "mki/utils/log/log_core.h"
 #include "mki/utils/env/env.h"
+#include "mki/utils/strings/match.h"
+#include "mki/utils/strings/str_checker.h"
+#include "mki/utils/strings/str_split.h"
 #include "mki/utils/log/log_sink_file.h"
 
 namespace Mki {
@@ -163,11 +166,35 @@ void LogSinkFile::Init()
     }
 }
 
+bool LogSinkFile::IsFileNameMatched(const std::string &fileName, std::string &createTime)
+{
+    std::string prefix = boostType_ + '_';
+    bool match = StartsWith(fileName, prefix);
+    if (!match) {
+        return false;
+    }
+    match = EndsWith(fileName, ".log");
+    if (!match) {
+        return false;
+    }
+    size_t subStrLen = fileName.length() - prefix.length() - 4;     // 4: length of ".log" postfix
+    std::string subStr = fileName.substr(prefix.length(), subStrLen);
+    std::vector<std::string> splitResult;
+    StrSplit(subStr, '_', splitResult);
+    if (splitResult.size() != 2) {  // 2: time & pid
+        return false;
+    }
+    for (auto &str : splitResult) {
+        if (str.empty() || !std::all_of(str.begin(), str.end(), ::isdigit)) {
+            return false;
+        }
+    }
+    createTime = splitResult.at(1);
+    return true;
+}
+
 void LogSinkFile::DeleteOldestFile()
 {
-    std::string regStr = boostType_ + "_\\d+_(\\d+).log";
-    const std::regex reg(regStr);
-
     std::vector<std::pair<std::string, std::string>> logFiles;
     DIR *dir = opendir(logDir_.c_str());
     if (!dir) {
@@ -177,9 +204,8 @@ void LogSinkFile::DeleteOldestFile()
     while ((ptr = readdir(dir)) != nullptr) {
         if (ptr->d_name[0] != '.') {
             std::string fileName = ptr->d_name;
-            std::smatch match;
-            if (std::regex_match(fileName, match, reg) && match.size() > 1) {
-                std::string createTime = match[1].str();
+            std::string createTime;
+            if (IsFileNameMatched(fileName, createTime)) {
                 logFiles.emplace_back(logDir_ + "/" + fileName, createTime);
             }
         }
