@@ -69,6 +69,13 @@ const KernelList &OperationBase::GetKernelList() const
     return kernelList_;
 }
 
+bool OperationBase::DynamicRegisterKernelByName(const LaunchParam &launchParam, const std::string &kernelName)
+{
+    UNUSED_VALUE(launchParam);
+    UNUSED_VALUE(kernelName);
+    return false;
+}
+
 Kernel *OperationBase::GetKernelByName(const std::string &kernelName) const
 {
     auto it = kernelMap_.find(kernelName);
@@ -81,6 +88,9 @@ Kernel *OperationBase::GetKernelByName(const std::string &kernelName) const
 
 void OperationBase::AddKernel(const std::string &kernelName, Kernel const *kernel)
 {
+    if (kernelMap_.find(kernelName) != kernelMap_.end()) {
+        return;
+    }
     MKI_CHECK(kernel != nullptr, "kernel is nullptr", return);
     kernelList_.push_back(kernel);
     kernelMap_[kernelName] = kernel;

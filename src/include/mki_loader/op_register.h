@@ -106,6 +106,13 @@ public:
                          AicpuKernelRegister::GetKernelCreators(),
                          KernelBinaryRegister::GetKernelBinaryMap());
     }
+    void UpdateLoader() override
+    {
+        UpdateLoaderBinary(OperationRegister::GetOperationCreators(),
+                         KernelRegister::GetKernelCreators(),
+                         AicpuKernelRegister::GetKernelCreators(),
+                         KernelBinaryRegister::GetKernelBinaryMap());
+    }
     ~OpSchedule() override {}
 };
 

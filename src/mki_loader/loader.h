@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <memory>
 #include <atomic>
+#include <mutex>
 #include <functional>
 #include "mki/operation.h"
 #include "mki/kernel.h"
@@ -31,6 +32,7 @@ public:
     const std::unordered_map<std::string, Operation *> &GetAllOperations() const;
     void GetOpKernels(const std::string &opName, Mki::KernelMap &kernels) const;
     bool IsValid() const;
+    void ReLoad();
 
 private:
     void Load();
@@ -50,6 +52,7 @@ private:
     const AicpuKernelCreators &aicpuKernelCreators_;
     const BinaryBasicInfoMap &binaryMap_;
 
+    std::mutex mtx;
     std::atomic_bool loadSuccess_{false};
     std::unordered_map<std::string, Mki::Operation *> opMap_;
     std::unordered_map<std::string, Mki::KernelMap> opKernelMap_;

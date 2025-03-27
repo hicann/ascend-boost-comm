@@ -15,6 +15,7 @@
 #include "mki/utils/fp16/fp16_t.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
+#include "mki/utils/rt/memory/memory.h"
 
 namespace Mki {
 KernelInfo::~KernelInfo()
@@ -148,6 +149,32 @@ void KernelInfo::SetTilingHostAddr(uint8_t *addr, uint64_t len)
 uint8_t *KernelInfo::GetTilingHostAddr() const
 {
     return tilingExtInfo_.hostTilingAddr;
+}
+
+void KernelInfo::SetKernelArgsIndex(const MiniVector<uint64_t>& index)
+{
+    kernelArgsIndex_ = index;
+    return;
+}
+
+const MiniVector<uint64_t> KernelInfo::GetKernelArgsIndex() const
+{
+    return kernelArgsIndex_;
+}
+
+MiniVector<uint64_t>& KernelInfo::GetKernelArgsIndex()
+{
+    return kernelArgsIndex_;
+}
+
+const MiniVector<void*>& KernelInfo::getDeviceAddr()
+{
+    return deviceAddr_;
+}
+
+void KernelInfo::setDeviceAddr(void* addr)
+{
+    deviceAddr_.push_back(addr);
 }
 
 uint64_t KernelInfo::GetTilingSize() const
@@ -336,6 +363,13 @@ void KernelInfo::ResetArgs()
         args_ = nullptr;
     }
     argsSize_ = 0;
+
+    for (auto &addr : deviceAddr_) {
+        if (addr != nullptr) {
+            MkiRtMemFreeDevice(addr);
+            addr = nullptr;
+        }
+    }
 }
 
 void KernelInfo::ResetTilingInfo()

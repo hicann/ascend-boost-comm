@@ -95,6 +95,14 @@ public:
     void SetMemsetInfo(uint64_t argIdx, uint64_t size);
     const MiniVector<KernelInfo::MemsetInfo> &GetMemsetInfo() const;
 
+    // BishengIR kernel args index
+    void SetKernelArgsIndex(const MiniVector<uint64_t>& index);
+    const MiniVector<uint64_t> GetKernelArgsIndex() const;
+    MiniVector<uint64_t>& GetKernelArgsIndex();
+
+    const MiniVector<void*>& getDeviceAddr();
+    void setDeviceAddr(void* addr);
+
 private:
     void ResetArgs();
     void ResetTilingInfo();
@@ -112,6 +120,8 @@ private:
     MiniVector<ConstTensorInfo> constTensorInfo_;
     MiniVector<uint64_t> scratchSizes_;
     MiniVector<MemsetInfo> memsetInfo_;
+    MiniVector<uint64_t> kernelArgsIndex_;
+    MiniVector<void*> deviceAddr_;
 };
 } // namespace Mki
 
