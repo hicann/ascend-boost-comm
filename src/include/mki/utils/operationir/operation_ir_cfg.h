@@ -30,15 +30,5 @@ private:
 private:
     std::map<std::string, OperationIr> data_;
 };
-class OperationIrTensorlistHandle {
-public:
-    OperationIrTensorlistHandle();
-    ~OperationIrTensorlistHandle();
-    Mki::OperationIr* ExtendInTensorIrByInputlens(Mki::SVector<int> &inputlens, Mki::OperationIr* outIr);
-    Mki::OperationIr* ExtendOutTensorIrByOutputlens(Mki::SVector<int> &outputlens, Mki::OperationIr* outIr);
-    Mki::OperationIr* ExtendInAndOutTensorIrByInputlens(Mki::SVector<int> &inputlens, Mki::SVector<int> &outputlens, Mki::OperationIr* outIr);
-private:
-    std::vector<Mki::OperationIr*> copyPool;
-};
 } // namespace Mki
 #endif
