@@ -22,9 +22,20 @@
 namespace Mki {
 constexpr size_t MAX_OP_NAME_LEN = 128;
 
-OperationIrCfg::OperationIrCfg() {}
+OperationIrCfg::OperationIrCfg() 
+{
+    this->tensorlistIr.clear();
+}
 
-OperationIrCfg::~OperationIrCfg() {}
+OperationIrCfg::~OperationIrCfg() 
+{
+    for (auto iter = this->tensorlistIr.begin(); iter != this->tensorlistIr.end(); iter++) {
+        if (iter->second != nullptr) {
+            delete iter->second;
+            iter->second = nullptr;
+        }
+    }
+}
 
 Status OperationIrCfg::Load(const std::string &fileName)
 {
@@ -66,5 +77,24 @@ OperationIr *OperationIrCfg::GetOperationIr(const std::string &opKey)
         return &it->second;
     }
     return nullptr;
+}
+
+OperationIr *OperationIrCfg::GetOperationIrWithTensorlist(OperationIr *opKey) 
+{
+    OperationIr * temp = nullptr;
+    auto iter = this->tensorlistIr.find(opKey);
+    if (iter != this->tensorlistIr.end()) {
+        if (iter->second != nullptr) {
+            delete iter->second;
+        }
+        iter->second = new Mki::OperationIr;
+        std::copy(opKey, opKey + 1, iter->second);
+        return iter->second;
+    } else {
+        temp = new Mki::OperationIr;
+        std::copy(opKey, opKey + 1, temp);
+        this->tensorlistIr[opKey] = temp;
+        return temp;
+    }
 }
 } // namespace Mki
