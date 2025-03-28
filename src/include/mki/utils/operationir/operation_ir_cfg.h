@@ -23,10 +23,10 @@ public:
     ~OperationIrCfg();
     Status Load(const std::string &fileName);
     OperationIr *GetOperationIr(const std::string &opKey);
-
+    OperationIr *GetOperationIrWithTensorlist(OperationIr *opKey);
 private:
     bool IsValidOpKey(const std::string &key) const;
-
+    std::map<OperationIr*, OperationIr*> tensorlistIr;
 private:
     std::map<std::string, OperationIr> data_;
 };
