@@ -26,9 +26,9 @@ public:
     OperationIr *GetOperationIrWithTensorlist(OperationIr *opKey);
 private:
     bool IsValidOpKey(const std::string &key) const;
-    std::map<OperationIr*, OperationIr*> tensorlistIr;
 private:
     std::map<std::string, OperationIr> data_;
+    std::map<OperationIr*, OperationIr*> tensorlistIr;
 };
 } // namespace Mki
 #endif
