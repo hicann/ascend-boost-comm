@@ -65,7 +65,8 @@ bool TensorDesc::IsContiguous() const
     }
  
     int64_t nextStride = 1;
-    for (int32_t idx = strides.size() - 1; idx >= 0; idx--) {
+    for (size_t revIdx = 1; revIdx <= strides.size(); revIdx++) {
+        size_t idx = strides.size() - revIdx;
         if (strides[idx] != nextStride) {
             return false;
         }
