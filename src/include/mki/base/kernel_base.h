@@ -39,10 +39,10 @@ public:
     std::string GetName() const override;
     const KernelInfo &GetKernelInfo() const override;
     KernelType GetType() const override;
+    const BinHandle *GetBinHandle() const;
 
 protected:
     virtual Status InitImpl(const LaunchParam &launchParam);
-    const BinHandle *GetBinHandle() const;
     void Copy(const KernelBase &other);
 
 protected:
