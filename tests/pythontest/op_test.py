@@ -109,7 +109,7 @@ class OpTest(unittest.TestCase):
             for idx, tensor in original_tensors.items():
                 if id(tensor) not in original_tensors_npu_id_map:
                     original_tensors_npu_id_map[id(tensor)] = tensor.npu()
-                original_tensors_npu[ids] = original_tensors_npu_id_map[id(tensor)]
+                original_tensors_npu[idx] = original_tensors_npu_id_map[id(tensor)]
         
         for idx, tensor in enumerate(in_tensors):
             if not tensor.is_contiguous():
@@ -143,6 +143,8 @@ class OpTest(unittest.TestCase):
 
         self.__set_envs(envs)
         if self.nct:
+            logging.debug("in_tensors_npu[0] stride [%s]:", in_tensors_npu[0].stride())
+            logging.debug("in_tensors_npu[0] storage_offset [%s]:", in_tensors_npu[0].storage_offset())
             self.mki.execute_nct(in_tensors_npu, out_tensors_npu)
         else:
             self.mki.execute(in_tensors_npu, out_tensors_npu)
