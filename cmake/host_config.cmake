@@ -12,7 +12,7 @@ add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe;-Wno-unused-parameter;-Wno-ignored-qualifiers>"
     "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-Wno-strict-overflow;-fno-strict-aliasing>"
     "$<$<COMPILE_LANGUAGE:CXX>:-fPIC;-fstack-protector-all;-Wl,--build-id=none>"
-    "$<$<COMPILE_LANGUAGE:CXX>:-Wno-strict-prototypes>"
+    "$<$<COMPILE_LANGUAGE:C>:-Wno-strict-prototypes>"
     -Wno-effc++
     -Wno-fromat
     -Wno-date-time
