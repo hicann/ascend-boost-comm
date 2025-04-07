@@ -12,6 +12,20 @@ add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe;-Wno-unused-parameter;-Wno-ignored-qualifiers>"
     "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-Wno-strict-overflow;-fno-strict-aliasing>"
     "$<$<COMPILE_LANGUAGE:CXX>:-fPIC;-fstack-protector-all;-Wl,--build-id=none>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wno-strict-prototypes>"
+    -Wno-effc++
+    -Wno-fromat
+    -Wno-date-time
+    -Wno-swithch-default
+    -Wno-shadow
+    -Wno-conversion
+    -Wno-cast-qual
+    -Wno-cast-align
+    -Wno-vla
+    -Wno-unused
+    -Wno-undef
+    -Wno-delete-non-virtual-dtor
+    -Wno-overloaded-virtual
 )
 
 if(NAMESPACE STREQUAL "")
@@ -29,6 +43,8 @@ set(LD_FLAGS_GLOBAL "-shared;-rdynamic;-ldl;-Wl,-z,relro;-Wl,-z,now")
 set(LD_FLAGS_GLOBAL "${LD_FLAGS_GLOBAL};-Wl,-z,noexecstack;-Wl,--build-id=none")
 
 add_link_options(
+    -Wl,-Bsymbolic
+    -rdynamic
     "$<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>:${LD_FLAGS_GLOBAL};-fexceptions>"
     "$<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:${LD_FLAGS_GLOBAL};-pie;-fPIE>"
 )
