@@ -88,7 +88,7 @@ class OpTest(unittest.TestCase):
         self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(
             self.op_desc))
 
-    def execute(self, in_tensors, out_tensors, original_tensors = None, envs=None):
+    def execute(self, in_tensors, out_tensors, envs=None, original_tensors = None):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
 
@@ -112,8 +112,8 @@ class OpTest(unittest.TestCase):
                 original_tensors_npu[idx] = original_tensors_npu_id_map[id(tensor)]
         
         for idx, tensor in enumerate(in_tensors):
-            if not tensor.is_contiguous():
-                original_tensor_npu = original_tensor_npu[idx]
+            if not tensor.is_contiguous() and original_tensors:
+                original_tensor_npu = original_tensors_npu[idx]
                 actual_tensor_npu = original_tensor_npu.as_strided(
                     tensor.shape,
                     tensor.stride(),
@@ -127,7 +127,7 @@ class OpTest(unittest.TestCase):
             idx += len(in_tensors)
             if isinstance(tensor, int):
                 out_tensors_npu.append(in_tensors_npu[tensor])
-            elif not tensor.is_contiguous():
+            elif not tensor.is_contiguous() and original_tensors:
                 original_tensor_npu = original_tensors_npu[idx]
                 actual_tensor_npu = original_tensor_npu.as_strided(
                     tensor.shape,
