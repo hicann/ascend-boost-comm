@@ -16,7 +16,6 @@ add_compile_options(
     -Wdate-time
     -Wswitch-default
     -fno-common
-
 )
 
 if(NAMESPACE STREQUAL "")
