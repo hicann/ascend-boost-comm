@@ -9,23 +9,13 @@ endif()
 
 add_compile_options(
     -fexceptions
-    "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe;-Wno-unused-parameter;-Wno-ignored-qualifiers>"
-    "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-Wno-strict-overflow;-fno-strict-aliasing>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-fno-strict-aliasing>"
     "$<$<COMPILE_LANGUAGE:CXX>:-fPIC;-fstack-protector-all;-Wl,--build-id=none>"
-    "$<$<COMPILE_LANGUAGE:C>:-Wno-strict-prototypes>"
-    -Wno-effc++
-    -Wno-fromat
-    -Wno-date-time
-    -Wno-swithch-default
-    -Wno-shadow
-    -Wno-conversion
-    -Wno-cast-qual
-    -Wno-cast-align
-    -Wno-vla
-    -Wno-unused
-    -Wno-undef
-    -Wno-delete-non-virtual-dtor
-    -Wno-overloaded-virtual
+    -Wformat=2
+    -Wdate-time
+    -Wswitch-default
+    -fno-common
 )
 
 if(NAMESPACE STREQUAL "")

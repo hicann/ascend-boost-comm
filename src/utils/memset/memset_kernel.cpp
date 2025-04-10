@@ -45,6 +45,7 @@ public:
 
     bool CanSupport(const LaunchParam &launchParam) const override
     {
+        (void)launchParam;
         return false;
     }
 
@@ -60,6 +61,7 @@ public:
 
     Status InitImpl(const LaunchParam &launchParam) override
     {
+        (void)launchParam;
         return Status::FailStatus(1);
     }
 
