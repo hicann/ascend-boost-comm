@@ -16,11 +16,14 @@ namespace Mki {
 namespace AutoGen {
 void JsonToOpParam(const nlohmann::json &opDescJson, Mki::LaunchParam &launchParam)
 {
+    (void)opDescJson;
+    (void)launchParam;
     MKI_LOG(ERROR) << "Please replace the libmki_test_autogen.so with your own version!";
 }
 
 Mki::Operation *GetOpByName(const std::string &operationName)
 {
+    (void)operationName;
     MKI_LOG(ERROR) << "Please replace the libmki_test_autogen.so with your own version!";
     return nullptr;
 }
