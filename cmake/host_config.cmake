@@ -9,13 +9,9 @@ endif()
 
 add_compile_options(
     -fexceptions
-    "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe>"
-    "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-fno-strict-aliasing>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17;-pipe;-Wno-unused-parameter;-Wno-ignored-qualifiers>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wformat=0;-Wno-strict-overflow;-fno-strict-aliasing>"
     "$<$<COMPILE_LANGUAGE:CXX>:-fPIC;-fstack-protector-all;-Wl,--build-id=none>"
-    -Wformat=2
-    -Wdate-time
-    -Wswitch-default
-    -fno-common
 )
 
 if(NAMESPACE STREQUAL "")
@@ -33,8 +29,6 @@ set(LD_FLAGS_GLOBAL "-shared;-rdynamic;-ldl;-Wl,-z,relro;-Wl,-z,now")
 set(LD_FLAGS_GLOBAL "${LD_FLAGS_GLOBAL};-Wl,-z,noexecstack;-Wl,--build-id=none")
 
 add_link_options(
-    -Wl,-Bsymbolic
-    -rdynamic
     "$<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>:${LD_FLAGS_GLOBAL};-fexceptions>"
     "$<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:${LD_FLAGS_GLOBAL};-pie;-fPIE>"
 )
