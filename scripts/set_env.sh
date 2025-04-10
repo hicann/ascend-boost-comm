@@ -14,8 +14,8 @@ if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     export LD_LIBRARY_PATH=$MKI_HOME_PATH/lib:$MKI_HOME_PATH/tests:$LD_LIBRARY_PATH
     export PATH=$MKI_HOME_PATH/bin:$PATH
 
-    export PYTORCH_INSTALL_PATH="$(python3 -c 'import importlib.util; spec=importlib.util.find_spec("torch"); \
-                                               print(spec.submodule_search_locations[0])')"
+    export PYTORCH_INSTALL_PATH="$(python3 -c 'import importlib.util; SPEC=importlib.util.find_spec("torch"); \
+                                               print(SPEC.submodule_search_locations[0])')"
     export LD_LIBRARY_PATH=$PYTORCH_INSTALL_PATH/lib:$LD_LIBRARY_PATH
     export ASDOPS_LOG_TO_STDOUT=0
     export ASDOPS_LOG_LEVEL=INFO
