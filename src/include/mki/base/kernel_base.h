@@ -39,6 +39,7 @@ public:
     std::string GetName() const override;
     const KernelInfo &GetKernelInfo() const override;
     KernelType GetType() const override;
+    KernelHandle GetBinaryHandle() const;
 
 protected:
     virtual Status InitImpl(const LaunchParam &launchParam);

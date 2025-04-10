@@ -39,7 +39,7 @@ function fn_install_cann_and_kernel()
     # CANN package location
     cann_install_path="/home/slave1/Ascend/ascend-toolkit/latest/"
     # Record the start time
-    time_before=`date +%s`
+    time_before="$(date +%s)"
     if [[ -d "$cann_install_path" ]]; then
         export ASCEND_HOME_PATH=${cann_install_path}
         export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
@@ -65,7 +65,7 @@ function fn_install_cann_and_kernel()
         fi
     done
     wait
-    time_after=`date +%s`
+    time_after="$(date +%s)"
     echo "并行解压花费时间 $(($time_after - $time_before))秒"
     # link library
     export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
