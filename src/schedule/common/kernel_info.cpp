@@ -150,6 +150,22 @@ uint8_t *KernelInfo::GetTilingHostAddr() const
     return tilingExtInfo_.hostTilingAddr;
 }
 
+void KernelInfo::SetKernelArgsIndex(const MiniVector<uint64_t>& index)
+{
+    kernelArgsIndex_ = index;
+    return;
+}
+
+const MiniVector<uint64_t>& KernelInfo::GetKernelArgsIndex() const
+{
+    return kernelArgsIndex_;
+}
+
+MiniVector<uint64_t>& KernelInfo::GetKernelArgsIndex()
+{
+    return kernelArgsIndex_;
+}
+
 uint64_t KernelInfo::GetTilingSize() const
 {
     return tilingExtInfo_.hostTilingSize;

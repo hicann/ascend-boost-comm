@@ -46,7 +46,11 @@ public:
      * @return Mki::Kernel*
      */
     Mki::Kernel *GetKernelInstance(const std::string &kernelName) const;
-
+    /**
+     * @brief update schedule for dynamic BishengIR bin
+     *
+     */
+    void UpdateSchedule();
 private:
     Ops();
     ~Ops();

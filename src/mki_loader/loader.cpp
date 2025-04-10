@@ -26,7 +26,7 @@ void DevPtrDeleter(uint8_t* ptr)
         (void)Mki::MkiRtMemFreeDevice(ptr);
     }
 }
-}
+} // namespace
 
 namespace Mki {
 Loader::Loader(const OperationCreators &operationCreators,
@@ -78,6 +78,11 @@ bool Loader::CreateKernels()
             MKI_LOG(WARN) << kernelName << " find bin handle fail";
             continue;
         }
+        const auto &opName = creatorInfo.opName;
+        if (opKernelMap_.find(opName) != opKernelMap_.end() &&
+            opKernelMap_[opName].find(kernelName) != opKernelMap_[opName].end()) {
+            continue;
+        }
         auto &handle = it->second;
         MKI_CHECK(handle.Init(kernelName), kernelName << " init handle fail", continue);
 
@@ -86,7 +91,6 @@ bool Loader::CreateKernels()
         const Kernel *kernel = kernelCreator(&handle);
         MKI_CHECK(kernel != nullptr, "Invalid kernel found in op: " << kernelName, return false);
 
-        const auto &opName = creatorInfo.opName;
         auto &opKernel = opKernelMap_[opName];
         opKernel[kernelName] = kernel;
     }
@@ -215,7 +219,7 @@ bool Loader::LoadKernelBinarys()
     for (auto &item : binaryMap_) {
         auto &binaryList = item.second;
         for (auto &binary : binaryList) {
-            if (binary.targetSoc == deviceVersion) {
+            if (binary.targetSoc == deviceVersion && binHandles_.find(item.first) == binHandles_.end()) {
                 binHandles_.emplace(item.first, &binary);
                 MKI_LOG(DEBUG) << "Kernel " << deviceVersion << " find basic information success";
                 break;
@@ -247,6 +251,7 @@ bool Loader::OpBaseAddKernels() const
 
 void Loader::Load()
 {
+    std::lock_guard<std::mutex> guard(mtx);
     loadSuccess_ = false;
 
     MKI_CHECK(LoadKernelBinarys(), "Load kernel binarys fail", return);
@@ -256,5 +261,10 @@ void Loader::Load()
     MKI_CHECK(OpBaseAddKernels(), "OpBase add kernels fail", return);
 
     loadSuccess_ = true;
+}
+
+void Loader::ReLoad()
+{
+    Load();
 }
 } // namespace Mki
