@@ -104,12 +104,9 @@ class OpTest(unittest.TestCase):
         in_tensors_npu = []
         out_tensors_npu = []
         original_tensors_npu = {}
-        original_tensors_npu_id_map = {}
         if original_tensors:
             for idx, tensor in original_tensors.items():
-                if id(tensor) not in original_tensors_npu_id_map:
-                    original_tensors_npu_id_map[id(tensor)] = tensor.npu()
-                original_tensors_npu[idx] = original_tensors_npu_id_map[id(tensor)]
+                original_tensors_npu[idx] = tensor.npu()
         
         for idx, tensor in enumerate(in_tensors):
             if not tensor.is_contiguous() and original_tensors:
@@ -132,14 +129,11 @@ class OpTest(unittest.TestCase):
                 actual_tensor_npu = original_tensor_npu.as_strided(
                     tensor.shape,
                     tensor.stride(),
-                    tensor,storage_offset()
+                    tensor.storage_offset()
                 )
                 out_tensors_npu.append(actual_tensor_npu)
             else:
                 out_tensors_npu.append(tensor.npu())
-        # in_tensors_npu = [tensor.npu() for tensor in in_tensors]
-        # out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
-        #                    for i in out_tensors]
 
         self.__set_envs(envs)
         if self.nct:
