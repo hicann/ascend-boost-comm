@@ -36,7 +36,7 @@ def gen_compile_cmd(args, src: str, dst: str, compile_options):
                     '-I/usr/local/Ascend/ascend-toolkit/latest/include']
     compile_cmd += ['-D_GLIBCXX_USE_CXX11_ABI=1',
                     '-Dasdops_aicpu_kernels_EXPORTS',
-                    '-std=gnu++11',
+                    '-std=c++17',
                     '-MD', '-MT', dst,
                     '-MF', dst + '.d',
                     '-o', dst,
