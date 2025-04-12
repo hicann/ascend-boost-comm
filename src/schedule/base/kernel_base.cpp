@@ -241,6 +241,8 @@ KernelBase::KernelBase(const std::string &opName, const BinHandle *handle) : ker
     }
 }
 
+KernelHandle KernelBase::GetBinaryHandle() const { return handle_->GetHandle(); }
+
 KernelBase::~KernelBase() {}
 
 std::string KernelBase::GetName() const { return kernelName_; }

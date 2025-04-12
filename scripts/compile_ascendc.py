@@ -141,7 +141,7 @@ def gen_json(args, kernels):
         json_template["magic"] = "RT_DEV_BINARY_MAGIC_ELF"
 
     with os.fdopen(os.open(os.path.splitext(args.dst)[0] + ".json",
-                           os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as f:
+                           os.O_TRUNC | os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as f:
         json.dump(json_template, f, indent=4)
 
 
