@@ -209,6 +209,7 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
 
 
 def compile_ascendc_code(obj_path, dst_cpp_path, is_const=True):
+    is_const = False
     if not obj_path.endswith('.o'):
         logging.error("%s is not an obj file.", obj_path)
         exit(1)
