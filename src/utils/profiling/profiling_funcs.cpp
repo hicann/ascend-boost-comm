@@ -51,8 +51,7 @@ ProfilingFuncs::ProfilingFuncs() noexcept
     }
 }
 
-ProfilingFuncs::~ProfilingFuncs()
-{}
+ProfilingFuncs::~ProfilingFuncs() {}
 
 int32_t ProfilingFuncs::ProfReportApi(uint32_t agingFlag, const MsProfApi *api) const
 {
@@ -119,7 +118,7 @@ int32_t ProfilingFuncs::MkiProfCommandHandle(uint32_t type, void *data, uint32_t
         MKI_LOG(ERROR) << "MkiProfCommandHandle failed! dataSize is not correct!";
         return PROFILING_REPORT_FAILED;
     }
-    MsprofCommandHandle *profilerConfig = static_cast<MsprofCommandHandle *>(data);
+    MsprofCommandHandle *profilerConfig = static_cast<MsprofCommandHandle*>(data);
     const uint64_t profSwitch = profilerConfig->profSwitch;
     const uint32_t profType = profilerConfig->type;
 
@@ -142,4 +141,4 @@ int32_t ProfilingFuncs::MkiProfCommandHandle(uint32_t type, void *data, uint32_t
 
     return PROFILING_REPORT_SUCCESS;
 }
-}  // namespace Mki
+} // namespace Mki

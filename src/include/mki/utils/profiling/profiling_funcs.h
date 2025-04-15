@@ -38,5 +38,5 @@ private:
     static std::atomic<bool> isProfilingLevel0Enable_;
     static std::atomic<bool> isProfilingLevel1Enable_;
 };
-}  // namespace Mki
+} // namespace Mki
 #endif
