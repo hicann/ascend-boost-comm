@@ -17,29 +17,29 @@
 
 namespace Mki {
 
-bool ProfilingFuncs::isProfilingLevel0Enable_ = false;
-bool ProfilingFuncs::isProfilingLevel1Enable_ = false;
+std::atomic<bool> ProfilingFuncs::isProfilingLevel0Enable_(false);
+std::atomic<bool> ProfilingFuncs::isProfilingLevel1Enable_(false);
 
 static ProfilingFuncs g_profiling = Mki::GetSingleton<ProfilingFuncs>();
 
 void ProfilingFuncs::SetProfilingLevel0Status(bool status) const
 {
-    isProfilingLevel0Enable_ = status;
+    isProfilingLevel0Enable_.store(status, std::memory_order_relaxed);
 }
 
 void ProfilingFuncs::SetProfilingLevel1Status(bool status) const
 {
-    isProfilingLevel1Enable_ = status;
+    isProfilingLevel1Enable_.store(status, std::memory_order_relaxed);
 }
 
 bool ProfilingFuncs::GetProfilingLevel0Status() const
 {
-    return isProfilingLevel0Enable_;
+    return isProfilingLevel0Enable_.load(std::memory_order_relaxed);
 };
 
 bool ProfilingFuncs::GetProfilingLevel1Status() const
 {
-    return isProfilingLevel1Enable_;
+    return isProfilingLevel1Enable_.load(std::memory_order_relaxed);
 }
 
 ProfilingFuncs::ProfilingFuncs() noexcept
@@ -50,7 +50,8 @@ ProfilingFuncs::ProfilingFuncs() noexcept
     }
 }
 
-ProfilingFuncs::~ProfilingFuncs() {}
+ProfilingFuncs::~ProfilingFuncs()
+{}
 
 int32_t ProfilingFuncs::ProfReportApi(uint32_t agingFlag, const MsProfApi *api) const
 {
@@ -61,7 +62,7 @@ int32_t ProfilingFuncs::ProfReportApi(uint32_t agingFlag, const MsProfApi *api) 
 int32_t ProfilingFuncs::ProfReportCompactInfo(uint32_t agingFlag, const void *data, uint32_t length) const
 {
     MKI_LOG(INFO) << "ProfReportCompactInfo start!";
-    if (isProfilingLevel1Enable_) {
+    if (isProfilingLevel1Enable_.load(std::memory_order_relaxed)) {
         return MsprofReportCompactInfo(agingFlag, data, length);
     }
     return 0;
@@ -117,27 +118,27 @@ int32_t ProfilingFuncs::MkiProfCommandHandle(uint32_t type, void *data, uint32_t
         MKI_LOG(ERROR) << "MkiProfCommandHandle failed! dataSize is not correct!";
         return PROFILING_REPORT_FAILED;
     }
-    MsprofCommandHandle *profilerConfig = static_cast<MsprofCommandHandle*>(data);
+    MsprofCommandHandle *profilerConfig = static_cast<MsprofCommandHandle *>(data);
     const uint64_t profSwitch = profilerConfig->profSwitch;
     const uint32_t profType = profilerConfig->type;
 
     if (profType == PROF_COMMANDHANDLE_TYPE_START) {
         MKI_LOG(INFO) << "Open Profiling Switch";
         if ((profSwitch & PROF_TASK_TIME_L0) != PROF_CTRL_INVALID) {
-            isProfilingLevel0Enable_ = true;
+            isProfilingLevel0Enable_.store(true, std::memory_order_relaxed);
             MKI_LOG(INFO) << "Profiling Level0 Enable";
         }
         if ((profSwitch & PROF_TASK_TIME_L1) != PROF_CTRL_INVALID) {
-            isProfilingLevel1Enable_ = true;
+            isProfilingLevel1Enable_.store(true, std::memory_order_relaxed);
             MKI_LOG(INFO) << "Profiling Level1 Enable";
         }
     }
     if (profType == PROF_COMMANDHANDLE_TYPE_STOP) {
         MKI_LOG(INFO) << "Close Profiling Switch";
-        isProfilingLevel0Enable_ = false;
-        isProfilingLevel1Enable_ = false;
+        isProfilingLevel0Enable_.store(false, std::memory_order_relaxed);
+        isProfilingLevel1Enable_.store(false, std::memory_order_relaxed);
     }
 
     return PROFILING_REPORT_SUCCESS;
 }
-} // namespace Mki
+}  // namespace Mki
