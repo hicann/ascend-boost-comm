@@ -9,7 +9,11 @@
  */
 #include "mki_torch.h"
 #include <ATen/ATen.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 #include <torch/extension.h>
+#pragma GCC diagnostic pop
 #include <torch_npu/csrc/core/npu/NPUStream.h>
 #include <torch_npu/csrc/core/npu/NPUFormat.h>
 #include "mki/kernel.h"
