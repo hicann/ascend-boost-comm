@@ -210,11 +210,11 @@ int RtBackend::AicpuFunctionLaunchExWithArgs(const char * const opName, const Mk
     CHECK_FUN_PARA_RETURN(opName);
     CHECK_FUN_PARA_RETURN(param);
     CHECK_FUN_PARA_RETURN(param->aicpuArgsEx);
-    constexpr uint32_t KERNEL_TYPE_AICPU_CUSTOM = 4;
-    constexpr uint32_t RT_KERNEL_CUSTOM_AICPU = 8;
-    CHECK_STATUS_WITH_DESC_RETURN(rtAicpuKernelLaunchExWithArgs(KERNEL_TYPE_AICPU_CUSTOM, opName, param->blockDim,
+    constexpr uint32_t kernelTypeAicpuCustom = 4;
+    constexpr uint32_t rtKernelCustomAicpu = 8;
+    CHECK_STATUS_WITH_DESC_RETURN(rtAicpuKernelLaunchExWithArgs(kernelTypeAicpuCustom, opName, param->blockDim,
                                                                 param->aicpuArgsEx, nullptr,
-                                                                stream, RT_KERNEL_CUSTOM_AICPU),
+                                                                stream, rtKernelCustomAicpu),
                                   "rt Aicpu KernelLaunch Ex With Args");
 }
 
@@ -223,9 +223,9 @@ int RtBackend::GetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
     CHECK_STATUS_WITH_DESC_RETURN(rtGetC2cCtrlAddr(addr, len), "rt Get C2cCtrl Addr");
 }
 
-int RtBackend::CtxGetOverflowAddr(void **overflowAddr)
+int RtBackend::CtxGetOverflowAddr(void **addr)
 {
-    CHECK_STATUS_WITH_DESC_RETURN(rtCtxGetOverflowAddr(overflowAddr), "rt Get Overflow Addr");
+    CHECK_STATUS_WITH_DESC_RETURN(rtCtxGetOverflowAddr(addr), "rt Get Overflow Addr");
 }
 
 int RtBackend::ModuleDestoryRtModule(void *rtModule) const

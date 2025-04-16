@@ -12,7 +12,7 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/assert/assert.h"
 #include "mki/base/kernel_base.h"
-#include "mki/utils/singleton/singleton.h"
+
 #include "loader.h"
 
 namespace Mki {
@@ -50,11 +50,11 @@ Kernel *OpScheduleBase::GetKernelInstance(const std::string &kernelName) const
 void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators,
                                       const KernelCreators &kerCreators,
                                       const AicpuKernelCreators &aicpuKerCreators,
-                                      const BinaryBasicInfoMap &binaryMap)
+                                      const BinaryBasicInfoMap &binMap)
 {
     if (loader_ && loader_->IsValid()) { return; }
 
-    loader_ = std::make_unique<Loader>(opCreators, kerCreators, aicpuKerCreators, binaryMap);
+    loader_ = std::make_unique<Loader>(opCreators, kerCreators, aicpuKerCreators, binMap);
     if (!loader_->IsValid()) {
         return;
     }

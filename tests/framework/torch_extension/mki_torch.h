@@ -25,6 +25,7 @@ public:
     explicit MkiTorch(std::string opDescJsonStr) : opDescJsonStr_(opDescJsonStr) {}
     ~MkiTorch() {}
     std::string Execute(std::vector<at::Tensor> atInTensors, std::vector<at::Tensor> atOutTensors);
+    std::string ExecuteNCT(std::vector<at::Tensor> atInTensors, std::vector<at::Tensor> atOutTensors);
     c10::intrusive_ptr<MkiTorch> clone() const { return c10::make_intrusive<MkiTorch>(opDescJsonStr_); }
 
 private:

@@ -32,6 +32,7 @@ private:
     void MakeLogDir();
     void CloseFile();
     std::string GetHomeDir();
+    bool IsFileNameMatched(const std::string &fileName, std::string &createTime);
 
 private:
     std::string boostType_;

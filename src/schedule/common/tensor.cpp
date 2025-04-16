@@ -43,6 +43,37 @@ int64_t TensorDesc::Numel() const
     return CalNumel(dims, 0, dims.size());
 }
 
+bool TensorDesc::IsContiguous() const
+{
+    if (offset != 0) {
+        return false;
+    }
+
+    if (Numel() <= 0) {
+        MKI_LOG(WARN) << "Tensor size is overflow or tensor dims is invalid, regard it as contiguous tensor";
+        return true;
+    }
+
+    if (strides.empty()) {
+        MKI_LOG(WARN) << "Strides is empty, regard it as contiguous tensor";
+        return true;
+    }
+ 
+    if (strides.size() != dims.size()) {
+        MKI_LOG(WARN) << "Strides size is different from dims size, regard it as contiguous tensor";
+        return true;
+    }
+ 
+    int64_t nextStride = 1;
+    for (int32_t idx = strides.size() - 1; idx >= 0; idx--) {
+        if (strides[idx] != nextStride) {
+            return false;
+        }
+        nextStride *= dims[idx];
+    }
+    return true;
+}
+
 void TensorDesc::View(const Mki::SVector<int64_t> &newDims)
 {
     int64_t elementCount = CalNumel(newDims, 0, newDims.size());
@@ -52,7 +83,7 @@ void TensorDesc::View(const Mki::SVector<int64_t> &newDims)
 
     int64_t oldElementCount = Numel();
     if (elementCount != oldElementCount) {
-        MKI_LOG(ERROR) << "tesnor view fail, elementCount:" << elementCount << " not equal:" << oldElementCount;
+        MKI_LOG(ERROR) << "tensor view fail, elementCount:" << elementCount << " not equal:" << oldElementCount;
         return;
     }
     dims = newDims;
@@ -69,12 +100,21 @@ std::string TensorDesc::ToString() const
             ss << ", " << dims.at(i);
         }
     }
-    ss << "]";
-
+    ss << "], strides:[";
+    for (size_t i = 0; i < strides.size(); ++i) {
+        if (i == 0) {
+            ss << strides.at(i);
+        } else {
+            ss << ", " << strides.at(i);
+        }
+    }
+    ss << "], offset:" << offset;
     return ss.str();
 }
 
 int64_t Tensor::Numel() const { return desc.Numel(); }
+
+bool Tensor::IsContiguous() const { return desc.IsContiguous(); }
 
 void Tensor::View(const Mki::SVector<int64_t> &newDims) { return desc.View(newDims); }
 

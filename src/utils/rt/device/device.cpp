@@ -35,6 +35,7 @@ int MkiRtDeviceSetSocVersion(const char *version)
 
 int MkiRtDeviceGetSocVersion(std::string &version, uint32_t maxLen)
 {
+    (void)maxLen;
     const char* version2 = aclrtGetSocName();
     if (version2 == nullptr) {
         MKI_LOG(ERROR) << "Failed to get SOC name";

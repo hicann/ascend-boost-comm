@@ -183,7 +183,7 @@ uint64_t KernelInfo::GetConstTensorOffset() const
     return tilingExtInfo_.constTensorOffset;
 }
 
-template <typename T_SRC, typename T_DST = T_SRC, typename T_CONT = SVector<T_SRC>>
+template <typename T_SRC, typename T_DST, typename T_CONT>
 bool KernelInfo::AddConstTensorData(uint64_t argIdx, const T_CONT &tensorData)
 {
     uint64_t offset = tilingExtInfo_.constTensorOffset;
@@ -374,6 +374,7 @@ template bool KernelInfo::AddConstTensorData<float>(uint64_t, const SVector<floa
 template bool KernelInfo::AddConstTensorData<float, int32_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, fp16_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<float, bf16_t>(uint64_t, const SVector<float> &);
+template bool KernelInfo::AddConstTensorData<float, int8_t>(uint64_t, const SVector<float> &);
 template bool KernelInfo::AddConstTensorData<int32_t>(uint64_t, const std::vector<int32_t> &);
 template bool KernelInfo::AddConstTensorData<int8_t>(uint64_t, const std::vector<int8_t> &);
 } // namespace Mki
