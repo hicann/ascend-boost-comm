@@ -13,9 +13,9 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #include <torch/extension.h>
+#pragma GCC diagnostic pop
 #include <torch_npu/csrc/core/npu/NPUStream.h>
 #include <torch_npu/csrc/core/npu/NPUFormat.h>
-#pragma GCC diagnostic pop
 #include "mki/kernel.h"
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/log/log.h"
