@@ -11,9 +11,13 @@
 #define MKI_TORCH_H
 #include <string>
 #include <vector>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 #include <torch/script.h>
 #include <torch/custom_class.h>
 #include <nlohmann/json.hpp>
+#pragma GCC diagnostic pop
 #include "mki/kernel.h"
 #include "mki/utils/SVector/SVector.h"
 #include "mki_loader/ops.h"
