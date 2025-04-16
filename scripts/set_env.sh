@@ -26,4 +26,3 @@ if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
 else
     echo "There is no 'set_env.sh' to import"
 fi
-
