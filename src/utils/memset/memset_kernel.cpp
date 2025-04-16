@@ -45,7 +45,6 @@ public:
 
     bool CanSupport(const LaunchParam &launchParam) const override
     {
-        (void)launchParam;
         return false;
     }
 
