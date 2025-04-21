@@ -73,7 +73,7 @@ TEST_F(MKIErrorCodeTest, CheckAllocTilingHost)
     constexpr uint64_t INVALID_LEN = -1;
     uint64_t len = INVALID_LEN;
     EXPECT_EQ(kernelInfo.AllocTilingHost(-1).Code(), Mki::ErrorType::ERROR_ALLOC_HOST);
-    constexpr uint64_t LARGE_SIZE = 1024 * 1024 + 1;
+    constexpr uint64_t LARGE_SIZE = 1024 * 1024 * 3 + 1;
     len = LARGE_SIZE;
     EXPECT_EQ(kernelInfo.AllocTilingHost(len).Code(), Mki::ErrorType::ERROR_ALLOC_HOST);
     constexpr uint64_t VALID_LEN = 32;
@@ -90,7 +90,7 @@ TEST_F(MKIErrorCodeTest, CheckInitArgs)
 {
     constexpr int minInvalidValue = -1;
     EXPECT_EQ(kernelInfo.InitArgs(minInvalidValue).Code(), Mki::ErrorType::ERROR_INVALID_VALUE);
-    constexpr int maxInvalidValue = 1024 * 1024 + 1;
+    constexpr int maxInvalidValue = 1024 * 1024 * 3 + 1;
     EXPECT_EQ(kernelInfo.InitArgs(maxInvalidValue).Code(), Mki::ErrorType::ERROR_INVALID_VALUE);
 }
 

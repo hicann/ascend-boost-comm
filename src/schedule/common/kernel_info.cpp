@@ -16,6 +16,10 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/math/tensor_utils.h"
 
+namespace {
+constexpr uint64_t MAX_ARGS_SIZE = 1024 * 1024 * 3; // 1mb
+}
+
 namespace Mki {
 KernelInfo::~KernelInfo()
 {
@@ -38,8 +42,7 @@ void KernelInfo::Reset()
 
 Status KernelInfo::InitArgs(uint64_t len)
 {
-    constexpr uint64_t maxArgsSize = 1024 * 1024; // 1mb
-    MKI_CHECK(len <= maxArgsSize, "failed to check args len " << len, return Status::FailStatus(ERROR_INVALID_VALUE));
+    MKI_CHECK(len <= MAX_ARGS_SIZE, "failed to check args len " << len, return Status::FailStatus(ERROR_INVALID_VALUE));
 
     args_ = new (std::nothrow) uint8_t[len];
     MKI_CHECK(args_ != nullptr, "failed to new args, len " << len, return Status::FailStatus(ERROR_INVALID_VALUE));
@@ -112,8 +115,7 @@ Status KernelInfo::AllocTilingHost(uint64_t len)
 {
     MKI_CHECK(launchWithTiling_, "launch with tiling mode off",
         return Status::FailStatus(ERROR_ALLOC_HOST));
-    constexpr uint64_t maxTilingSize = 1024 * 1024; // 1mb
-    MKI_CHECK(len <= maxTilingSize,
+    MKI_CHECK(len <= MAX_ARGS_SIZE,
         "failed to check tiling len " << len, return Status::FailStatus(ERROR_ALLOC_HOST));
     MKI_CHECK(tilingExtInfo_.hostTilingAddr == nullptr,
         "Tiling is already alloced", return Status::FailStatus(ERROR_ALLOC_HOST));
