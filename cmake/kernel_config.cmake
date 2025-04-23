@@ -27,6 +27,9 @@ macro(add_kernel kernel soc channel srcs tac)
                 "--use_mssanitizer" "${USE_MSSANITIZER}"
                 "--no_warning"
             )
+            if(NOT "${ARGN}" STREQUAL "")
+                set(PYTHON_ARGS ${PYTHON_ARGS} "--include_directories" "${ARGN}")
+            endif()
             add_custom_command(
                 OUTPUT ${${kernel}_${soc}_output}
                 DEPENDS ${srcs}
