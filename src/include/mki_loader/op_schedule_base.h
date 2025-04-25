@@ -28,10 +28,13 @@ public:
     std::vector<Operation *> GetAllOperations() const;
     Operation *GetOperationByName(const std::string &opName) const;
     Kernel *GetKernelInstance(const std::string &kernelName) const;
+    virtual void UpdateLoader();
 
 protected:
     void AddAllOperations(const OperationCreators &opCreators, const KernelCreators &kerCreators,
-                          const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binMap);
+        const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binMap);
+    void UpdateLoaderBinary(const OperationCreators &opCreators, const KernelCreators &kerCreators,
+        const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binMap);
 
 private:
     void AddOperationByName(Operation *op);
