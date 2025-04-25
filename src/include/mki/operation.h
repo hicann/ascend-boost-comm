@@ -35,6 +35,8 @@ public:
     virtual const KernelList &GetKernelList() const = 0;
     virtual Kernel *GetBestKernel(const LaunchParam &launchParam) const = 0;
     virtual Kernel *GetKernelByName(const std::string &kernelName) const = 0;
+    virtual bool DynamicRegisterKernelByName(
+        const LaunchParam &launchParam, const std::string &kernelName = nullptr) = 0;
 };
 } // namespace Mki
 

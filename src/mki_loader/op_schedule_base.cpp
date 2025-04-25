@@ -67,6 +67,12 @@ void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators,
     }
 }
 
+void OpScheduleBase::UpdateLoaderBinary(const OperationCreators &opCreators, const KernelCreators &kerCreators,
+    const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binaryMap)
+{
+    loader_->ReLoad();
+}
+
 void OpScheduleBase::AddOperationByName(Operation *op)
 {
     std::string opName = op->GetName();
@@ -99,4 +105,7 @@ void OpScheduleBase::AddKernel(Kernel const *kernel)
         MKI_LOG(WARN) << "kernelName:" << kernelName << " repeat";
     }
 }
+
+void OpScheduleBase::UpdateLoader() {}
+
 } // namespace Mki
