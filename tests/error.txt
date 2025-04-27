@@ -1,612 +1,197 @@
-(cuda-env) root@tritontest:~/triton/sglang/decode_kernel# python decode_kernel.py 
-Traceback (most recent call last):
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/backends/nvidia/compiler.py", line 292, in make_cubin
-    subprocess.run(cmd, shell=True, check=True)
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/subprocess.py", line 528, in run
-    raise CalledProcessError(retcode, process.args,
-subprocess.CalledProcessError: Command '/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/backends/nvidia/bin/ptxas -lineinfo -v --gpu-name=sm_7
-5 /tmp/tmp7dig7piz.ptx -o /tmp/tmp7dig7piz.ptx.o 2> /tmp/tmpr9xclde3.log' returned non-zero exit status 255.
+Unsupported conversion from f16 to f16
+LLVM ERROR: Unsupported rounding mode for conversion.
+#blocked = #ttg.blocked<{sizePerThread = [2, 2], threadsPerWarp = [2, 16], warpsPerCTA = [4, 1], order = [1, 0]}>
+#blocked1 = #ttg.blocked<{sizePerThread = [1, 8], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>
+#blocked2 = #ttg.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>
+#blocked3 = #ttg.blocked<{sizePerThread = [1, 8], threadsPerWarp = [8, 4], warpsPerCTA = [4, 1], order = [1, 0]}>
+#shared = #ttg.swizzled_shared<{vec = 1, perPhase = 1, maxPhase = 1, order = [1, 0]}>
+#smem = #ttg.shared_memory
+module attributes {"ttg.num-ctas" = 1 : i32, "ttg.num-warps" = 4 : i32, ttg.target = "cuda:75", "ttg.threads-per-warp" = 32 : i32} {
+  tt.func public @fused_moe_kernel(%arg0: !tt.ptr<f16> {tt.divisibility = 16 : i32}, %arg1: !tt.ptr<f16> {tt.divisibility = 16 : i32}, %arg2: !tt.ptr<f16> {tt.di
+visibility = 16 : i32}, %arg3: !tt.ptr<f32> {tt.divisibility = 16 : i32}, %arg4: !tt.ptr<f32> {tt.divisibility = 16 : i32}, %arg5: !tt.ptr<f32> {tt.divisibility 
+= 16 : i32}, %arg6: !tt.ptr<i32> {tt.divisibility = 16 : i32}, %arg7: !tt.ptr<i32> {tt.divisibility = 16 : i32}, %arg8: !tt.ptr<i32> {tt.divisibility = 16 : i32}
+, %arg9: i32 {tt.divisibility = 16 : i32}, %arg10: i32 {tt.divisibility = 16 : i32}, %arg11: i32 {tt.divisibility = 16 : i32}, %arg12: i32 {tt.divisibility = 16 
+: i32}, %arg13: i32 {tt.divisibility = 16 : i32}, %arg14: i32 {tt.divisibility = 16 : i32}, %arg15: i32 {tt.divisibility = 16 : i32}, %arg16: i32 {tt.divisibilit
+y = 16 : i32}, %arg17: i32 {tt.divisibility = 16 : i32}) attributes {noinline = false} {
+    %cst = arith.constant dense<0.000000e+00> : tensor<16x32xf32, #blocked>
+    %c64_i32 = arith.constant 64 : i32
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %c15_i32 = arith.constant 15 : i32
+    %c31_i32 = arith.constant 31 : i32
+    %c63_i32 = arith.constant 63 : i32
+    %cst_0 = arith.constant dense<0.000000e+00> : tensor<16x64xf16, #blocked1>
+    %c4_i32 = arith.constant 4 : i32
+    %c16_i32 = arith.constant 16 : i32
+    %c32_i32 = arith.constant 32 : i32
+    %cst_1 = arith.constant dense<2> : tensor<16x1xi64, #blocked1>
+    %cst_2 = arith.constant dense<0.000000e+00> : tensor<16xf32, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %cst_3 = arith.constant dense<64> : tensor<16x64xi32, #blocked1>
+    %0 = tt.get_program_id x : i32
+    %1 = arith.addi %arg11, %c15_i32 : i32
+    %2 = arith.divsi %1, %c16_i32 : i32
+    %3 = arith.addi %arg9, %c31_i32 : i32
+    %4 = arith.divsi %3, %c32_i32 : i32
+    %5 = arith.muli %4, %c4_i32 : i32
+    %6 = arith.divsi %0, %5 : i32
+    %7 = arith.muli %6, %c4_i32 : i32
+    %8 = arith.subi %2, %7 : i32
+    %9 = arith.minsi %8, %c4_i32 : i32
+    %10 = arith.remsi %0, %5 : i32
+    %11 = arith.remsi %10, %9 : i32
+    %12 = arith.addi %7, %11 : i32
+    %13 = arith.divsi %10, %9 : i32
+    %14 = tt.load %arg8 : !tt.ptr<i32>
+    %15 = arith.muli %12, %c16_i32 : i32
+    %16 = arith.cmpi sge, %15, %14 : i32
+    cf.cond_br %16, ^bb1, ^bb2
+  ^bb1:  // pred: ^bb0
+    tt.return
+  ^bb2:  // pred: ^bb0
+    %17 = tt.make_range {end = 16 : i32, start = 0 : i32} : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %18 = tt.make_range {end = 16 : i32, start = 0 : i32} : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %19 = tt.make_range {end = 16 : i32, start = 0 : i32} : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %20 = tt.splat %15 : i32 -> tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %21 = tt.splat %15 : i32 -> tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %22 = tt.splat %15 : i32 -> tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %23 = arith.addi %20, %17 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %24 = arith.addi %21, %18 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %25 = arith.addi %22, %19 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %26 = tt.splat %arg6 : !tt.ptr<i32> -> tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %27 = tt.splat %arg6 : !tt.ptr<i32> -> tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %28 = tt.splat %arg6 : !tt.ptr<i32> -> tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %29 = tt.addptr %26, %23 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked1}>>, tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %30 = tt.addptr %27, %24 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked}>>, tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %31 = tt.addptr %28, %25 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked2}>>, tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %32 = tt.load %29 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %33 = tt.load %30 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %34 = tt.load %31 : tensor<16x!tt.ptr<i32>, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %35 = arith.extsi %32 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked1}>> to tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %36 = arith.extsi %33 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked}>> to tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %37 = arith.extsi %34 : tensor<16xi32, #ttg.slice<{dim = 1, parent = #blocked2}>> to tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %38 = arith.extsi %arg12 : i32 to i64
+    %39 = tt.splat %38 : i64 -> tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %40 = tt.splat %38 : i64 -> tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %41 = tt.splat %38 : i64 -> tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %42 = arith.cmpi slt, %35, %39 : tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked1}>>
+    %43 = arith.cmpi slt, %36, %40 : tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %44 = arith.cmpi slt, %37, %41 : tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked2}>>
+    %45 = arith.muli %13, %c32_i32 : i32
+    %46 = tt.make_range {end = 32 : i32, start = 0 : i32} : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>>
+    %47 = tt.make_range {end = 32 : i32, start = 0 : i32} : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked2}>>
+    %48 = tt.splat %45 : i32 -> tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>>
+    %49 = tt.splat %45 : i32 -> tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked2}>>
+    %50 = arith.addi %48, %46 : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>>
+    %51 = arith.addi %49, %47 : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked2}>>
+    %52 = tt.splat %arg9 : i32 -> tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>>
+    %53 = arith.remsi %50, %52 : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>>
+    %54 = tt.expand_dims %35 {axis = 1 : i32} : tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked1}>> -> tensor<16x1xi64, #blocked1>
+    %55 = tt.expand_dims %37 {axis = 1 : i32} : tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked2}>> -> tensor<16x1xi64, #blocked2>
+    %56 = arith.divsi %54, %cst_1 : tensor<16x1xi64, #blocked1>
+    %57 = arith.extsi %arg13 : i32 to i64
+    %58 = tt.splat %57 : i64 -> tensor<16x1xi64, #blocked1>
+    %59 = arith.muli %56, %58 : tensor<16x1xi64, #blocked1>
+    %60 = tt.make_range {end = 64 : i32, start = 0 : i32} : tensor<64xi32, #ttg.slice<{dim = 0, parent = #blocked1}>>
+    %61 = tt.expand_dims %60 {axis = 0 : i32} : tensor<64xi32, #ttg.slice<{dim = 0, parent = #blocked1}>> -> tensor<1x64xi32, #blocked1>
+    %62 = arith.extsi %61 : tensor<1x64xi32, #blocked1> to tensor<1x64xi64, #blocked1>
+    %63 = tt.broadcast %59 : tensor<16x1xi64, #blocked1> -> tensor<16x64xi64, #blocked1>
+    %64 = tt.broadcast %62 : tensor<1x64xi64, #blocked1> -> tensor<16x64xi64, #blocked1>
+    %65 = arith.addi %63, %64 : tensor<16x64xi64, #blocked1>
+    %66 = tt.splat %arg0 : !tt.ptr<f16> -> tensor<16x64x!tt.ptr<f16>, #blocked1>
+    %67 = tt.addptr %66, %65 : tensor<16x64x!tt.ptr<f16>, #blocked1>, tensor<16x64xi64, #blocked1>
+    %68 = tt.addptr %arg7, %12 : !tt.ptr<i32>, i32
+    %69 = tt.load %68 : !tt.ptr<i32>
+    %70 = arith.muli %69, %arg14 : i32
+    %71 = tt.addptr %arg1, %70 : !tt.ptr<f16>, i32
+    %72 = tt.make_range {end = 64 : i32, start = 0 : i32} : tensor<64xi32, #ttg.slice<{dim = 1, parent = #blocked3}>>
+    %73 = tt.expand_dims %72 {axis = 1 : i32} : tensor<64xi32, #ttg.slice<{dim = 1, parent = #blocked3}>> -> tensor<64x1xi32, #blocked3>
+    %74 = tt.splat %arg15 : i32 -> tensor<64x1xi32, #blocked3>
+    %75 = arith.muli %73, %74 : tensor<64x1xi32, #blocked3>
+    %76 = tt.expand_dims %53 {axis = 0 : i32} : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked3}>> -> tensor<1x32xi32, #blocked3>
+    %77 = tt.broadcast %75 : tensor<64x1xi32, #blocked3> -> tensor<64x32xi32, #blocked3>
+    %78 = tt.broadcast %76 : tensor<1x32xi32, #blocked3> -> tensor<64x32xi32, #blocked3>
+    %79 = arith.addi %77, %78 : tensor<64x32xi32, #blocked3>
+    %80 = tt.splat %71 : !tt.ptr<f16> -> tensor<64x32x!tt.ptr<f16>, #blocked3>
+    %81 = tt.addptr %80, %79 : tensor<64x32x!tt.ptr<f16>, #blocked3>, tensor<64x32xi32, #blocked3>
+    %82 = arith.addi %arg10, %c63_i32 : i32
+    %83 = arith.divsi %82, %c64_i32 : i32
+    %84 = tt.expand_dims %42 {axis = 1 : i32} : tensor<16xi1, #ttg.slice<{dim = 1, parent = #blocked1}>> -> tensor<16x1xi1, #blocked1>
+    %85 = tt.broadcast %84 : tensor<16x1xi1, #blocked1> -> tensor<16x64xi1, #blocked1>
+    %86 = arith.muli %arg15, %c64_i32 : i32
+    %87 = tt.splat %86 : i32 -> tensor<64x32xi32, #blocked3>
+    %88:3 = scf.for %arg18 = %c0_i32 to %83 step %c1_i32 iter_args(%arg19 = %cst, %arg20 = %67, %arg21 = %81) -> (tensor<16x32xf32, #blocked>, tensor<16x64x!tt.p
+tr<f16>, #blocked1>, tensor<64x32x!tt.ptr<f16>, #blocked3>)  : i32 {
+      %112 = tt.load %arg20, %85, %cst_0 : tensor<16x64x!tt.ptr<f16>, #blocked1>
+      %113 = tt.load %arg21 : tensor<64x32x!tt.ptr<f16>, #blocked3>
+      %114 = tt.fp_to_fp %112 : tensor<16x64xf16, #blocked1> -> tensor<16x64xf32, #blocked1>
+      %115 = ttg.local_alloc %114 : (tensor<16x64xf32, #blocked1>) -> !ttg.memdesc<16x64xf32, #shared, #smem>
+      %116 = ttg.local_load %115 : !ttg.memdesc<16x64xf32, #shared, #smem> -> tensor<16x64xf32, #ttg.dot_op<{opIdx = 0, parent = #blocked}>>
+      %117 = tt.fp_to_fp %113 : tensor<64x32xf16, #blocked3> -> tensor<64x32xf32, #blocked3>
+      %118 = ttg.local_alloc %117 : (tensor<64x32xf32, #blocked3>) -> !ttg.memdesc<64x32xf32, #shared, #smem>
+      %119 = ttg.local_load %118 : !ttg.memdesc<64x32xf32, #shared, #smem> -> tensor<64x32xf32, #ttg.dot_op<{opIdx = 1, parent = #blocked}>>
+      %120 = tt.dot %116, %119, %arg19, inputPrecision = tf32 : tensor<16x64xf32, #ttg.dot_op<{opIdx = 0, parent = #blocked}>> * tensor<64x32xf32, #ttg.dot_op<{o
+pIdx = 1, parent = #blocked}>> -> tensor<16x32xf32, #blocked>
+      %121 = tt.addptr %arg20, %cst_3 : tensor<16x64x!tt.ptr<f16>, #blocked1>, tensor<16x64xi32, #blocked1>
+      %122 = tt.addptr %arg21, %87 : tensor<64x32x!tt.ptr<f16>, #blocked3>, tensor<64x32xi32, #blocked3>
+      scf.yield %120, %121, %122 : tensor<16x32xf32, #blocked>, tensor<16x64x!tt.ptr<f16>, #blocked1>, tensor<64x32x!tt.ptr<f16>, #blocked3>
+    }
+    %89 = tt.splat %arg5 : !tt.ptr<f32> -> tensor<16x!tt.ptr<f32>, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %90 = tt.addptr %89, %36 : tensor<16x!tt.ptr<f32>, #ttg.slice<{dim = 1, parent = #blocked}>>, tensor<16xi64, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %91 = tt.load %90, %43, %cst_2 : tensor<16x!tt.ptr<f32>, #ttg.slice<{dim = 1, parent = #blocked}>>
+    %92 = tt.expand_dims %91 {axis = 1 : i32} : tensor<16xf32, #ttg.slice<{dim = 1, parent = #blocked}>> -> tensor<16x1xf32, #blocked>
+    %93 = tt.broadcast %92 : tensor<16x1xf32, #blocked> -> tensor<16x32xf32, #blocked>
+    %94 = arith.mulf %88#0, %93 : tensor<16x32xf32, #blocked>
+    %95 = arith.truncf %94 : tensor<16x32xf32, #blocked> to tensor<16x32xf16, #blocked>
+    %96 = arith.extsi %arg16 : i32 to i64
+    %97 = tt.splat %96 : i64 -> tensor<16x1xi64, #blocked2>
+    %98 = arith.muli %97, %55 : tensor<16x1xi64, #blocked2>
+    %99 = tt.splat %arg2 : !tt.ptr<f16> -> tensor<16x1x!tt.ptr<f16>, #blocked2>
+    %100 = tt.addptr %99, %98 : tensor<16x1x!tt.ptr<f16>, #blocked2>, tensor<16x1xi64, #blocked2>
+    %101 = tt.expand_dims %51 {axis = 0 : i32} : tensor<32xi32, #ttg.slice<{dim = 0, parent = #blocked2}>> -> tensor<1x32xi32, #blocked2>
+    %102 = tt.broadcast %100 : tensor<16x1x!tt.ptr<f16>, #blocked2> -> tensor<16x32x!tt.ptr<f16>, #blocked2>
+    %103 = tt.broadcast %101 : tensor<1x32xi32, #blocked2> -> tensor<16x32xi32, #blocked2>
+    %104 = tt.addptr %102, %103 : tensor<16x32x!tt.ptr<f16>, #blocked2>, tensor<16x32xi32, #blocked2>
+    %105 = tt.expand_dims %44 {axis = 1 : i32} : tensor<16xi1, #ttg.slice<{dim = 1, parent = #blocked2}>> -> tensor<16x1xi1, #blocked2>
+    %106 = tt.splat %arg9 : i32 -> tensor<1x32xi32, #blocked2>
+    %107 = arith.cmpi slt, %101, %106 : tensor<1x32xi32, #blocked2>
+    %108 = tt.broadcast %105 : tensor<16x1xi1, #blocked2> -> tensor<16x32xi1, #blocked2>
+    %109 = tt.broadcast %107 : tensor<1x32xi1, #blocked2> -> tensor<16x32xi1, #blocked2>
+    %110 = arith.andi %108, %109 : tensor<16x32xi1, #blocked2>
+    %111 = ttg.convert_layout %95 : tensor<16x32xf16, #blocked> -> tensor<16x32xf16, #blocked2>
+    tt.store %104, %111, %110 : tensor<16x32x!tt.ptr<f16>, #blocked2>
+    tt.return
+  }
+}
 
-During handling of the above exception, another exception occurred:
-
+{-#
+  external_resources: {
+    mlir_reproducer: {
+      pipeline: "builtin.module(triton-nvidia-mma-lowering, tritongpu-combine-tensor-select-and-if, tritongpu-allocate-warp-groups, convert-scf-to-cf, allocate-s
+hared-memory, triton-tensor-memory-allocation, tritongpu-global-scratch-memory-allocation, convert-triton-gpu-to-llvm{compute-capability=75 ptx-version=84}, cano
+nicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=normal test-convergence=false top-down=true}, cse, convert-nv-gpu-to-llvm, convert-warp-speciali
+ze-to-llvm, canonicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=normal test-convergence=false top-down=true}, cse, symbol-dce, enable-line-info)
+",
+      disable_threading: false,
+      verify_each: true
+    }
+  }
+#-}
+/root/triton/sglang/fused_moe_kernel/test_fused_moe_kernel.py:9:0: error: Failures have been detected while processing an MLIR pass pipeline
+/root/triton/sglang/fused_moe_kernel/test_fused_moe_kernel.py:9:0: note: Pipeline failed while executing [`ConvertTritonGPUToLLVM` on 'builtin.module' operation]
+: reproducer generated at `std::errs, please share the reproducer above with Triton project.`
 Traceback (most recent call last):
-  File "/root/triton/sglang/decode_kernel/decode_kernel.py", line 115, in <module>
-    decode_kernel()
-  File "/root/triton/sglang/decode_kernel/decode_kernel.py", line 91, in decode_kernel
-    _decode_kernel[grid](
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/runtime/jit.py", line 345, in <lambda>
+  File "/root/triton/sglang/fused_moe_kernel/test_fused_moe_kernel.py", line 296, in <module>
+    result = fused_moe()
+  File "/root/triton/sglang/fused_moe_kernel/test_fused_moe_kernel.py", line 250, in fused_moe
+    fused_moe_kernel[grid](
+  File "/root/miniconda3/envs/cuda-env/lib/python3.10/site-packages/triton/runtime/jit.py", line 347, in <lambda>
     return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/runtime/jit.py", line 662, in run
-    kernel = self.compile(
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/compiler/compiler.py", line 282, in compile
+  File "/root/miniconda3/envs/cuda-env/lib/python3.10/site-packages/triton/runtime/jit.py", line 569, in run
+    kernel = self.compile(src, target=target, options=options.__dict__)
+  File "/root/miniconda3/envs/cuda-env/lib/python3.10/site-packages/triton/compiler/compiler.py", line 284, in compile
     next_module = compile_ir(module, metadata)
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/backends/nvidia/compiler.py", line 320, in <lambda>
-    stages["cubin"] = lambda src, metadata: self.make_cubin(src, metadata, options, self.capability)
-  File "/root/miniconda3/envs/cuda-env/lib/python3.9/site-packages/triton/backends/nvidia/compiler.py", line 297, in make_cubin
-    raise RuntimeError(f'Internal Triton PTX codegen error: \n{log}')
-RuntimeError: Internal Triton PTX codegen error: 
-ptxas /tmp/tmp7dig7piz.ptx, line 688; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 688; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 694; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 694; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 700; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 700; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 706; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 706; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 712; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 712; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 718; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 718; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 724; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 724; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 730; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 730; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 736; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 736; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 742; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 742; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 748; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 748; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 754; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 754; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 760; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 760; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 766; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 766; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 772; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 772; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 778; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 778; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 784; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 784; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 790; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 790; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 796; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 796; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 802; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 802; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 808; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 808; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 814; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 814; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 820; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 820; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 826; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 826; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 832; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 832; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 838; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 838; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 844; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 844; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 850; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 850; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 856; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 856; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 862; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 862; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 868; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 868; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 874; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 874; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 880; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 880; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 886; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 886; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 892; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 892; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 898; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 898; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 904; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 904; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 910; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 910; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 916; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 916; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 922; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 922; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 928; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 928; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 934; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 934; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 940; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 940; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 946; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 946; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 952; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 952; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 958; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 958; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 964; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 964; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 970; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 970; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 976; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 976; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 982; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 982; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 988; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 988; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 994; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 994; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1000; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1000; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1006; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1006; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1012; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1012; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1018; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1018; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1024; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1024; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1030; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1030; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1036; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1036; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1042; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1042; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1048; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1048; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1054; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1054; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1060; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1060; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1066; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1066; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1072; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1072; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1078; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1078; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1084; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1084; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1090; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1090; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1096; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1096; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1102; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1102; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1108; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1108; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1114; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1114; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1120; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1120; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1126; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1126; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1132; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1132; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1138; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1138; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1144; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1144; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1150; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1150; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1156; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1156; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1162; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1162; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1168; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1168; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1174; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1174; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1180; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1180; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1186; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1186; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1192; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1192; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1198; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1198; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1204; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1204; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1210; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1210; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1216; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1216; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1222; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1222; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1228; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1228; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1234; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1234; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1240; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1240; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1246; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1246; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1252; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1252; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1258; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1258; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1264; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1264; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1270; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1270; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1276; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1276; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1282; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1282; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1288; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1288; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1294; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1294; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1300; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1300; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1306; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1306; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1312; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1312; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1318; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1318; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1324; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1324; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1330; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1330; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1336; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1336; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1342; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1342; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1348; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1348; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1354; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1354; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1360; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1360; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1366; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1366; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1372; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1372; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1378; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1378; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1384; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1384; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1390; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1390; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1396; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1396; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1402; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1402; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1408; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1408; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1414; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1414; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1420; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1420; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1426; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1426; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1432; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1432; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1438; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1438; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1444; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1444; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1450; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1450; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1455; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1455; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1459; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1459; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1463; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1463; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1467; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1467; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1471; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1471; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1475; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1475; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1479; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1479; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1483; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1483; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1487; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1487; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1491; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1491; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1495; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1495; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1499; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1499; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1503; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1503; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1507; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1507; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1511; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1511; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1515; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1515; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1519; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1519; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1523; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1523; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1527; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1527; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1531; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1531; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1535; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1535; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1539; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1539; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1543; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1543; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1547; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1547; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1551; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1551; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1555; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1555; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1559; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1559; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1563; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1563; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1567; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1567; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1571; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1571; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1575; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1575; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1579; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1579; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1583; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1583; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1587; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1587; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1591; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1591; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1595; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1595; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1599; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1599; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1603; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1603; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1607; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1607; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1611; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1611; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1615; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1615; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1619; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1619; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1623; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1623; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1627; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1627; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1631; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1631; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1635; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1635; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1639; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1639; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1643; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1643; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1647; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1647; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1651; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1651; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1655; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1655; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1659; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1659; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1663; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1663; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1667; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1667; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1671; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1671; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1675; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1675; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1679; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1679; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1683; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1683; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1687; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1687; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1691; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1691; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1695; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1695; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1699; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1699; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1703; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1703; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1707; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1707; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1711; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1711; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1715; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1715; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1719; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1719; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1723; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1723; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1727; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1727; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1731; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1731; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1735; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1735; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1739; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1739; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1743; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1743; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1747; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1747; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1751; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1751; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1755; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1755; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1759; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1759; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1763; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1763; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1767; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1767; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1771; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1771; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1775; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1775; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1779; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1779; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1783; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1783; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1787; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1787; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1791; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1791; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1795; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1795; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1799; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1799; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1803; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1803; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1807; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1807; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1811; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1811; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1815; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1815; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1819; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1819; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1823; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1823; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1827; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1827; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1831; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1831; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1835; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1835; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1839; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1839; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1843; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1843; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1847; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1847; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1851; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1851; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1855; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1855; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1859; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1859; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1863; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1863; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1867; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1867; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1871; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1871; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1875; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1875; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1879; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1879; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1883; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1883; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1887; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1887; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1891; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1891; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1895; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1895; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1899; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1899; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1903; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1903; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1907; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1907; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1911; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1911; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1915; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1915; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1919; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1919; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1923; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1923; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1927; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1927; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1931; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1931; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1935; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1935; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1939; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1939; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1943; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1943; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1947; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1947; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1951; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1951; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1955; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1955; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1959; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1959; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1963; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 1963; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2357; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2357; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2361; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2361; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2365; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2365; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2369; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2369; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2373; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2373; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2377; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2377; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2381; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2381; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2385; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2385; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2389; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2389; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2393; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2393; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2397; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2397; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2401; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2401; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2405; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2405; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2409; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2409; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2413; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2413; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2417; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2417; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2421; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2421; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2425; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2425; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2429; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2429; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2433; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2433; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2437; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2437; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2441; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2441; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2445; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2445; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2449; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2449; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2453; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2453; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2457; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2457; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2461; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2461; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2465; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2465; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2469; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2469; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2473; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2473; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2477; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2477; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2481; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2481; error   : Feature 'cvt with .f32.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2735; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2735; error   : Feature 'cvt.bf16.f32' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2739; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2739; error   : Feature 'cvt.bf16.f32' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2743; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2743; error   : Feature 'cvt.bf16.f32' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2747; error   : Feature '.bf16' requires .target sm_80 or higher
-ptxas /tmp/tmp7dig7piz.ptx, line 2747; error   : Feature 'cvt.bf16.f32' requires .target sm_80 or higher
-ptxas fatal   : Ptx assembly aborted due to errors
+  File "/root/miniconda3/envs/cuda-env/lib/python3.10/site-packages/triton/backends/nvidia/compiler.py", line 450, in <lambda>
+    stages["llir"] = lambda src, metadata: self.make_llir(src, metadata, options, capability)
+  File "/root/miniconda3/envs/cuda-env/lib/python3.10/site-packages/triton/backends/nvidia/compiler.py", line 341, in make_llir
+    pm.run(mod)
+RuntimeError: PassManager::run failed
