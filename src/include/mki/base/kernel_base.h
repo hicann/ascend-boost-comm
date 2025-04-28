@@ -18,6 +18,7 @@
 #include "mki/bin_handle.h"
 
 namespace Mki {
+class KernelParamBuilder;
 class KernelBase : public Kernel {
 using KernelSelfCreator = std::function<KernelBase*(void)>;
 public:
@@ -40,6 +41,8 @@ public:
     const KernelInfo &GetKernelInfo() const override;
     KernelType GetType() const override;
     KernelHandle GetBinaryHandle() const;
+    Status BuildArgs(const LaunchParam &launchParam, RunInfo &runinfo, void *hostBuffer) override;
+    Status RunWithArgs(void *args, void *stream, bool isDeviceAddr) override;
 
 protected:
     virtual Status InitImpl(const LaunchParam &launchParam);
@@ -59,6 +62,7 @@ private:
     const BinHandle *handle_{nullptr};
     KernelSelfCreator creator_{nullptr};
     friend void SetKernelSelfCreator(KernelBase &kernel, KernelSelfCreator func);
+    std::shared_ptr<KernelParamBuilder> builder_{nullptr};
 };
 
 void SetKernelSelfCreator(KernelBase &kernel, KernelBase::KernelSelfCreator func);

@@ -25,9 +25,13 @@ constexpr uint32_t OVERFLOW_ADDR_NEG_IDX = 1;
 namespace Mki {
 class KernelParamBuilder {
 public:
-    Status Init(const LaunchParam &launchParam, const RunInfo &runInfo, uint64_t argsNum, const KernelInfo &kernelInfo)
+    Status Init(const LaunchParam &launchParam, const RunInfo &runInfo, uint64_t argsNum, const KernelInfo &kernelInfo,
+                uint8_t *hostBuffer = nullptr)
     {
         uint8_t *argsPtr = kernelInfo.GetArgs();
+        if (hostBuffer) {
+            argsPtr = hostBuffer;
+        }
         uint64_t argsSize = kernelInfo.GetArgsSize();
         MKI_CHECK(argsPtr != nullptr, "kernel info args is nullptr, please check first error before.",
                   return Status::FailStatus(ERROR_INVALID_VALUE));
@@ -324,26 +328,8 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
 
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
-    KernelParamBuilder paramBuilder;
-    uint64_t argsNum = GetKernelArgsNum(launchParam);
-    Status status = paramBuilder.Init(launchParam, runInfo, argsNum, kernelInfo_);
-    MKI_CHECK(status.Ok(), "failed to build kernel params", return status);
-    const MkiRtKernelParam &kernelParam = paramBuilder.GetKernelParam();
-    MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
-    MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
-    if (*handle_->GetHandle() != nullptr) {
-        MKI_LOG(DEBUG) << "launch function with handle";
-        int st = MkiRtFunctionLaunchWithHandle(*handle_->GetHandle(), &kernelParam, runInfo.GetStream(), nullptr);
-        MKI_CHECK(
-            st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithHandle fail",
-            return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction LaunchWithHandle fail"));
-    } else {
-        MKI_LOG(DEBUG) << "launch function with flag";
-        int st = MkiRtFunctionLaunchWithFlag(handle_->GetHandle(), &kernelParam, runInfo.GetStream(), nullptr);
-        MKI_CHECK(st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithFlag fail",
-                    return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction Launch fail"));
-    }
-    return Status::OkStatus();
+    BuildArgs(launchParam, runInfo, nullptr);
+    return RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
 }
 
 bool KernelBase::CanSupport(const LaunchParam &launchParam) const
@@ -382,6 +368,45 @@ Kernel *KernelBase::Clone() const
     MKI_CHECK(kernel != nullptr, kernelName_ << " create kernel failed", return nullptr);
     kernel->Copy(*this);
     return kernel;
+}
+
+Status KernelBase::BuildArgs(const LaunchParam &launchParam, RunInfo &runinfo, void *hostBuffer)
+{
+    builder_.reset(new(KernelParamBuilder));
+    uint64_t argsNum = GetKernelArgsNum(launchParam);
+    uint8_t *hostBufferPtr = reinterpret_cast<uint8_t*>(hostBuffer);
+    Status status = builder_->Init(launchParam, runinfo, argsNum, kernelInfo_, hostBufferPtr);
+    return status;
+}
+
+Status KernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
+{
+    MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
+    MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
+    MkiRtKernelParam kernelParam = builder_->GetKernelParam();
+#ifdef _DEBUG
+    MKI_LOG(DEBUG) << "ARGS CONTENT IS:";
+    for (size_t i = 0; i < kernelParam.argsEx->argsSize / sizeof(void*); i++) {
+        MKI_LOG(DEBUG) << ((void**)(kernelParam.argsEx->args))[i];
+    }
+#endif
+    kernelParam.argsEx->args = args;
+    if (isDeviceAddr) {
+        kernelParam.argsEx->isNoNeedH2DCopy = 1;
+    }
+    if (*handle_->GetHandle() != nullptr) {
+        MKI_LOG(DEBUG) << "launch function with handle";
+        int st = MkiRtFunctionLaunchWithHandle(*handle_->GetHandle(), &kernelParam, stream, nullptr);
+        MKI_CHECK(
+            st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithHandle fail",
+            return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction LaunchWithHandle fail"));
+    } else {
+        MKI_LOG(DEBUG) << "launch function with flag";
+        int st = MkiRtFunctionLaunchWithFlag(handle_->GetHandle(), &kernelParam, stream, nullptr);
+        MKI_CHECK(st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithFlag fail",
+                    return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction Launch fail"));
+    }
+    return Status::OkStatus();
 }
 
 void SetKernelSelfCreator(KernelBase &kernel, KernelBase::KernelSelfCreator func)
