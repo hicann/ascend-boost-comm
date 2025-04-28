@@ -328,7 +328,8 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
 
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
-    BuildArgs(launchParam, runInfo, nullptr);
+    MKI_CHECK(BuildArgs(launchParam, runInfo, nullptr).Ok(), "build args failed, abort running",
+              return Status::FailStatus(ERROR_INVALID_VALUE));
     return RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
 }
 
@@ -383,7 +384,9 @@ Status KernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
 {
     MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
     MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
-    MkiRtKernelParam kernelParam = builder_->GetKernelParam();
+    const MkiRtKernelParam &kernelParam = builder_->GetKernelParam();
+    MKI_CHECK(kernelParam.argsEx != nullptr, "kernelParam's argsEx is nullptr",
+              return Status::FailStatus(ERROR_INVALID_VALUE));
 #ifdef _DEBUG
     MKI_LOG(DEBUG) << "ARGS CONTENT IS:";
     for (size_t i = 0; i < kernelParam.argsEx->argsSize / sizeof(void*); i++) {
