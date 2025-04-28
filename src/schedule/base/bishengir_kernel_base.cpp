@@ -266,6 +266,24 @@ Status BishengIRKernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo
     return Status::OkStatus();
 }
 
+Status BishengIRKernelBase::BuildArgs(const LaunchParam &launchParam, RunInfo &runinfo, void *hostBuffer)
+{
+    (void)launchParam;
+    (void)runinfo;
+    (void)hostBuffer;
+    MKI_LOG(ERROR) << "BuildArgs in BishengIRKernel is not implemented!";
+    return Status::FailStatus(ERROR_INVALID_VALUE, "Mki BuildArgs fail");
+}
+
+Status BishengIRKernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
+{
+    (void)args;
+    (void)stream;
+    (void)isDeviceAddr;
+    MKI_LOG(ERROR) << "RunWithArgs in BishengIRKernel is not implemented!";
+    return Status::FailStatus(ERROR_INVALID_VALUE, "Mki RunWithArgs fail");
+}
+
 void BishengIRKernelBase::UpdateKernelArgsIndex(const LaunchParam &launchParam)
 {
     // 按照char数据大小更新KernelArgs的起始位置

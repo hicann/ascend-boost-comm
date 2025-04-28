@@ -179,6 +179,24 @@ Status AicpuKernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
     return Status::OkStatus();
 }
 
+Status AicpuKernelBase::BuildArgs(const LaunchParam &launchParam, RunInfo &runinfo, void *hostBuffer)
+{
+    (void)launchParam;
+    (void)runinfo;
+    (void)hostBuffer;
+    MKI_LOG(ERROR) << "BuildArgs in AicpuKernel is not implemented!";
+    return Status::FailStatus(ERROR_INVALID_VALUE, "Mki BuildArgs fail");
+}
+
+Status AicpuKernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
+{
+    (void)args;
+    (void)stream;
+    (void)isDeviceAddr;
+    MKI_LOG(ERROR) << "RunWithArgs in AicpuKernel is not implemented!";
+    return Status::FailStatus(ERROR_INVALID_VALUE, "Mki RunWithArgs fail");
+}
+
 bool AicpuKernelBase::CanSupport(const LaunchParam &launchParam) const
 {
     UNUSED_VALUE(launchParam);
