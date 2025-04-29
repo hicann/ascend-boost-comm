@@ -328,8 +328,8 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
 
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
-    MKI_CHECK(BuildArgs(launchParam, runInfo, nullptr).Ok(), "build args failed, abort running",
-              return Status::FailStatus(ERROR_INVALID_VALUE));
+    Status st = BuildArgs(launchParam, runInfo, nullptr);
+    MKI_CHECK(st.Ok(), "build args failed, abort running", return st);
     return RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
 }
 
