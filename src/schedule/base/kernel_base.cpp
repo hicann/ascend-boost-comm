@@ -257,7 +257,7 @@ void KernelBase::SetLaunchWithTiling(bool flag) { kernelInfo_.SetLaunchWithTilin
 
 void KernelBase::SetTilingHostAddr(uint8_t *addr, uint64_t len) { kernelInfo_.SetTilingHostAddr(addr, len); }
 
-void KernelBase::Reset()
+void KernelBase::Reset() 
 {
     kernelInfo_.Reset();
 }
