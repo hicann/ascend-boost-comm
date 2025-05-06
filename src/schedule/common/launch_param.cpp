@@ -100,4 +100,27 @@ std::string LaunchParam::ToString() const
     ss << std::endl;
     return ss.str();
 }
+
+int LaunchParam::GetInputTensorListNum() const
+{
+    int tensorListNum = 0;
+    for (auto i : inputLens_) {
+        if (i > 0) {
+            tensorListNum++;
+        }
+    }
+    return tensorListNum;
+}
+
+int LaunchParam::GetOutputTensorListNum() const
+{
+    int tensorListNum = 0;
+    for (auto i : outputLens_) {
+        if (i > 0) {
+            tensorListNum++;
+        }
+    }
+    return tensorListNum;
+}
+
 } // namespace Mki

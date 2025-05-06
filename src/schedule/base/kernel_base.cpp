@@ -20,6 +20,9 @@
 #include "mki/utils/memset/clear_tensors.h"
 
 namespace Mki {
+
+static const int TENSORLEN = 0;
+
 class KernelParamBuilder {
 public:
     Status Init(const LaunchParam &launchParam, const RunInfo &runInfo, uint64_t argsNum, const KernelInfo &kernelInfo)
@@ -202,39 +205,51 @@ private:
     Status UpdateArgsWithTensorList(void **args, uint64_t argsNum, const MiniVector<uint64_t> &workspaces,
                             const LaunchParam &launchParam, uint8_t *workspaceAddr)
     {
-        size_t inputNum = launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
-        size_t outputNum = launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
+        size_t inputNum =
+            launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
+        size_t outputNum =
+            launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
         SVector<int> inputLens = launchParam.GetInputLens();
         size_t tensorId = 0;
-        for (size_t i = 0 ; i < inputNum ; i++) {
-            int len = launchParam.GetInputLenCount() > 0 ? inputLens[i] : 1;
-            if (len > 1) {
-                tensorId += len;
-            } else if (len == 1) {
-                MKI_LOG(DEBUG) << "args info: input " << i << " tensorId: " << tensorId;
-                args[i] = launchParam.GetInTensor(tensorId++).data;
+        size_t argsIdx = 0;
+        for (size_t i = 0 ; i < inputNum ;) {
+            if (args[argsIdx] != nullptr) {
+                argsIdx++;
+                continue;
             }
+            int len = launchParam.GetInputLenCount() > 0 ? inputLens[i] : TENSORLEN;
+            if (len > TENSORLEN) {
+                tensorId += static_cast<size_t>(len);
+            } else if (len == TENSORLEN) {
+                MKI_LOG(DEBUG) << "args info: input " << i << " tensorId: " << tensorId;
+                args[argsIdx++] = launchParam.GetInTensor(tensorId++).data;
+            }
+            i++;
         }
         SVector<int> outputLens = launchParam.GetOutputLens();
         tensorId = 0;
-        for (size_t i = 0 ; i < outputNum ; i++) {
-            int len = launchParam.GetOutputLenCount() > 0 ? outputLens[i] : 1;
-            if (len > 1) {
-                tensorId += len;
-            } else if (len == 1) {
-                MKI_LOG(DEBUG) << "args info: output " << i + inputNum << " tensorId: " << tensorId;
-                args[i + inputNum] = launchParam.GetOutTensor(tensorId++).data;
+        for (size_t i = 0 ; i < outputNum ;) {
+            if (args[argsIdx] != nullptr) {
+                argsIdx++;
+                continue;
             }
+            int len = launchParam.GetOutputLenCount() > 0 ? outputLens[i] : TENSORLEN;
+            if (len > TENSORLEN) {
+                tensorId += static_cast<size_t>(len);
+            } else if (len == TENSORLEN) {
+                MKI_LOG(DEBUG) << "args info: output " << i + inputNum << " tensorId: " << tensorId;
+                args[argsIdx++] = launchParam.GetOutTensor(tensorId++).data;
+            }
+            i++;
         }
         size_t workspaceNum = workspaces.size();
         uint64_t workspaceOffset = 0;
-        uint64_t idx = inputNum + outputNum;
-        for (size_t i = 0; i < workspaceNum && idx < argsNum; idx++) {
-            if (args[idx] != nullptr) {
+        for (size_t i = 0; i < workspaceNum && argsIdx < argsNum; argsIdx++) {
+            if (args[argsIdx] != nullptr) {
                 continue;
             }
-            MKI_LOG(DEBUG) << "args info: workspace " << idx << " offset " << workspaceOffset;
-            args[idx] = workspaceAddr + workspaceOffset;
+            MKI_LOG(DEBUG) << "args info: workspace " << argsIdx << " offset " << workspaceOffset;
+            args[argsIdx] = workspaceAddr + workspaceOffset;
             workspaceOffset += workspaces.at(i++);
         }
         return Status::OkStatus();
@@ -354,7 +369,8 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
     size_t inputNum = launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
     size_t outputNum = launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
     uint64_t inputOutputNum = inputNum + outputNum;
-    uint64_t constInputNum = kernelInfo_.GetConstTensorCount();
+    uint64_t constInputNum =
+        kernelInfo_.GetConstTensorCount() - launchParam.GetInputTensorListNum() - launchParam.GetOutputTensorListNum();
     uint64_t workspaceNum = kernelInfo_.GetScratchSizes().size();
     uint64_t hwsyncNum = kernelInfo_.GetHwsyncIdx() < 0 ? 0 : 1;
     MKI_LOG(DEBUG) << "kernel param: " << inputOutputNum << " in/out, " << constInputNum << " const in, "
@@ -412,7 +428,7 @@ uint64_t KernelBase::GetTensorListSize(const LaunchParam &launchParam)
     size_t tensorId = 0;
     uint64_t totalSize = 0;
     for (auto &len : launchParam.GetInputLens()) {
-        if (len > 1) {
+        if (len > TENSORLEN) {
             uint64_t sigleSize = len + 1;
             for (size_t i = tensorId; i < tensorId + len; ++i) {
                 sigleSize += launchParam.GetInTensors().at(i).desc.dims.size() + 1;
@@ -425,7 +441,7 @@ uint64_t KernelBase::GetTensorListSize(const LaunchParam &launchParam)
     }
     tensorId = 0;
     for (auto &len : launchParam.GetOutputLens()) {
-        if (len > 1) {
+        if (len > TENSORLEN) {
             uint64_t sigleSize = len + 1;
             for (size_t i = tensorId; i < tensorId + len; ++i) {
                 sigleSize += launchParam.GetOutTensors().at(i).desc.dims.size() + 1;
@@ -446,7 +462,7 @@ void KernelBase::BuildTensorList(uint8_t *startPtr, SVector<int> &lens, SVector<
     uint64_t *basePtr = reinterpret_cast<uint64_t *>(startPtr);
     for (uint64_t i = 0 ; i < lens.size() ; i++) {
         int len = lens[i];
-        if (len > 1) {
+        if (len > TENSORLEN) {
             uint64_t sigleSize = len + 1;
             for (size_t i = tensorId; i < tensorId + len; ++i) {
                 sigleSize += tensors.at(i).desc.dims.size() + 1;
@@ -467,7 +483,7 @@ void KernelBase::BuildTensorList(uint8_t *startPtr, SVector<int> &lens, SVector<
             basePtr = basePtr + sigleSize;
             totalSize += sigleSize;
             kernelInfo_.AddTensorListInfo(i + idxOffset, sigleSize * sizeof(uint64_t));
-        } else if (len == 1) {
+        } else if (len == TENSORLEN) {
             ++tensorId;
         }
     }

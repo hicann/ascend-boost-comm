@@ -52,11 +52,13 @@ public:
     size_t GetInputLenCount() const;
     int GetInputLen(size_t pos) const;
     const SVector<int> &GetInputLens() const;
+    int GetInputTensorListNum() const;
 
     void SetOutputLens(SVector<int> &Lens);
     size_t GetOutputLenCount() const;
     int GetOutputLen(size_t pos) const;
     const SVector<int> &GetOutputLens() const;
+    int GetOutputTensorListNum() const;
 
     std::string ToString() const;
 
