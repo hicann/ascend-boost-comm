@@ -22,6 +22,7 @@ static const std::string TENSOR_KEY_NAME = "name";
 static const std::string TENSOR_KEY_D_TYPE = "dtype";
 static const std::string TENSOR_KEY_FORMAT = "format";
 static const std::string TENSOR_KEY_OPTIONAL = "optional";
+static const int TENSORLEN = 0;
 
 std::string TensorInfoIr::ToString() const
 {
@@ -265,10 +266,14 @@ bool OperationIr::ExtendInTensorIrByInputlens(SVector<int> &inputlens)
     size_t totalLen = 0;
     size_t oldLen = inTensorInfoIrs_.size();
     for (auto len : inputlens) {
-        if (len < 1) {
+        if (len < TENSORLEN) {
             return false;
         }
-        totalLen += len;
+        if (len == TENSORLEN) {
+            totalLen++;
+        } else {
+            totalLen += len;
+        }
     }
     int startId = totalLen;
     inTensorInfoIrs_.resize(totalLen);
@@ -286,10 +291,14 @@ bool OperationIr::ExtendOutTensorIrByOutputlens(SVector<int> &outputlens)
     size_t totalLen = 0;
     size_t oldLen = outTensorInfoIrs_.size();
     for (auto len : outputlens) {
-        if (len < 1) {
+        if (len < TENSORLEN) {
             return false;
         }
-        totalLen += len;
+        if (len == TENSORLEN) {
+            totalLen++;
+        } else {
+            totalLen += len;
+        }
     }
     int startId = totalLen;
     outTensorInfoIrs_.resize(totalLen);
