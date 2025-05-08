@@ -134,6 +134,7 @@ function fn_install_cann_and_kernel()
     ln -s ${ASCEND_HOME_PATH}/compiler/$(arch)-linux/ascendc/include/highlevel_api/               ${ASCEND_HOME_PATH}/$(arch)-linux/ascendc/include/ # platform_ascendc.h
     ln -s ${ASCEND_HOME_PATH}/compiler/include/acl/acl_op_compiler.h                              ${ASCEND_HOME_PATH}/$(arch)-linux/include/acl/ # acl_op_compiler.h
     cp -rf /usr1/CANN/mstx ${ASCEND_HOME_PATH}/tools/
+    cp -rf /usr1/CANN/mstx/include/mstx ${ASCEND_HOME_PATH}/include/
     ## lib64
     # mki
     rm -rf ${ASCEND_HOME_PATH}/lib64
