@@ -142,7 +142,7 @@ def get_header_from_file(file_path):
     return header, result
 
 
-def write_to_cpp(binary_path, header, dst_cpp_path, kernel, target_version, is_const=True):
+def write_to_cpp(binary_path, header, dst_cpp_path, kernel, target_version):
     try:
         with open(binary_path, 'rb') as f:
             data = f.read()
@@ -152,9 +152,10 @@ def write_to_cpp(binary_path, header, dst_cpp_path, kernel, target_version, is_c
     except FileNotFoundError:
         logging.error("file %s is not found!", binary_path)
         return False
+    shell_result = subprocess.run(['strings', os.path.realpath(binary_path)], capture_output=True, text=True)
     # 将数据写入到cpp文件中
     name = f'KERNELBIN_{kernel.upper()}_{target_version.upper()}'
-    data_type = 'const uint8_t' if is_const else 'uint8_t'
+    data_type = 'uint8_t' if 'g_opSystemRunCfg' in shell_result.stdout else 'const uint8_t'
     with open(dst_cpp_path, 'w') as f:
         f.write('#include <cstdint>\n#include "mki_loader/op_register.h"\n')
         f.write('namespace OpSpace {\n')
@@ -223,7 +224,7 @@ def compile_ascendc_code(obj_path, dst_cpp_path, is_const=True):
     output_dir = os.path.dirname(dst_cpp_path)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
-    result = write_to_cpp(obj_path, header, dst_cpp_path, kernel, target_version, is_const)
+    result = write_to_cpp(obj_path, header, dst_cpp_path, kernel, target_version)
     if not result:
         logging.error("failed to write into file %s.", dst_cpp_path)
         exit(1)
@@ -261,9 +262,7 @@ def copy_tbe_code_all_version(input_paras):
                     logging.error("failed to parse json file %s", relative_op_path)
                     exit(1)
 
-                shell_result = subprocess.run(['strings', os.path.realpath(code_file)], capture_output=True, text=True)
-                is_const = False if 'g_opSystemRunCfg' in shell_result.stdout else True
-                result = write_to_cpp(code_file, header, dst_cpp_path, op_key, target_version, is_const)
+                result = write_to_cpp(code_file, header, dst_cpp_path, op_key, target_version)
                 binary_id += 1
                 if not result:
                     logging.error("failed to write into file %s.", dst_cpp_path)
