@@ -16,6 +16,8 @@ macro(add_kernel kernel soc channel srcs tac)
             # build target: op_kernels/soc/op/kernel/kernel.o
             set(${kernel}_${soc}_output
                 ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${tac}/${kernel}.o)
+            set(multiValueArgs INCLUDE_DIRECTORIES)
+            cmake_parse_arguments(arg_add_kernel "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
             set(PYTHON_ARGS 
                 "--soc" "${soc}"
                 "--channel" "${channel}"
@@ -27,6 +29,9 @@ macro(add_kernel kernel soc channel srcs tac)
                 "--use_mssanitizer" "${USE_MSSANITIZER}"
                 "--no_warning"
             )
+            if(NOT "${arg_add_kernel_INCLUDE_DIRECTORIES}" STREQUAL "")
+                set(PYTHON_ARGS ${PYTHON_ARGS} "--include_directories" "${arg_add_kernel_INCLUDE_DIRECTORIES}")
+            endif()
             add_custom_command(
                 OUTPUT ${${kernel}_${soc}_output}
                 DEPENDS ${srcs}
