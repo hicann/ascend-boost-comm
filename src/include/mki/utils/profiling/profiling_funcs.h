@@ -10,6 +10,7 @@
 #ifndef PROFILING_FUNCS_H
 #define PROFILING_FUNCS_H
 
+#include <atomic>
 #include <mutex>
 #include <unordered_map>
 #include "prof_api.h"
@@ -34,8 +35,8 @@ public:
 
 private:
     std::unordered_map<void const *, uint64_t> kernelNameHashCache_;
-    static bool isProfilingLevel0Enable_;
-    static bool isProfilingLevel1Enable_;
+    static std::atomic<bool> isProfilingLevel0Enable_;
+    static std::atomic<bool> isProfilingLevel1Enable_;
 };
 } // namespace Mki
 #endif
