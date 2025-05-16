@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--use_msdebug', type=str)
     parser.add_argument('--use_mssanitizer', type=str, required=True)
     parser.add_argument('--no_warning', action='store_true')
-    parser.add_argument('--include_directories', type=str, required=False)
+    parser.add_argument('--include_directories', type=str, required=False, nargs="+")
     return parser.parse_args()
 
 
@@ -155,8 +155,7 @@ def get_common_options(args):
     options.append("-I" + os.path.join(tikcpp_path, "tikcfw", "impl"))
     options.append("-I" + os.path.join(tikcpp_path, "tikcfw", "interface"))
     if args.include_directories:
-        inc_dirs = args.include_directories.split(';')
-        for dir in inc_dirs:
+        for dir in args.include_directories:
             options.append("-I" + dir)
     if args.no_warning:
         options.append("-Wno-deprecated-declarations")
