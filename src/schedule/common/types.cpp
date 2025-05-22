@@ -60,6 +60,9 @@ static const std::map<std::string, TensorDType> MAP_STRING_TO_DTYPE = {
     { "complex64", TENSOR_DTYPE_COMPLEX64 },
     { "complex128", TENSOR_DTYPE_COMPLEX128 },
     { "bf16", TENSOR_DTYPE_BF16 },
+    { "hifloat8", TENSOR_DTYPE_HIFLOAT8},
+    { "float8_e4m3fn", TENSOR_DTYPE_FLOAT8_E4M3FN},
+    { "float8_e5m2", TENSOR_DTYPE_FLOAT8_E5M2},
 };
 
 TensorDType GetDTypeWithStr(const std::string &typeStr)
@@ -88,6 +91,9 @@ static const std::map<int, std::string> MAP_DTYPE_TO_STRING = {
     { TENSOR_DTYPE_COMPLEX64, "complex64" },
     { TENSOR_DTYPE_COMPLEX128, "complex128" },
     { TENSOR_DTYPE_BF16, "bf16" },
+    { TENSOR_DTYPE_HIFLOAT8, "hifloat8"},
+    { TENSOR_DTYPE_FLOAT8_E4M3FN, "float8_e4m3fn" },
+    { TENSOR_DTYPE_FLOAT8_E5M2, "float8_e5m2" },
 };
 
 const std::string &GetStrWithDType(int dType)
