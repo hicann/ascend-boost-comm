@@ -184,7 +184,7 @@ def get_arch(soc, channel):
         "ascend310p": {"vector": "dav-m200", "cube": "dav-m200"},
         "ascend910":  {"vector": "dav-c100", "cube": "dav-c100"},
         "ascend910b": {"vector": "dav-c220-vec", "cube": "dav-c220-cube", "mix": "mix"},
-        "ascend910d": {"vector": "dav-c310", "cube": "dav-c310", "mix": "mix"}
+        "ascend910_95": {"vector": "dav-c310", "cube": "dav-c310", "mix": "mix"}
     }
     try:
         return arch_dict[soc][channel]
@@ -242,7 +242,7 @@ def compile_ascendc_operation(args):
                 if(exe_cmd(compile_cmd)) != 0:
                     return -1
                 dsts.append(dst)
-        elif args.soc == "ascend910d":
+        elif args.soc == "ascend910_95":
             if args.channel != "mix":
                 dst = os.path.splitext(args.dst)[0] + f"_{key}.o"
                 opt = options + [f'-D{args.kernel}={args.kernel}_{key}', f'-DTILING_KEY_VAR={key}']
