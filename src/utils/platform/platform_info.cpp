@@ -52,7 +52,9 @@ void PlatformInfo::Init()
         {"Ascend910",    {PlatformType::ASCEND_910A, "ascend910"}},
         {"Ascend910B",   {PlatformType::ASCEND_910B, "ascend910b"}},
         {"Ascend910_93", {PlatformType::ASCEND_910B, "ascend910b"}},
-        {"Ascend910D", {PlatformType::ASCEND_910D, "ascend910d"}}};
+        {"Ascend910D", {PlatformType::ASCEND_910D, "ascend910_95"}},
+        {"Ascend910_9599", {PlatformType::ASCEND910_9599, "ascend910_95"}},
+        {"Ascend910_95", {PlatformType::ASCEND910_95, "ascend910_95"}}};
 
     (void)platformConfigs_.GetPlatformSpec("version", "Short_SoC_version", platformName_);
     const auto it = supportedPlatform.find(platformName_);
