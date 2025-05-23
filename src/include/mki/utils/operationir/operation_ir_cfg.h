@@ -23,12 +23,12 @@ public:
     ~OperationIrCfg();
     Status Load(const std::string &fileName);
     OperationIr *GetOperationIr(const std::string &opKey);
-
+    OperationIr *GetOperationIrWithTensorlist(OperationIr *opKey);
 private:
     bool IsValidOpKey(const std::string &key) const;
-
 private:
     std::map<std::string, OperationIr> data_;
+    std::map<OperationIr*, OperationIr*> tensorlistIr;
 };
 } // namespace Mki
 #endif
