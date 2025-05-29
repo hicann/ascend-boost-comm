@@ -10,10 +10,29 @@
 #include "mki/launch_param.h"
 #include <functional>
 #include <map>
+#include <aclnn/opdev/common_types.h>
 #include "mki/utils/log/log.h"
+#include "mki/utils/assert/assert.h"
 #include "mki/utils/stringify/stringify.h"
 
 namespace Mki {
+namespace {
+bool ConvertAclTensorToMkiTensor(const aclTensor *srcTensor, Tensor &dstTensor)
+{
+    MKI_CHECK(srcTensor != nullptr, "src aclTensor is nullptr", return false);
+    dstTensor.hostData = srcTensor->GetData();
+    dstTensor.data = srcTensor->GetStorageAddr();
+    dstTensor.desc.format = static_cast<Mki::TensorFormat>(srcTensor->GetStorageFormat());
+    dstTensor.desc.dtype = static_cast<Mki::TensorDType>(srcTensor->GetDataType());
+    auto const &shape = srcTensor->GetStorageShape();
+    dstTensor.desc.dims.resize(shape.GetDimNum());
+    for (size_t i = 0; i < shape.GetDimNum(); i++) {
+        dstTensor.desc.dims.at(i) = shape.GetDim(i);
+    }
+    return true;
+}
+}
+
 using ToStringFunc = std::function<std::string(const Any &)>;
 
 LaunchParam::LaunchParam(const LaunchParam &other) { *this = other; }
@@ -47,6 +66,14 @@ void LaunchParam::SetParam(const Any &srcParam) { specificParam_ = srcParam; }
 
 void LaunchParam::AddInTensor(const Tensor &tensor) { inTensors_.push_back(tensor); }
 
+void LaunchParam::AddInTensor(const aclTensor *tensor)
+{
+    Tensor inTensor;
+    if (ConvertAclTensorToMkiTensor(tensor, inTensor)) {
+        inTensors_.push_back(inTensor);
+    }
+}
+
 size_t LaunchParam::GetInTensorCount() const { return inTensors_.size(); }
 
 Tensor &LaunchParam::GetInTensor(size_t pos) { return inTensors_.at(pos); }
@@ -58,6 +85,14 @@ const SVector<Tensor> &LaunchParam::GetInTensors() const { return inTensors_; }
 SVector<Tensor> &LaunchParam::GetInTensors() { return inTensors_; }
 
 void LaunchParam::AddOutTensor(const Tensor &tensor) { outTensors_.push_back(tensor); }
+
+void LaunchParam::AddOutTensor(const aclTensor *tensor)
+{
+    Tensor outTensor;
+    if (ConvertAclTensorToMkiTensor(tensor, outTensor)) {
+        outTensors_.push_back(outTensor);
+    }
+}
 
 size_t LaunchParam::GetOutTensorCount() const { return outTensors_.size(); }
 
@@ -81,5 +116,11 @@ std::string LaunchParam::ToString() const
     }
     ss << std::endl;
     return ss.str();
+}
+
+void *GetStorageAddr(const aclTensor *tensor)
+{
+    MKI_CHECK(tensor != nullptr, "input aclTensor is nullptr", return nullptr);
+    return tensor->GetStorageAddr();
 }
 } // namespace Mki

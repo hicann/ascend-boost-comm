@@ -15,6 +15,8 @@
 #include "mki/tensor.h"
 #include "mki/utils/any/any.h"
 
+class aclTensor;
+
 namespace Mki {
 class LaunchParam {
 public:
@@ -33,6 +35,7 @@ public:
     Any &GetParam() { return specificParam_; }
 
     void AddInTensor(const Tensor &tensor);
+    void AddInTensor(const aclTensor *tensor);
     size_t GetInTensorCount() const;
     const Tensor &GetInTensor(size_t pos) const;
     Tensor &GetInTensor(size_t pos);
@@ -40,6 +43,7 @@ public:
     SVector<Tensor> &GetInTensors();
 
     void AddOutTensor(const Tensor &tensor);
+    void AddOutTensor(const aclTensor *tensor);
     size_t GetOutTensorCount() const;
     const Tensor &GetOutTensor(size_t pos) const;
     Tensor &GetOutTensor(size_t pos);
@@ -53,6 +57,8 @@ private:
     SVector<Tensor> inTensors_;
     SVector<Tensor> outTensors_;
 };
+
+void *GetStorageAddr(const aclTensor *tensor);
 } // namespace Mki
 
 #endif

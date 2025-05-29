@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <gtest/gtest.h>
+#include <acl_meta.h>
 #include "mki/launch_param.h"
 
 namespace {
@@ -47,6 +48,33 @@ TEST_F(LaunchParamTest, AddInputTensor)
     EXPECT_EQ(launchParam.GetInTensorCount(), 2); // 验证添加的输入张量数量是否为2
 }
 
+TEST_F(LaunchParamTest, AddInputAclTensor)
+{
+    EXPECT_EQ(launchParam.GetInTensorCount(), 0); // 验证添加的输入张量数量是否为0
+    int64_t viewDims[2] = {2, 4};
+    int64_t strides[2] = {1, 4};
+    int64_t storageDims[2] = {2, 4};
+    aclTensor *tensor1 = aclCreateTensor(viewDims, 2, ACL_FLOAT16, strides, 0, ACL_FORMAT_ND, storageDims, 2, nullptr);
+    aclTensor *tensor2 = aclCreateTensor(viewDims, 2, ACL_FLOAT16, strides, 0, ACL_FORMAT_ND, storageDims, 2, nullptr);
+    launchParam.AddInTensor(tensor1);
+    EXPECT_EQ(launchParam.GetInTensorCount(), 1); // 验证添加的输入张量数量是否为1
+    EXPECT_EQ(launchParam.GetInTensor(0).desc.dims[0], 2); // 2 验证第一维为2
+    EXPECT_EQ(launchParam.GetInTensor(0).desc.dims[1], 4); // 4 验证第一维为4
+    EXPECT_EQ(launchParam.GetInTensor(0).desc.dtype, Mki::TENSOR_DTYPE_FLOAT16);
+    EXPECT_EQ(launchParam.GetInTensor(0).desc.format, Mki::TENSOR_FORMAT_ND);
+    launchParam.AddInTensor(tensor2);
+    EXPECT_EQ(launchParam.GetInTensorCount(), 2); // 验证添加的输入张量数量是否为2
+    aclDestroyTensor(tensor1);
+    aclDestroyTensor(tensor2);
+}
+
+TEST_F(LaunchParamTest, AddInputAclTensorFail)
+{
+    aclTensor *tensor = nullptr;
+    launchParam.AddInTensor(tensor);
+    EXPECT_EQ(launchParam.GetInTensorCount(), 0);
+}
+
 TEST_F(LaunchParamTest, GetInputTensor)
 {
     launchParam.AddInTensor(tensor1);
@@ -62,6 +90,33 @@ TEST_F(LaunchParamTest, AddOutputTensor)
     EXPECT_EQ(launchParam.GetOutTensorCount(), 1); // 验证输出张量数量是否为1
     launchParam.AddOutTensor(tensor2);
     EXPECT_EQ(launchParam.GetOutTensorCount(), 2); // 验证输出张量数量是否为2
+}
+
+TEST_F(LaunchParamTest, AddOutputAclTensor)
+{
+    EXPECT_EQ(launchParam.GetOutTensorCount(), 0); // 验证添加的输入张量数量是否为0
+    int64_t viewDims[2] = {2, 4};
+    int64_t strides[2] = {1, 4};
+    int64_t storageDims[2] = {2, 4};
+    aclTensor *tensor1 = aclCreateTensor(viewDims, 2, ACL_FLOAT16, strides, 0, ACL_FORMAT_ND, storageDims, 2, nullptr);
+    aclTensor *tensor2 = aclCreateTensor(viewDims, 2, ACL_FLOAT16, strides, 0, ACL_FORMAT_ND, storageDims, 2, nullptr);
+    launchParam.AddOutTensor(tensor1);
+    EXPECT_EQ(launchParam.GetOutTensorCount(), 1); // 验证添加的输入张量数量是否为1
+    EXPECT_EQ(launchParam.GetOutTensor(0).desc.dims[0], 2); // 2 验证第一维为2
+    EXPECT_EQ(launchParam.GetOutTensor(0).desc.dims[1], 4); // 4 验证第一维为4
+    EXPECT_EQ(launchParam.GetOutTensor(0).desc.dtype, Mki::TENSOR_DTYPE_FLOAT16);
+    EXPECT_EQ(launchParam.GetOutTensor(0).desc.format, Mki::TENSOR_FORMAT_ND);
+    launchParam.AddOutTensor(tensor2);
+    EXPECT_EQ(launchParam.GetOutTensorCount(), 2); // 验证添加的输入张量数量是否为2
+    aclDestroyTensor(tensor1);
+    aclDestroyTensor(tensor2);
+}
+
+TEST_F(LaunchParamTest, AddOutputAclTensorFail)
+{
+    aclTensor *tensor = nullptr;
+    launchParam.AddOutTensor(tensor);
+    EXPECT_EQ(launchParam.GetOutTensorCount(), 0);
 }
 
 TEST_F(LaunchParamTest, GetOutputTensor)
