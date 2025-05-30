@@ -101,8 +101,8 @@ bool Loader::GetAicpuDeviceKernelSo(uint32_t &fileSize)
 {
     int ret = 0;
     // Parse FileName
-    std::string searchPath = Mki::GetEnv("ASDOPS_HOME_PATH");
-    MKI_CHECK(!searchPath.empty(), "ASDOPS_HOME_PATH not exists!", return false);
+    std::string searchPath = Mki::GetEnv("ATB_HOME_PATH");
+    MKI_CHECK(!searchPath.empty(), "ATB_HOME_PATH not exists!", return false);
     searchPath += "/lib/libasdops_aicpu_kernels.so";
 
     // Open .so file
