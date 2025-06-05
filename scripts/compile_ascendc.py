@@ -176,7 +176,8 @@ def get_arch(soc, channel):
         "ascend310b": {"vector": "dav-m300", "cube": "dav-m300"},
         "ascend310p": {"vector": "dav-m200", "cube": "dav-m200"},
         "ascend910":  {"vector": "dav-c100", "cube": "dav-c100"},
-        "ascend910b": {"vector": "dav-c220-vec", "cube": "dav-c220-cube", "mix": "mix"}
+        "ascend910b": {"vector": "dav-c220-vec", "cube": "dav-c220-cube", "mix": "mix"},
+        "ascend910_95": {"vector": "dav-c310", "cube": "dav-c310", "mix": "mix"}
     }
     try:
         return arch_dict[soc][channel]
