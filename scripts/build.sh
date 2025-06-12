@@ -140,11 +140,12 @@ function fn_install_cann_and_kernel()
     # mki
     rm -rf ${ASCEND_HOME_PATH}/lib64
     mkdir -p ${ASCEND_HOME_PATH}/lib64
-    find "${ASCEND_HOME_PATH}/runtime/lib64"  -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
-    find "${ASCEND_HOME_PATH}/compiler/lib64" -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
-    find "${ASCEND_HOME_PATH}/aoe/lib64"      -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
-    find "${ASCEND_HOME_PATH}/hccl/lib64"     -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
-    find "${ASCEND_HOME_PATH}/toolkit/lib64"  -mindepth 1  -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/runtime/lib64"  -mindepth 1  -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/compiler/lib64" -mindepth 1  -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/aoe/lib64"      -mindepth 1  -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/hccl/lib64"     -mindepth 1  -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    find "${ASCEND_HOME_PATH}/toolkit/lib64"  -mindepth 1  -maxdepth 1 -exec ln -s {} "${ASCEND_HOME_PATH}/lib64" \; 2>/dev/null
+    cp -rf ${ASCEND_HOME_PATH}/lib64                        ${ASCEND_HOME_PATH}/$(arch)-linux/
     set -e
 }
 
