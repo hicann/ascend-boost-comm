@@ -34,6 +34,7 @@ public:
     Status Run(const LaunchParam &launchParam, RunInfo &runInfo) override;
 
     void SetLaunchWithTiling(bool flag) override;
+    void SetLaunchWithTensorlist(bool flag) override;
     void SetTilingHostAddr(uint8_t *addr, uint64_t len) override;
     std::string GetName() const override;
     const KernelInfo &GetKernelInfo() const override;

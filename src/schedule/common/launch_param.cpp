@@ -69,6 +69,22 @@ const SVector<Tensor> &LaunchParam::GetOutTensors() const { return outTensors_; 
 
 SVector<Tensor> &LaunchParam::GetOutTensors() { return outTensors_; }
 
+void LaunchParam::SetInputLens(SVector<int> &Lens) { inputLens_ = Lens; }
+
+size_t LaunchParam::GetInputLenCount() const { return inputLens_.size(); }
+
+int LaunchParam::GetInputLen(size_t pos) const { return inputLens_.at(pos); }
+
+const SVector<int> &LaunchParam::GetInputLens() const { return inputLens_; }
+
+void LaunchParam::SetOutputLens(SVector<int> &Lens) { outputLens_ = Lens; }
+
+size_t LaunchParam::GetOutputLenCount() const { return outputLens_.size(); }
+
+int LaunchParam::GetOutputLen(size_t pos) const { return outputLens_.at(pos); }
+
+const SVector<int> &LaunchParam::GetOutputLens() const { return outputLens_; }
+
 std::string LaunchParam::ToString() const
 {
     std::stringstream ss;
@@ -81,5 +97,27 @@ std::string LaunchParam::ToString() const
     }
     ss << std::endl;
     return ss.str();
+}
+
+int LaunchParam::GetInputTensorListNum() const
+{
+    int tensorListNum = 0;
+    for (auto i : inputLens_) {
+        if (i > 0) {
+            tensorListNum++;
+        }
+    }
+    return tensorListNum;
+}
+
+int LaunchParam::GetOutputTensorListNum() const
+{
+    int tensorListNum = 0;
+    for (auto i : outputLens_) {
+        if (i > 0) {
+            tensorListNum++;
+        }
+    }
+    return tensorListNum;
 }
 } // namespace Mki
