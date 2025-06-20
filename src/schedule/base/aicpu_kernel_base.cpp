@@ -115,6 +115,8 @@ const KernelInfo &AicpuKernelBase::GetKernelInfo() const { return kernelInfo_; }
 
 void AicpuKernelBase::SetLaunchWithTiling(bool flag) { kernelInfo_.SetLaunchWithTiling(flag); }
 
+void AicpuKernelBase::SetLaunchWithTensorlist(bool flag) { kernelInfo_.SetLaunchWithTensorlist(flag); }
+
 void AicpuKernelBase::SetTilingHostAddr(uint8_t *addr, uint64_t len) { kernelInfo_.SetTilingHostAddr(addr, len); }
 
 void AicpuKernelBase::Reset()

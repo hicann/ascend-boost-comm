@@ -23,6 +23,9 @@ KernelInfo::~KernelInfo()
     if (launchWithTiling_ && tilingExtInfo_.hostTilingAddr != nullptr) {
         delete[] tilingExtInfo_.hostTilingAddr;
     }
+    if (launchWithTensorlist_ && tensorListExtInfo_.tensorListAddr != nullptr) {
+        delete[] tensorListExtInfo_.tensorListAddr;
+    }
 }
 
 void KernelInfo::Reset()
@@ -150,6 +153,43 @@ uint8_t *KernelInfo::GetTilingHostAddr() const
     return tilingExtInfo_.hostTilingAddr;
 }
 
+Status KernelInfo::AllocTensorListHost(uint64_t len)
+{
+    MKI_CHECK(tensorListExtInfo_.tensorListAddr == nullptr,
+        "TensorList is already alloced",
+        return Status::FailStatus(ERROR_ALLOC_HOST));
+    MKI_CHECK(len > 0 && len < 1024 * 1024,  // 1024*1024: 1mb
+        "TensorList size is invalid",
+        return Status::FailStatus(ERROR_ALLOC_HOST));
+    tensorListExtInfo_.tensorListAddr = new (std::nothrow) uint8_t[len];
+    MKI_CHECK(tensorListExtInfo_.tensorListAddr != nullptr,
+        "failed to new tensorList, len " << len, return Status::FailStatus(ERROR_ALLOC_HOST));
+    (void)memset_s(tensorListExtInfo_.tensorListAddr, len, 0, len);
+    MKI_LOG(INFO) << "alloc " << len << " bytes tensorList host";
+    tensorListExtInfo_.tensorListSize = len;
+
+    return Status::OkStatus();
+}
+
+void KernelInfo::SetTensorListHostAddr(uint8_t *addr, uint64_t len)
+{
+    MKI_CHECK(!launchWithTensorlist_, "launch with tensorList mode on", return);
+    MKI_CHECK(addr != nullptr,
+        "failed to set host tensorList addr to nullptr ", return);
+    tensorListExtInfo_.tensorListAddr = addr;
+    tensorListExtInfo_.tensorListSize = len;
+}
+
+uint8_t *KernelInfo::GetTensorListHostAddr() const
+{
+    return tensorListExtInfo_.tensorListAddr;
+}
+
+uint64_t KernelInfo::GetTensorListSize() const
+{
+    return tensorListExtInfo_.tensorListSize;
+}
+
 void KernelInfo::SetKernelArgsIndex(const MiniVector<uint64_t>& index)
 {
     kernelArgsIndex_ = index;
@@ -252,6 +292,16 @@ const MiniVector<KernelInfo::ConstTensorInfo> &KernelInfo::GetConstTensorInfos()
     return constTensorInfo_;
 }
 
+bool KernelInfo::isIndexInConstTensorInfos(uint64_t argIdx) const
+{
+    for (auto &it : constTensorInfo_) {
+        if (it.argIdx == argIdx) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void KernelInfo::SetLaunchWithTiling(bool flag)
 {
     if (launchWithTiling_ == flag) {
@@ -263,6 +313,24 @@ void KernelInfo::SetLaunchWithTiling(bool flag)
 }
 
 bool KernelInfo::GetLaunchWithTiling() const { return launchWithTiling_; }
+
+void KernelInfo::SetLaunchWithTensorlist(bool flag)
+{
+    if (launchWithTensorlist_ == flag) {
+        return;
+    }
+    ResetTensorListExtInfo();
+    initFlag_ = false;
+    launchWithTensorlist_ = flag;
+}
+
+bool KernelInfo::GetLaunchWithTensorlist() const { return launchWithTensorlist_; };
+
+bool KernelInfo::AddTensorListInfo(uint64_t argIdx, uint64_t len)
+{
+    constTensorInfo_.push_back({argIdx, len});
+    return true;
+}
 
 MiniVector<uint64_t> &KernelInfo::GetScratchSizes()
 {
@@ -368,9 +436,19 @@ void KernelInfo::ResetTilingInfo()
     tilingExtInfo_.tilingId = 0;
 }
 
+void KernelInfo::ResetTensorListExtInfo()
+{
+    if (launchWithTensorlist_ && tensorListExtInfo_.tensorListAddr != nullptr) {
+        delete[] tensorListExtInfo_.tensorListAddr;
+        tensorListExtInfo_.tensorListAddr = nullptr;
+        tensorListExtInfo_.tensorListSize = 0;
+    }
+}
+
 void KernelInfo::ResetConstTensorInfo()
 {
     constTensorInfo_.clear();
+    ResetTensorListExtInfo();
 }
 
 void KernelInfo::ResetScratchSizes()

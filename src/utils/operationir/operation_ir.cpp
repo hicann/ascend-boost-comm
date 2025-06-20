@@ -257,4 +257,54 @@ bool OperationIr::SetIsOptional(SVector<TensorInfoIr> &tensorInfoIrs, const size
     tensorInfoIrs[index].isOptional = isOptional;
     return true;
 }
+
+bool OperationIr::ExtendInTensorIrByInputlens(SVector<int> &inputlens)
+{
+    size_t totalLen = 0;
+    size_t oldLen = inTensorInfoIrs_.size();
+    for (auto len : inputlens) {
+        if (len < 0) {
+            return false;
+        }
+        if (len == 0) {
+            totalLen++;
+        } else {
+            totalLen += len;
+        }
+    }
+    int startId = totalLen;
+    inTensorInfoIrs_.resize(totalLen);
+    for (int i = oldLen - 1; i >= 0 ; i--) {
+        startId -= inputlens.at(i);
+        for (int j = startId ; j < startId + inputlens.at(i); j++) {
+            inTensorInfoIrs_.at(j) = inTensorInfoIrs_.at(i);
+        }
+    }
+    return true;
+}
+
+bool OperationIr::ExtendOutTensorIrByOutputlens(SVector<int> &outputlens)
+{
+    size_t totalLen = 0;
+    size_t oldLen = outTensorInfoIrs_.size();
+    for (auto len : outputlens) {
+        if (len < 0) {
+            return false;
+        }
+        if (len == 0) {
+            totalLen++;
+        } else {
+            totalLen += len;
+        }
+    }
+    int startId = totalLen;
+    outTensorInfoIrs_.resize(totalLen);
+    for (int i = oldLen - 1; i >= 0 ; i--) {
+        startId -= outputlens.at(i);
+        for (int j = startId ; j < startId + outputlens.at(i); j++) {
+            outTensorInfoIrs_.at(j) = outTensorInfoIrs_.at(i);
+        }
+    }
+    return true;
+}
 }
