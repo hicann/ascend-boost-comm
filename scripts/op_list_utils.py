@@ -103,7 +103,7 @@ def build_cmake_options(yaml_file_path, cmake_option_path, json_ini_path=''):
     built_device_list, all_device_list = build_util.get_build_target_list(with_all=True)
     try:
         with open(yaml_file_path) as f:
-            op_kernel_list = yaml.load(f, Loader=yaml.Loader)
+            op_kernel_list = yaml.safe_load(f)
             for op_name in op_kernel_list:
                 assert op_name.endswith('Operation'), f'{op_name} is an invalid operation name'
                 option_list.append(f'set(BUILD_{op_name} ON)')
