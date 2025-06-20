@@ -45,6 +45,7 @@ public:
     virtual Status Run(const LaunchParam &launchParam, RunInfo &runInfo) = 0;
 
     virtual void SetLaunchWithTiling(bool flag) = 0;
+    virtual void SetLaunchWithTensorlist(bool flag) = 0;
     virtual void SetTilingHostAddr(uint8_t *addr, uint64_t len) = 0;
     virtual std::string GetName() const = 0;
     virtual const KernelInfo &GetKernelInfo() const = 0;

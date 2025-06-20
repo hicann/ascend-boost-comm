@@ -227,6 +227,11 @@ void BishengIRKernelBase::SetLaunchWithTiling(bool flag)
     kernelInfo_.SetLaunchWithTiling(flag);
 }
 
+void BishengIRKernelBase::SetLaunchWithTensorlist(bool flag)
+{
+    kernelInfo_.SetLaunchWithTensorlist(flag);
+}
+
 void BishengIRKernelBase::SetTilingHostAddr(uint8_t *addr, uint64_t len)
 {
     kernelInfo_.SetTilingHostAddr(addr, len);

@@ -36,6 +36,7 @@ public:
     Status Run(const LaunchParam &launchParam, RunInfo &runInfo) override;
 
     void SetLaunchWithTiling(bool flag) override;
+    void SetLaunchWithTensorlist(bool flag) override;
     void SetTilingHostAddr(uint8_t *addr, uint64_t len) override;
     std::string GetName() const override;
     const KernelInfo &GetKernelInfo() const override;
@@ -55,6 +56,10 @@ protected:
 
 private:
     uint64_t GetKernelArgsNum(const LaunchParam &launchParam);
+    uint64_t GetTensorListSize(const LaunchParam &launchParam) const;
+    Status InitTensorList(const LaunchParam &launchParam);
+    void BuildTensorList(uint8_t *startPtr, SVector<int> &lens, SVector<Tensor> &tensors, uint64_t &useSize,
+                         uint64_t &argsIdx);
 
 private:
     std::string kernelName_;

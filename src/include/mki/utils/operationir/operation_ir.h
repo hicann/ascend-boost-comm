@@ -36,6 +36,8 @@ public:
     bool IsValid() const;
     size_t GetSupportSize() const;
     std::string GetCombString() const;
+    bool ExtendInTensorIrByInputlens(SVector<int> &inputlens);
+    bool ExtendOutTensorIrByOutputlens(SVector<int> &outputlens);
 
 private:
     void ConvertStrToInt(const std::string &str, int &num) const;

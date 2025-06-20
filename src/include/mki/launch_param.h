@@ -46,12 +46,26 @@ public:
     const SVector<Tensor> &GetOutTensors() const;
     SVector<Tensor> &GetOutTensors();
 
+    void SetInputLens(SVector<int> &Lens);
+    size_t GetInputLenCount() const;
+    int GetInputLen(size_t pos) const;
+    const SVector<int> &GetInputLens() const;
+    int GetInputTensorListNum() const;
+
+    void SetOutputLens(SVector<int> &Lens);
+    size_t GetOutputLenCount() const;
+    int GetOutputLen(size_t pos) const;
+    const SVector<int> &GetOutputLens() const;
+    int GetOutputTensorListNum() const;
+
     std::string ToString() const;
 
 private:
     Any specificParam_;
     SVector<Tensor> inTensors_;
     SVector<Tensor> outTensors_;
+    SVector<int> inputLens_;
+    SVector<int> outputLens_;
 };
 } // namespace Mki
 

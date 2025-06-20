@@ -36,6 +36,11 @@ struct MemsetInfo {
     uint64_t size = 0;
 };
 
+struct TensorListExtInfo {
+    uint8_t *tensorListAddr = nullptr;
+    uint64_t tensorListSize = 0;
+};
+
 public:
     KernelInfo() = default;
     ~KernelInfo();
@@ -70,6 +75,13 @@ public:
     void SetTilingUsedSize(uint64_t usedSize);
     uint64_t GetTilingUsedSize() const;
 
+    // TensorListExtInfo
+    Status AllocTensorListHost(uint64_t len);
+    void SetTensorListHostAddr(uint8_t *addr, uint64_t len);
+    uint8_t *GetTensorListHostAddr() const;
+    uint64_t GetTensorListSize() const;
+    bool isIndexInConstTensorInfos(uint64_t argIdx) const;
+
     // TilingExtInfo - ConstTensorOffset
     void SetConstTensorOffset(uint64_t offset);
     uint64_t GetConstTensorOffset() const;
@@ -85,6 +97,14 @@ public:
     // LaunchWithTiling
     void SetLaunchWithTiling(bool flag);
     bool GetLaunchWithTiling() const;
+
+    // LaunchWithTensorlist
+    void SetLaunchWithTensorlist(bool flag);
+    bool GetLaunchWithTensorlist() const;
+    size_t GetTensorListCount() const;
+    const ConstTensorInfo &GetTensorListInfo(size_t id) const;
+    const MiniVector<ConstTensorInfo> &GetTensorListInfos() const;
+    bool AddTensorListInfo(uint64_t argIdx, uint64_t len);
 
     // Scratch
     MiniVector<uint64_t> &GetScratchSizes();
@@ -104,6 +124,7 @@ private:
     void ResetArgs();
     void ResetTilingInfo();
     void ResetConstTensorInfo();
+    void ResetTensorListExtInfo();
     void ResetScratchSizes();
     void ResetMemsetInfo();
 
@@ -112,8 +133,10 @@ private:
     uint64_t argsSize_ = 0;
     bool initFlag_{false};  // kernel info 线程间不共享
     bool launchWithTiling_{true};
+    bool launchWithTensorlist_{false};
     int64_t hwsyncIdx_ = -1; // < 0: no hwsync, >= 0: hwsync arg idx
     TilingExtInfo tilingExtInfo_;
+    TensorListExtInfo tensorListExtInfo_;
     MiniVector<ConstTensorInfo> constTensorInfo_;
     MiniVector<uint64_t> scratchSizes_;
     MiniVector<MemsetInfo> memsetInfo_;
