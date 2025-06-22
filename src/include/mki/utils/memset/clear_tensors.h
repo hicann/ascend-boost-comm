@@ -13,9 +13,11 @@
 #include <cstdint>
 #include "mki/kernel_info.h"
 #include "mki/utils/status/status.h"
+#include "mki/utils/rt/base/types.h"
 
 namespace Mki {
-Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream);
+Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MkiRtKernelParam &kernelParam);
+Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream);
 } // namespace Mki
 
 #endif // MKI_UTILS_MEMSET_CLEAR_TENSORS_H
