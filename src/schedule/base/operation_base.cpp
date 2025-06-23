@@ -27,14 +27,18 @@ std::string OperationBase::GetName() const { return opName_; }
 
 Status OperationBase::InferShape(LaunchParam &launchParam) const
 {
-    MKI_CHECK(launchParam.GetInTensorCount() == static_cast<size_t>(GetInputNum(launchParam.GetParam())),
-        "input num is invalid, actual: " << launchParam.GetInTensorCount() << "expect : " <<
-        GetInputNum(launchParam.GetParam()),
-        return Status::FailStatus(ERROR_INFERSHAPE_ERROR, "input num is invalid"));
-    MKI_CHECK(launchParam.GetOutTensorCount() == static_cast<size_t>(GetOutputNum(launchParam.GetParam())),
-        "output num is invalid, actual: " << launchParam.GetOutTensorCount() << "expect : " <<
-        GetOutputNum(launchParam.GetParam()),
-        return Status::FailStatus(ERROR_INFERSHAPE_ERROR, "output num is invalid"));
+    size_t inputNum =
+        launchParam.GetInputLenCount() > 0 ? launchParam.GetInputLenCount() : launchParam.GetInTensorCount();
+    size_t outputNum =
+        launchParam.GetOutputLenCount() > 0 ? launchParam.GetOutputLenCount() : launchParam.GetOutTensorCount();
+    MKI_CHECK(inputNum == static_cast<size_t>(GetInputNum(launchParam.GetParam())),
+              "input num is invalid, actual: " << launchParam.GetInTensorCount()
+                                               << "expect : " << GetInputNum(launchParam.GetParam()),
+              return Status::FailStatus(ERROR_INFERSHAPE_ERROR, "input num is invalid"));
+    MKI_CHECK(outputNum == static_cast<size_t>(GetOutputNum(launchParam.GetParam())),
+              "output num is invalid, actual: " << launchParam.GetOutTensorCount()
+                                                << "expect : " << GetOutputNum(launchParam.GetParam()),
+              return Status::FailStatus(ERROR_INFERSHAPE_ERROR, "output num is invalid"));
     return InferShapeImpl(launchParam, launchParam.GetOutTensors());
 }
 
