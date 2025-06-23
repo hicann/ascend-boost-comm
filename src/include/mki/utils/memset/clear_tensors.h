@@ -16,7 +16,7 @@
 #include "mki/utils/rt/base/types.h"
 
 namespace Mki {
-Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MkiRtKernelParam &kernelParam);
+Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo);
 Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream);
 } // namespace Mki
 

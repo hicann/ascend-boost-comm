@@ -37,6 +37,9 @@ struct MemsetArgs {
     MemsetTilingData tilingData;
 };
 
+private:
+    MkiRtKernelParam memsetParam_;
+
 public:
     explicit MemsetKernel(const std::string &opName, const BinHandle *handle) noexcept : KernelBase(opName, handle)
     {
@@ -99,42 +102,12 @@ public:
         return blockDim;
     }
 
-    Status Run(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream) const
+    const MkiRtKernelParam GetMemsetParam() const
     {
-        MemsetArgs memsetArgs;
-        int ret = memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
-        MKI_CHECK(ret == EOK, "memset_s memsetArgs Error! Error Code: " << ret, return Status::FailStatus(-1));
-        for (size_t i = 0; i < MEMSET_MAX_TENSOR_NUM && i < memsetInfo.size() && i < argsNum; ++i) {
-            memsetArgs.tensors[i] = args[memsetInfo[i].argIdx];
-        }
-
-        uint32_t blockDim = MemsetTiling(memsetInfo, memsetArgs.tilingData);
-        MKI_CHECK(blockDim > 0, "failed to run memset tiling", return Status::FailStatus(1));
-
-        RtArgsExT argsEx;
-        ret = memset_s(&argsEx, sizeof(RtArgsExT), 0, sizeof(RtArgsExT));
-        MKI_CHECK(ret == EOK, "memset_s argsEx Error! Error Code: " << ret, return Status::FailStatus(-1));
-
-        argsEx.args = &memsetArgs;
-        argsEx.argsSize = sizeof(MemsetArgs);
-        argsEx.hasTiling = 1;
-        argsEx.tilingAddrOffset = MEMSET_MAX_TENSOR_NUM * sizeof(void *);
-        argsEx.tilingDataOffset = (MEMSET_MAX_TENSOR_NUM + 1) * sizeof(void *);
-
-        MkiRtKernelParam kernelParam;
-        ret = memset_s(&kernelParam, sizeof(MkiRtKernelParam), 0, sizeof(MkiRtKernelParam));
-        MKI_CHECK(ret == EOK, "memset_s kernelParam Error! Error Code: " << ret, return Status::FailStatus(-1));
-
-        kernelParam.blockDim = blockDim;
-        kernelParam.argsEx = &argsEx;
-
-        int st = MkiRtFunctionLaunchWithFlag(GetBinHandle()->GetHandle(), &kernelParam, stream, nullptr);
-        MKI_CHECK(st == MKIRT_SUCCESS, "fail to launch memset", return Mki::Status::FailStatus(1));
-
-        return Status::OkStatus();
+        return memsetParam_;
     }
 
-    Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MkiRtKernelParam &kernelParam) const
+    Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo) const
     {
         static MemsetArgs memsetArgs;
         int ret = memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
@@ -156,15 +129,15 @@ public:
         argsEx.tilingAddrOffset = MEMSET_MAX_TENSOR_NUM * sizeof(void *);
         argsEx.tilingDataOffset = (MEMSET_MAX_TENSOR_NUM + 1) * sizeof(void *);
 
-        ret = memset_s(&kernelParam, sizeof(MkiRtKernelParam), 0, sizeof(MkiRtKernelParam));
+        ret = memset_s(&memsetParam_, sizeof(MkiRtKernelParam), 0, sizeof(MkiRtKernelParam));
         MKI_CHECK(ret == EOK, "memset_s kernelParam Error! Error Code: " << ret, return Status::FailStatus(-1));
-        kernelParam.argsEx = &argsEx;
-        kernelParam.blockDim = blockDim;
+        memsetParam_.argsEx = &argsEx;
+        memsetParam_.blockDim = blockDim;
 
         return Status::OkStatus();
     }
 
-    Status DispatchMemset(MkiRtKernelParam kernelParam, void *stream)
+    Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream)
     {
         int st = MkiRtFunctionLaunchWithFlag(GetBinHandle()->GetHandle(), &kernelParam, stream, nullptr);
         MKI_CHECK(st == MKIRT_SUCCESS, "fail to launch memset", return Mki::Status::FailStatus(1));
@@ -172,6 +145,9 @@ public:
         return Status::OkStatus();
     }
 };
+
+static std::once_flag initedFlag;
+static MemsetKernel* memsetKernel = nullptr;
 
 static MemsetKernel *MemsetInit()
 {
@@ -191,28 +167,16 @@ static MemsetKernel *MemsetInit()
     return new MemsetKernel(kernelName, &binHandle);
 }
 
-Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MkiRtKernelParam &kernelParam)
+Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo)
 {
-    static std::once_flag initedFlag;
-    static MemsetKernel* memsetKernel = nullptr;
-
     std::call_once(initedFlag, [&]() { memsetKernel = MemsetInit(); });
 
     MKI_CHECK(memsetKernel != nullptr, "memset kernel is nullptr", return Mki::Status::FailStatus(ERROR_INVALID_VALUE));
-    // RtArgsExT argsEx;
-    // uint32_t blockDim;
-    return memsetKernel->BuildMemsetArgs(args, argsNum, memsetInfo, kernelParam);
+    return memsetKernel->BuildMemsetArgs(args, argsNum, memsetInfo);
 }
 
 Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream)
 {
-    static std::once_flag initedFlag;
-    static MemsetKernel* memsetKernel = nullptr;
-
-    std::call_once(initedFlag, [&]() { memsetKernel = MemsetInit(); });
-    MKI_CHECK(memsetKernel != nullptr, "memset kernel is nullptr", return Mki::Status::FailStatus(ERROR_INVALID_VALUE));
-    // RtArgsExT argsEx;
-    // uint32_t blockDim;
-    return memsetKernel->DispatchMemset(kernelParam, stream);
+    return memsetKernel->DispatchMemsetKernel(kernelParam, stream);
 }
 } // namespace Mki

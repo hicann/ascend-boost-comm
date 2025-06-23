@@ -85,7 +85,7 @@ public:
         MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
         // Memset
         const auto &memsetInfo = kernelInfo.GetMemsetInfo();
-        status = MemsetTensorArgs(args, argsNum, memsetInfo, memsetParam_);
+        status = MemsetTensorArgs(args, argsNum, memsetInfo);
         MKI_CHECK(status.Ok(), "failed to memset tensor args", return status);
 
         // launch
@@ -100,11 +100,6 @@ public:
     const MkiRtKernelParam &GetKernelParam() const
     {
         return kernelParam_;
-    }
-
-    const MkiRtKernelParam &GetMemsetParam() const
-    {
-        return memsetParam_;
     }
 
 private:
@@ -169,10 +164,10 @@ private:
     }
 
     Status MemsetTensorArgs(void **args, uint64_t argsNum,
-                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, MkiRtKernelParam &kernelParam) const
+                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo) const
     {
         if (memsetInfo.size() != 0) {
-            Status status = ClearTensors(args, argsNum, memsetInfo, kernelParam);
+            Status status = BuildMemsetArgs(args, argsNum, memsetInfo);
             MKI_CHECK(status.Ok(), "failed to clear tensors", return status);
         }
         return Status::OkStatus();
@@ -227,7 +222,6 @@ private:
     RtArgsExT argsEx_;
     std::unique_ptr<RtHostInputInfoT[]> hostInfo_{nullptr};
     MkiRtKernelParam kernelParam_;
-    MkiRtKernelParam memsetParam_;
 };
 
 KernelBase::KernelBase(const std::string &opName, const BinHandle *handle) : kernelName_(opName), handle_(handle)
@@ -396,7 +390,7 @@ Status KernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
     MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
     const auto &memsetInfo = kernelInfo_.GetMemsetInfo();
     if (!memsetInfo.empty()) {
-        Status st = DispatchMemsetKernel(builder_->GetMemsetParam(), stream);
+        Status st = DispatchMemsetKernel(args + kernelInfo_.GetArgsSize(), stream);
         MKI_CHECK(st.Ok(), "dispatch memset failed", return st);
     }
     const MkiRtKernelParam &kernelParam = builder_->GetKernelParam();
