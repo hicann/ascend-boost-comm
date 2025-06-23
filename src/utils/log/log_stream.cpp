@@ -22,7 +22,7 @@
 namespace Mki {
 static std::ostringstream &GetGlobalStream()
 {
-    thread_local static std::ostringstream *sstream = new std::ostringstream();
+    thread_local static std::ostringstream *const sstream = new std::ostringstream();
     return *sstream;
 }
 
