@@ -20,7 +20,11 @@
 #include "mki/utils/log/log_stream.h"
 
 namespace Mki {
-thread_local std::ostringstream g_stream;
+static std::ostringstream &GetGlobalStream()
+{
+    thread_local static std::ostringstream *sstream = new std::ostringstream();
+    return *sstream;
+}
 
 thread_local long g_threadId = -1;
 long GetThreadId()
@@ -31,7 +35,7 @@ long GetThreadId()
     return g_threadId;
 }
 
-LogStream::LogStream(const char *filePath, int line, const char *funcName, LogLevel level) : stream_(g_stream)
+LogStream::LogStream(const char *filePath, int line, const char *funcName, LogLevel level) : stream_(GetGlobalStream())
 {
     if (filePath != nullptr && funcName != nullptr) {
         const char *str = strrchr(filePath, '/');
