@@ -390,7 +390,7 @@ Status KernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
     MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
     const auto &memsetInfo = kernelInfo_.GetMemsetInfo();
     if (!memsetInfo.empty()) {
-        Status st = DispatchMemsetKernel(static_cast<void*>(static_cast<char*>(args) + kernelInfo_.GetArgsSize()), stream);
+        Status st = DispatchMemsetKernel(static_cast<void*>(static_cast<char*>(args) + kernelInfo_.GetArgsSize()), stream, isDeviceAddr);
         MKI_CHECK(st.Ok(), "dispatch memset failed", return st);
     }
     const MkiRtKernelParam &kernelParam = builder_->GetKernelParam();

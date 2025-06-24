@@ -137,9 +137,12 @@ public:
         return Status::OkStatus();
     }
 
-    Status DispatchMemsetKernel(void *args, void *stream)
+    Status DispatchMemsetKernel(void *args, void *stream, bool isDeviceAddr)
     {
         memsetParam_.argsEx->args = args;
+        if (isDeviceAddr) {
+            memsetParam_.argsEx->isNoNeedH2DCopy = 1;
+        }
         int st = MkiRtFunctionLaunchWithFlag(GetBinHandle()->GetHandle(), &memsetParam_, stream, nullptr);
         MKI_CHECK(st == MKIRT_SUCCESS, "fail to launch memset", return Mki::Status::FailStatus(1));
 
@@ -176,8 +179,8 @@ Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInf
     return memsetKernel->BuildMemsetArgs(args, argsNum, memsetInfo);
 }
 
-Status DispatchMemsetKernel(void *args, void *stream)
+Status DispatchMemsetKernel(void *args, void *stream, bool isDeviceAddr)
 {
-    return memsetKernel->DispatchMemsetKernel(args, stream);
+    return memsetKernel->DispatchMemsetKernel(args, stream, isDeviceAddr);
 }
 } // namespace Mki

@@ -17,7 +17,7 @@
 
 namespace Mki {
 Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo);
-Status DispatchMemsetKernel(void *args, void *stream);
+Status DispatchMemsetKernel(void *args, void *stream, bool isDeviceAddr);
 } // namespace Mki
 
 #endif // MKI_UTILS_MEMSET_CLEAR_TENSORS_H
