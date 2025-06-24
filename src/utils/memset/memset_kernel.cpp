@@ -107,7 +107,7 @@ public:
         return memsetParam_;
     }
 
-    Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo) const
+    Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo)
     {
         static MemsetArgs memsetArgs;
         int ret = memset_s(&memsetArgs, sizeof(MemsetArgs), 0, sizeof(MemsetArgs));
@@ -137,9 +137,10 @@ public:
         return Status::OkStatus();
     }
 
-    Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream)
+    Status DispatchMemsetKernel(void *args, void *stream)
     {
-        int st = MkiRtFunctionLaunchWithFlag(GetBinHandle()->GetHandle(), &kernelParam, stream, nullptr);
+        memsetParam_.argsEx->args = args;
+        int st = MkiRtFunctionLaunchWithFlag(GetBinHandle()->GetHandle(), &memsetParam_, stream, nullptr);
         MKI_CHECK(st == MKIRT_SUCCESS, "fail to launch memset", return Mki::Status::FailStatus(1));
 
         return Status::OkStatus();
@@ -175,8 +176,8 @@ Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInf
     return memsetKernel->BuildMemsetArgs(args, argsNum, memsetInfo);
 }
 
-Status DispatchMemsetKernel(MkiRtKernelParam kernelParam, void *stream)
+Status DispatchMemsetKernel(void *args, void *stream)
 {
-    return memsetKernel->DispatchMemsetKernel(kernelParam, stream);
+    return memsetKernel->DispatchMemsetKernel(args, stream);
 }
 } // namespace Mki
