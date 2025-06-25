@@ -117,7 +117,7 @@ public:
 };
 
 #define REG_OPERATION(opName)                                                                                       \
-    Mki::Operation *(GetOperation##opName)()                                                                          \
+    Mki::Operation *GetOperation#(#opName)()                                                                          \
     {                                                                                                               \
         static opName op##opName(#opName);                                                                          \
         return &op##opName;                                                                                         \
