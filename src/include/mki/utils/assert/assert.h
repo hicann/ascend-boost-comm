@@ -17,7 +17,7 @@ namespace Utils {
 #define MKI_CHECK(condition, logExpr, handleExpr)                                                                   \
 do {                                                                                                                \
     if (!(condition)) {                                                                                             \
-        MKI_LOG(ERROR) << logExpr;                                                                                  \
+        MKI_LOG(ERROR) << (logExpr);                                                                                  \
         handleExpr;                                                                                                 \
     }                                                                                                               \
 } while (0)
