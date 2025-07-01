@@ -14,38 +14,28 @@
 #include <iostream>
 #include <algorithm>
 #include "mki/utils/env/env.h"
-#include "mki/utils/cfg/cfg_core.h"
 #include "mki/utils/log/log_sink_stdout.h"
 #include "mki/utils/log/log_sink_file.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/log/log_core.h"
 
 namespace Mki {
-static bool GetLogToStdoutFromEnvCfg(bool controlledByCfg)
+static bool GetLogToStdoutFromEnvCfg()
 {
-    if (controlledByCfg) {
-        return CfgCore::GetCfgCoreInstance().GetLogCfg().isLogToStdOut;
-    }
     const char *envLogToStdout = std::getenv("ASDOPS_LOG_TO_STDOUT");
     return envLogToStdout != nullptr && strlen(envLogToStdout) <= MAX_ENV_STRING_LEN &&
            strcmp(envLogToStdout, "1") == 0;
 }
 
-static bool GetLogToFileFromEnvCfg(bool controlledByCfg)
+static bool GetLogToFileFromEnvCfg()
 {
-    if (controlledByCfg) {
-        return CfgCore::GetCfgCoreInstance().GetLogCfg().isLogToFile;
-    }
     const char *envLogToFile = std::getenv("ASDOPS_LOG_TO_FILE");
     return envLogToFile != nullptr && strlen(envLogToFile) <= MAX_ENV_STRING_LEN && strcmp(envLogToFile, "1") == 0;
 }
 
-static LogLevel GetLogLevelFromEnvCfg(bool controlledByCfg)
+static LogLevel GetLogLevelFromEnvCfg()
 {
     const char *env = std::getenv("ASDOPS_LOG_LEVEL");
-    if (controlledByCfg) {
-        env = CfgCore::GetCfgCoreInstance().GetLogCfg().logLevel.c_str();
-    }
     if (env == nullptr || strlen(env) > MAX_ENV_STRING_LEN) {
         return LogLevel::WARN;
     }
@@ -60,12 +50,11 @@ static LogLevel GetLogLevelFromEnvCfg(bool controlledByCfg)
 
 LogCore::LogCore()
 {
-    controlledByCfg_ = CfgCore::GetCfgCoreInstance().CfgFileExists();
-    level_ = GetLogLevelFromEnvCfg(controlledByCfg_);
-    if (GetLogToStdoutFromEnvCfg(controlledByCfg_)) {
+    level_ = GetLogLevelFromEnvCfg();
+    if (GetLogToStdoutFromEnvCfg()) {
         AddSink(std::make_shared<LogSinkStdout>());
     }
-    if (GetLogToFileFromEnvCfg(controlledByCfg_)) {
+    if (GetLogToFileFromEnvCfg()) {
         AddSink(std::make_shared<LogSinkFile>());
     }
 }
