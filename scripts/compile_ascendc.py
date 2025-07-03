@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (c) 2024 Huawei Technologies Co., Ltd.
 # This file is a part of the CANN Open Software.

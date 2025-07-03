@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (c) 2024 Huawei Technologies Co., Ltd.
 # This file is a part of the CANN Open Software.
@@ -188,7 +189,7 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
             for file in os.listdir(kernel_dir):
                 if not file.endswith('.json'):
                     continue
-                code_file = os.path.join(kernel_dir, file[:-4] + 'o')
+                code_file = os.path.join(kernel_dir, f"{file[:-4]}o")
                 if not os.path.exists(code_file):
                     logging.error("file %s has no object file.", file)
                     exit(1)
@@ -199,7 +200,7 @@ def copy_ascendc_code(binary_dir, target_version, output_path):
                     logging.error("failed to parse file %s.", json_file)
                     exit(1)
 
-                dst_cpp_path = os.path.join(output_operation_dir, file)[:-4] + 'cpp'
+                dst_cpp_path = f"{os.path.join(output_operation_dir, file)[:-4]}cpp"
                 result = write_to_cpp(code_file, header, dst_cpp_path, kernel, target_version)
                 if not result:
                     logging.error("failed to write into file %s.", dst_cpp_path)
@@ -252,9 +253,9 @@ def copy_tbe_code_all_version(input_paras):
                     if version_op_key != target_version:
                         continue
                 code_file = os.path.join(
-                    target_version_path, relative_op_path[:-4] + 'o')
+                    target_version_path, f"{relative_op_path[:-4]}o")
                 object_name = os.path.basename(code_file)
-                dst_cpp_path = os.path.join(op_dir_path, object_name[:-2] + '_' + op_key.lower() + '.cpp')
+                dst_cpp_path = os.path.join(op_dir_path, f"{object_name[:-2]}_{op_key.lower()}.cpp")
 
                 header, ret = get_header_from_file(os.path.join(
                     target_version_path, relative_op_path))

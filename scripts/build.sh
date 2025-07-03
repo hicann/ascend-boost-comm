@@ -39,7 +39,7 @@ function fn_install_cann_and_kernel()
     # CANN package location
     cann_install_path="/home/slave1/Ascend/ascend-toolkit/latest/"
     # Record the start time
-    time_before=`date +%s`
+    time_before=$(date +%s)
     if [[ -d "$cann_install_path" ]]; then
         export ASCEND_HOME_PATH=${cann_install_path}
         export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
@@ -54,7 +54,7 @@ function fn_install_cann_and_kernel()
     chmod +x *.run
     set +e
     for run_file in $(ls *.run);do
-        if [[ ${run_file} =~ "opp_kernel" ]];then
+        if [[ "${run_file}" =~ "opp_kernel" ]];then
             kernel_path=$(echo ${run_file%%-*} | tr A-Z a-z)
             mkdir -p ${kernel_path}/opp_kernel
             chmod -R 750 ${cann_install_path}/opp/built-in/op_impl/ai_core/tbe
@@ -65,7 +65,7 @@ function fn_install_cann_and_kernel()
         fi
     done
     wait
-    time_after=`date +%s`
+    time_after=$(date +%s)
     echo "并行解压花费时间 $(($time_after - $time_before))秒"
     # link library
     export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${LD_LIBRARY_PATH}
@@ -274,7 +274,7 @@ function fn_build()
             . /usr/local/Ascend/ascend-toolkit/set_env.sh
         fi
     fi
-    if [ -z $ASCEND_HOME_PATH ];then
+    if [ -z "$ASCEND_HOME_PATH" ];then
         echo "env ASCEND_HOME_PATH not exists, build fail"
         exit 1
     fi
@@ -282,7 +282,7 @@ function fn_build()
     [ -n "$CACHE_DIR" ] && rm -rf $CACHE_DIR
     [[ ! -d "$CACHE_DIR" ]] && mkdir $CACHE_DIR
     [[ ! -d "$OUTPUT_DIR" ]] && mkdir -p $OUTPUT_DIR
-    [[ ! -d $THIRD_PARTY_DIR ]] && mkdir -p $THIRD_PARTY_DIR
+    [[ ! -d "$THIRD_PARTY_DIR" ]] && mkdir -p $THIRD_PARTY_DIR
 
     fn_build_release_3rdparty
 
@@ -319,12 +319,12 @@ function fn_main()
     else
         cfg_flag=0
         for item in ${BUILD_CONFIGURE_LIST[*]};do
-            if [[ $1 =~ $item ]];then
+            if [[ "$1" =~ "$item" ]];then
                 cfg_flag=1
                 break 1
             fi
         done
-        if [[ $cfg_flag == 1 ]];then
+        if [[ "$cfg_flag" == 1 ]];then
             arg1="dev"
         else
             echo "argument $1 is unknown, please type 'build.sh help' for more imformation"
@@ -338,7 +338,7 @@ function fn_main()
         case "${arg2}" in
         --output=*)
             arg2=${arg2#*=}
-            if [ -z $arg2 ];then
+            if [ -z "$arg2" ];then
                 echo "the output directory is not set. This should be set like --output=<outputDir>"
             else
                 cd $CURRENT_DIR
@@ -409,7 +409,7 @@ function fn_main()
         "clean")
             [[ -d "$CACHE_DIR" ]] && rm -rf $CACHE_DIR
             [[ -d "$OUTPUT_DIR" ]] && rm -rf $OUTPUT_DIR
-            [[ -d $THIRD_PARTY_DIR ]] && rm -rf $THIRD_PARTY_DIR
+            [[ -d "$THIRD_PARTY_DIR" ]] && rm -rf $THIRD_PARTY_DIR
             echo "clear all build history."
             ;;
         *)
