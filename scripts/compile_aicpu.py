@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (c) 2024 Huawei Technologies Co., Ltd.
 # This file is a part of the CANN Open Software.
@@ -67,7 +68,7 @@ def get_common_options():
 
 
 def exe_cmd(cmd):
-    if os.system(cmd) != 0:
+    if subprocess.run(cmd) != 0:
         logging.error("execute command failed")
         logging.debug("command: %s", cmd)
         return -1
@@ -87,7 +88,7 @@ def compile_aicpu_kernels(args, output_dir):
 
     # Compiling
     for src in args.srcs:
-        dst = os.path.join(intermediate_dir, src.split("/")[-1]) + '.o'
+        dst = f"{os.path.join(intermediate_dir, src.split("/")[-1])}.o"
         compile_cmd = ' '.join(gen_compile_cmd(args, src, dst, options))
         if(exe_cmd(compile_cmd)) != 0:
             return -1
