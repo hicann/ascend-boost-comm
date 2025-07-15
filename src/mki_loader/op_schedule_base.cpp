@@ -70,6 +70,10 @@ void OpScheduleBase::AddAllOperations(const OperationCreators &opCreators,
 void OpScheduleBase::UpdateLoaderBinary(const OperationCreators &opCreators, const KernelCreators &kerCreators,
     const AicpuKernelCreators &aicpuKerCreators, const BinaryBasicInfoMap &binaryMap)
 {
+    UNUSED_VALUE(opCreators);
+    UNUSED_VALUE(kerCreators);
+    UNUSED_VALUE(aicpuKerCreators);
+    UNUSED_VALUE(binaryMap);
     loader_->ReLoad();
 }
 
