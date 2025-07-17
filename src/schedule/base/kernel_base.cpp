@@ -16,6 +16,7 @@
 #include "mki/utils/rt/rt.h"
 #include "mki/utils/math/tensor_utils.h"
 #include "mki/utils/memset/clear_tensors.h"
+#include "mki/utils/platform/platform_info.h"
 
 namespace {
 constexpr uint32_t TILING_ADDR_NEG_IDX = 2;
@@ -80,9 +81,11 @@ public:
         status = launchWithTiling ? UpdateTilingArgs(argsEx_, argsNum)
                                   : UpdateTilingArgs(args, argsNum, runInfo.GetTilingDeviceAddr());
         MKI_CHECK(status.Ok(), "failed to get launch with tiling", return status);
-        // set overflow addr
-        status = UpdateOverflowArgs(args, argsNum);
-        MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
+        // only 910A need set overflow addr
+        if (PlatformInfo::Instance().GetPlatformType() == PlatformType::ASCEND_910A) {
+            status = UpdateOverflowArgs(args, argsNum);
+            MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
+        }
         // Memset
         const auto &memsetInfo = kernelInfo.GetMemsetInfo();
         status = MemsetTensorArgs(args, argsNum, runInfo.GetStream(), memsetInfo);
