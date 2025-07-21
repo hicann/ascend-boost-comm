@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "mki/base/kernel_base.h"
+#include <mutex>
 #include <securec.h>
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/checktensor/check_tensor.h"
@@ -16,7 +17,6 @@
 #include "mki/utils/rt/rt.h"
 #include "mki/utils/math/tensor_utils.h"
 #include "mki/utils/memset/clear_tensors.h"
-#include "mki/utils/platform/platform_info.h"
 
 namespace {
 constexpr uint32_t TILING_ADDR_NEG_IDX = 2;
@@ -81,11 +81,9 @@ public:
         status = launchWithTiling ? UpdateTilingArgs(argsEx_, argsNum)
                                   : UpdateTilingArgs(args, argsNum, runInfo.GetTilingDeviceAddr());
         MKI_CHECK(status.Ok(), "failed to get launch with tiling", return status);
-        // only 910A need set overflow addr
-        if (PlatformInfo::Instance().GetPlatformType() == PlatformType::ASCEND_910A) {
-            status = UpdateOverflowArgs(args, argsNum);
-            MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
-        }
+        // set overflow addr
+        status = UpdateOverflowArgs(args, argsNum);
+        MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
         // Memset
         const auto &memsetInfo = kernelInfo.GetMemsetInfo();
         status = MemsetTensorArgs(args, argsNum, runInfo.GetStream(), memsetInfo);
@@ -156,9 +154,10 @@ private:
 
     Status UpdateOverflowArgs(void **args, uint64_t argsNum) const
     {
-        void *overflowAddr = nullptr;
-        int32_t st = MkiRtCtxGetOverflowAddr(&overflowAddr);
-        MKI_CHECK(st == MKIRT_SUCCESS, "Mki Get RtC2cCtrlAddr failed: %d" << st,
+        static std::once_flag overflow_flag;
+        static void *overflowAddr = nullptr;
+        std::call_once(overflow_flag, [&]() { MkiRtCtxGetOverflowAddr(&overflowAddr); });
+        MKI_CHECK(overflowAddr == nullptr, "Mki Get RtC2cCtrlAddr failed",
                   return Status::FailStatus(ERROR_RUN_TIME_ERROR));
         args[argsNum - OVERFLOW_ADDR_NEG_IDX] = overflowAddr;
         MKI_LOG(DEBUG) << "args info: overflow addr " << (argsNum - OVERFLOW_ADDR_NEG_IDX);
