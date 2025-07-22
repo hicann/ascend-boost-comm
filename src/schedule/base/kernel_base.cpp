@@ -154,7 +154,7 @@ private:
 
     Status UpdateOverflowArgs(void **args, uint64_t argsNum) const
     {
-        static std::once_flag overflow_flag;
+        static std::once_flag overflowFlag;
         static void *overflowAddr = nullptr;
         std::call_once(overflow_flag, [&]() { MkiRtCtxGetOverflowAddr(&overflowAddr); });
         MKI_CHECK(overflowAddr == nullptr, "Mki Get RtC2cCtrlAddr failed",
