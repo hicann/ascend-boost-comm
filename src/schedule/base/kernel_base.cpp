@@ -156,7 +156,7 @@ private:
     {
         static std::once_flag overflowFlag;
         static void *overflowAddr = nullptr;
-        std::call_once(overflow_flag, [&]() { MkiRtCtxGetOverflowAddr(&overflowAddr); });
+        std::call_once(overflowFlag, [&]() { MkiRtCtxGetOverflowAddr(&overflowAddr); });
         MKI_CHECK(overflowAddr == nullptr, "Mki Get RtC2cCtrlAddr failed",
                   return Status::FailStatus(ERROR_RUN_TIME_ERROR));
         args[argsNum - OVERFLOW_ADDR_NEG_IDX] = overflowAddr;
