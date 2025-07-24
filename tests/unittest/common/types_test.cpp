@@ -26,6 +26,19 @@ TEST(GetTensorElementSizeTest, HandleValidInput) {
     EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_DOUBLE), sizeof(double));
     EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_BOOL), sizeof(bool));
     EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_BF16), 2);
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_COMPLEX64), sizeof(double));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_COMPLEX128), 16);
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_INT4), sizeof(bool));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_UINT1), sizeof(bool));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_COMPLEX32), sizeof(int32_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_HIFLOAT8), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT8_E5M2), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT8_E4M3FN), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT8_E8M0), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT6_E3M2), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT6_E2M3), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT4_E2M1), sizeof(int8_t));
+    EXPECT_EQ(GetTensorElementSize(TensorDType::TENSOR_DTYPE_FLOAT4_E1M2), sizeof(int8_t));
 }
 
 TEST(GetTensorElementSizeTest, HandleInvalidInput) {
@@ -47,9 +60,17 @@ TEST(GetDTypeWithStrTest, HandleValidInput) {
     EXPECT_EQ(GetDTypeWithStr("double"), TensorDType::TENSOR_DTYPE_DOUBLE);
     EXPECT_EQ(GetDTypeWithStr("bool"), TensorDType::TENSOR_DTYPE_BOOL);
     EXPECT_EQ(GetDTypeWithStr("string"), TensorDType::TENSOR_DTYPE_STRING);
-    EXPECT_EQ(GetDTypeWithStr("complex64"), TensorDType::TENSOR_DTYPE_COMPLEX64);
-    EXPECT_EQ(GetDTypeWithStr("complex128"), TensorDType::TENSOR_DTYPE_COMPLEX128);
-    EXPECT_EQ(GetDTypeWithStr("bf16"), TensorDType::TENSOR_DTYPE_BF16);
+    EXPECT_EQ(GetDTypeWithStr("int4"), TensorDType::TENSOR_DTYPE_INT4);
+    EXPECT_EQ(GetDTypeWithStr("uint1"), TensorDType::TENSOR_DTYPE_UINT1);
+    EXPECT_EQ(GetDTypeWithStr("complex32"), TensorDType::TENSOR_DTYPE_COMPLEX32);
+    EXPECT_EQ(GetDTypeWithStr("hifloat8"), TensorDType::TENSOR_DTYPE_HIFLOAT8);
+    EXPECT_EQ(GetDTypeWithStr("float8_e5m2"), TensorDType::TENSOR_DTYPE_FLOAT8_E5M2);
+    EXPECT_EQ(GetDTypeWithStr("float8_e4m3fn"), TensorDType::TENSOR_DTYPE_FLOAT8_E4M3FN);
+    EXPECT_EQ(GetDTypeWithStr("float8_e8m0"), TensorDType::TENSOR_DTYPE_FLOAT8_E8M0);
+    EXPECT_EQ(GetDTypeWithStr("float6_e3m2"), TensorDType::TENSOR_DTYPE_FLOAT6_E3M2);
+    EXPECT_EQ(GetDTypeWithStr("float6_e2m3"), TensorDType::TENSOR_DTYPE_FLOAT6_E2M3);
+    EXPECT_EQ(GetDTypeWithStr("float4_e2m1"), TensorDType::TENSOR_DTYPE_FLOAT4_E2M1);
+    EXPECT_EQ(GetDTypeWithStr("float4_e1m2"), TensorDType::TENSOR_DTYPE_FLOAT4_E1M2);
 }
 
 TEST(GetDTypeWithStrTest, HandleInvalidInput) {
@@ -74,6 +95,17 @@ TEST(GetStrWithDTypeTest, HandleValidInput) {
     EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_COMPLEX64), "complex64");
     EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_COMPLEX128), "complex128");
     EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_BF16), "bf16");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_INT4), "int4");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_UINT1), "uint1");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_COMPLEX32), "complex32");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_HIFLOAT8), "hifloat8");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT8_E5M2), "float8_e5m2");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT8_E4M3FN), "float8_e4m3fn");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT8_E8M0), "float8_e8m0");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT6_E3M2), "float6_e3m2");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT6_E2M3), "float6_e2m3");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT4_E2M1), "float4_e2m1");
+    EXPECT_EQ(GetStrWithDType(TensorDType::TENSOR_DTYPE_FLOAT4_E1M2), "float4_e1m2");
 }
 
 TEST(GetStrWithDTypeTest, HandleInvalidInput) {
@@ -94,6 +126,10 @@ TEST(GetFormatWithStrTest, HandleValidInput) {
     EXPECT_EQ(GetFormatWithStr("ncdhw"), TensorFormat::TENSOR_FORMAT_NCDHW);
     EXPECT_EQ(GetFormatWithStr("ndc1hwc0"), TensorFormat::TENSOR_FORMAT_NDC1HWC0);
     EXPECT_EQ(GetFormatWithStr("fractal_z_3d"), TensorFormat::TENSOR_FORMAT_FRACTAL_Z_3D);
+    EXPECT_EQ(GetFormatWithStr("nc"), TensorFormat::TENSOR_FORMAT_NC);
+    EXPECT_EQ(GetFormatWithStr("ncl"), TensorFormat::TENSOR_FORMAT_NCL);
+    EXPECT_EQ(GetFormatWithStr("fractal_nz_c0_16"), TensorFormat::TENSOR_FORMAT_FRACTAL_NZ_C0_16);
+    EXPECT_EQ(GetFormatWithStr("fractal_nz_c0_32"), TensorFormat::TENSOR_FORMAT_FRACTAL_NZ_C0_32);
 }
 
 TEST(GetFormatWithStrTest, HandleInvalidInput) {
@@ -114,6 +150,10 @@ TEST(GetStrWithFormatTest, HandleValidInput) {
     EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_NCDHW), "ncdhw");
     EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_NDC1HWC0), "ndc1hwc0");
     EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_FRACTAL_Z_3D), "fractal_z_3d");
+    EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_NC), "nc");
+    EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_NCL), "ncl");
+    EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_FRACTAL_NZ_C0_16), "fractal_nz_c0_16");
+    EXPECT_EQ(GetStrWithFormat(TensorFormat::TENSOR_FORMAT_FRACTAL_NZ_C0_32), "fractal_nz_c0_32");
 }
 
 TEST(GetStrWithFormatTest, HandleInvalidInput) {

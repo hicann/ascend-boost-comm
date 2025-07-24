@@ -13,6 +13,7 @@
 
 namespace Mki {
 constexpr size_t HALF_DATA_SIZE = 2;
+constexpr size_t BITWIDTH128_DATA_SIZE = 16;
 static const std::string UNDEFINED_STR = "undefined";
 
 static const std::map<TensorDType, size_t> MAP_OF_DTYPE_SIZE = {
@@ -30,7 +31,20 @@ static const std::map<TensorDType, size_t> MAP_OF_DTYPE_SIZE = {
     {TensorDType::TENSOR_DTYPE_DOUBLE, sizeof(double)},
     {TensorDType::TENSOR_DTYPE_BOOL, sizeof(bool)},
     {TensorDType::TENSOR_DTYPE_BF16, HALF_DATA_SIZE},
-    {TensorDType::TENSOR_DTYPE_COMPLEX64, sizeof(double)}
+    {TensorDType::TENSOR_DTYPE_COMPLEX64, sizeof(double)},
+    {TensorDType::TENSOR_DTYPE_COMPLEX128, BITWIDTH128_DATA_SIZE},
+    {TensorDType::TENSOR_DTYPE_BF16, HALF_DATA_SIZE},
+    {TensorDType::TENSOR_DTYPE_INT4, sizeof(bool)},
+    {TensorDType::TENSOR_DTYPE_UINT1, sizeof(bool)},
+    {TensorDType::TENSOR_DTYPE_COMPLEX32, sizeof(int32_t)},
+    {TensorDType::TENSOR_DTYPE_HIFLOAT8, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT8_E5M2, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT8_E4M3FN, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT8_E8M0, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT6_E3M2, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT6_E2M3, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT4_E2M1, sizeof(int8_t)},
+    {TensorDType::TENSOR_DTYPE_FLOAT4_E1M2, sizeof(int8_t)},
 };
 
 size_t GetTensorElementSize(const TensorDType dtype)
@@ -60,6 +74,17 @@ static const std::map<std::string, TensorDType> MAP_STRING_TO_DTYPE = {
     { "complex64", TENSOR_DTYPE_COMPLEX64 },
     { "complex128", TENSOR_DTYPE_COMPLEX128 },
     { "bf16", TENSOR_DTYPE_BF16 },
+    { "int4", TENSOR_DTYPE_INT4 },
+    { "uint1", TENSOR_DTYPE_UINT1 },
+    { "complex32", TENSOR_DTYPE_COMPLEX32 },
+    { "hifloat8", TENSOR_DTYPE_HIFLOAT8 },
+    { "float8_e5m2", TENSOR_DTYPE_FLOAT8_E5M2 },
+    { "float8_e4m3fn", TENSOR_DTYPE_FLOAT8_E4M3FN },
+    { "float8_e8m0", TENSOR_DTYPE_FLOAT8_E8M0 },
+    { "float6_e3m2", TENSOR_DTYPE_FLOAT6_E3M2 },
+    { "float6_e2m3", TENSOR_DTYPE_FLOAT6_E2M3 },
+    { "float4_e2m1", TENSOR_DTYPE_FLOAT4_E2M1 },
+    { "float4_e1m2", TENSOR_DTYPE_FLOAT4_E1M2 },
 };
 
 TensorDType GetDTypeWithStr(const std::string &typeStr)
@@ -88,6 +113,17 @@ static const std::map<int, std::string> MAP_DTYPE_TO_STRING = {
     { TENSOR_DTYPE_COMPLEX64, "complex64" },
     { TENSOR_DTYPE_COMPLEX128, "complex128" },
     { TENSOR_DTYPE_BF16, "bf16" },
+    { TENSOR_DTYPE_INT4, "int4" },
+    { TENSOR_DTYPE_UINT1, "uint1" },
+    { TENSOR_DTYPE_COMPLEX32, "complex32" },
+    { TENSOR_DTYPE_HIFLOAT8, "hifloat8" },
+    { TENSOR_DTYPE_FLOAT8_E5M2, "float8_e5m2" },
+    { TENSOR_DTYPE_FLOAT8_E4M3FN, "float8_e4m3fn" },
+    { TENSOR_DTYPE_FLOAT8_E8M0, "float8_e8m0" },
+    { TENSOR_DTYPE_FLOAT6_E3M2, "float6_e3m2" },
+    { TENSOR_DTYPE_FLOAT6_E2M3, "float6_e2m3" },
+    { TENSOR_DTYPE_FLOAT4_E2M1, "float4_e2m1" },
+    { TENSOR_DTYPE_FLOAT4_E1M2, "float4_e1m2" },
 };
 
 const std::string &GetStrWithDType(int dType)
@@ -112,6 +148,10 @@ static const std::map<std::string, TensorFormat> MAP_STRING_TO_FORMAT = {
     { "ncdhw", TENSOR_FORMAT_NCDHW },
     { "ndc1hwc0", TENSOR_FORMAT_NDC1HWC0 },
     { "fractal_z_3d", TENSOR_FORMAT_FRACTAL_Z_3D },
+    { "nc", TENSOR_FORMAT_NC},
+    { "ncl", TENSOR_FORMAT_NCL},
+    { "fractal_nz_c0_16", TENSOR_FORMAT_FRACTAL_NZ_C0_16},
+    { "fractal_nz_c0_32", TENSOR_FORMAT_FRACTAL_NZ_C0_32},
 };
 
 TensorFormat GetFormatWithStr(const std::string &formatStr)
@@ -136,6 +176,10 @@ static const std::map<int, std::string> MAP_FORMAT_TO_STRING = {
     { TENSOR_FORMAT_NCDHW, "ncdhw" },
     { TENSOR_FORMAT_NDC1HWC0, "ndc1hwc0" },
     { TENSOR_FORMAT_FRACTAL_Z_3D, "fractal_z_3d" },
+    { TENSOR_FORMAT_NC, "nc" },
+    { TENSOR_FORMAT_NCL, "ncl" },
+    { TENSOR_FORMAT_FRACTAL_NZ_C0_16, "fractal_nz_c0_16" },
+    { TENSOR_FORMAT_FRACTAL_NZ_C0_32, "fractal_nz_c0_32" },
 };
 
 const std::string &GetStrWithFormat(int format)
