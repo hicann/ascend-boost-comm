@@ -328,9 +328,26 @@ uint64_t KernelBase::GetKernelArgsNum(const LaunchParam &launchParam)
 
 Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
-    Status st = BuildArgs(launchParam, runInfo, nullptr);
-    MKI_CHECK(st.Ok(), "build args failed, abort running", return st);
-    return RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
+    KernelParamBuilder paramBuilder;
+    uint64_t argsNum = GetKernelArgsNum(launchParam);
+    Status status = paramBuilder.Init(launchParam, runInfo, argsNum, kernelInfo_);
+    MKI_CHECK(status.Ok(), "failed to build kernel params", return status);
+    const MkiRtKernelParam &kernelParam = paramBuilder.GetKernelParam();
+    MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
+    MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
+    if (*handle_->GetHandle() != nullptr) {
+        MKI_LOG(DEBUG) << "launch function with handle";
+        int st = MkiRtFunctionLaunchWithHandle(*handle_->GetHandle(), &kernelParam, runInfo.GetStream(), nullptr);
+        MKI_CHECK(
+            st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithHandle fail",
+            return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction LaunchWithHandle fail"));
+    } else {
+        MKI_LOG(DEBUG) << "launch function with flag";
+        int st = MkiRtFunctionLaunchWithFlag(handle_->GetHandle(), &kernelParam, runInfo.GetStream(), nullptr);
+        MKI_CHECK(st == MKIRT_SUCCESS, "Mki RtFunction LaunchWithFlag fail",
+                    return Status::FailStatus(ERROR_LAUNCH_KERNEL_ERROR, "Mki RtFunction Launch fail"));
+    }
+    return Status::OkStatus();
 }
 
 bool KernelBase::CanSupport(const LaunchParam &launchParam) const
