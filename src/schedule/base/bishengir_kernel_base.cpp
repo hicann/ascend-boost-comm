@@ -328,12 +328,6 @@ uint64_t BishengIRKernelBase::GetKernelArgsTotalSize(const LaunchParam &launchPa
     return totalSize;
 }
 
-void BishengIRKernelBase::setNumPtr(const uint64_t numPtr)
-{
-    numPtr_ = numPtr_;
-    return;
-}
-
 const uint64_t BishengIRKernelBase::getNumPtr() const
 {
     return numPtr_;
