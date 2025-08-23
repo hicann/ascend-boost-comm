@@ -18,23 +18,43 @@ macro(add_kernel kernel soc channel srcs tac)
                 ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${tac}/${kernel}.o)
             set(multiValueArgs INCLUDE_DIRECTORIES)
             cmake_parse_arguments(arg_add_kernel "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+            set(kernel_srcs ${CMAKE_CURRENT_LIST_DIR}/${srcs})
+            set(KERNEL_INCLUDE_DIRECTORIES ${arg_add_kernel_INCLUDE_DIRECTORIES})
+            if(USE_ASCENDC_DUMP)
+                get_filename_component(KERNEL_FILE_PATH ${CMAKE_CURRENT_LIST_DIR}/${srcs} DIRECTORY)
+                set(KERNEL_INCLUDE_DIRECTORIES ${KERNEL_INCLUDE_DIRECTORIES} ${KERNEL_FILE_PATH})
+                set(decorated_${kernel}_srcs ${CMAKE_BINARY_DIR}/op_kernels/${soc}/${op_name}/${srcs})
+                set(DUMP_PYTHON_ARGS
+                    "--srcs" "${CMAKE_CURRENT_LIST_DIR}/${srcs}"
+                    "--dst" "${decorated_${kernel}_srcs}"
+                )
+                add_custom_command(
+                    OUTPUT ${decorated_${kernel}_srcs}
+                    DEPENDS ${srcs}
+                    WORKING_DIRECTORY ${OPS_PROJECT_ROOT_DIR}
+                    COMMAND python3 ${MKI_SCRIPT_DIR}/generate_kernel_api.py ${DUMP_PYTHON_ARGS}
+                )
+                set(ADDITIONAL_ARGS "--use_ascendc_dump")
+                set(kernel_srcs ${decorated_${kernel}_srcs})
+            endif()
             set(PYTHON_ARGS 
                 "--soc" "${soc}"
                 "--channel" "${channel}"
-                "--srcs" "${CMAKE_CURRENT_LIST_DIR}/${srcs}"
+                "--srcs" "${kernel_srcs}"
                 "--dst" "${${kernel}_${soc}_output}"
                 "--code_root" "${OPS_THIRD_PARTY_DIR}/.."
                 "--kernel" "${kernel}"
                 "--use_msdebug" "${USE_MSDEBUG}"
                 "--use_mssanitizer" "${USE_MSSANITIZER}"
                 "--no_warning"
+                ${ADDITIONAL_ARGS}
             )
-            if(NOT "${arg_add_kernel_INCLUDE_DIRECTORIES}" STREQUAL "")
-                set(PYTHON_ARGS ${PYTHON_ARGS} "--include_directories" "${arg_add_kernel_INCLUDE_DIRECTORIES}")
+            if(NOT "${KERNEL_INCLUDE_DIRECTORIES}" STREQUAL "")
+                set(PYTHON_ARGS ${PYTHON_ARGS} "--include_directories" "${KERNEL_INCLUDE_DIRECTORIES}")
             endif()
             add_custom_command(
                 OUTPUT ${${kernel}_${soc}_output}
-                DEPENDS ${srcs}
+                DEPENDS ${kernel_srcs}
                 WORKING_DIRECTORY ${OPS_PROJECT_ROOT_DIR}
                 COMMAND python3 ${MKI_SCRIPT_DIR}/compile_ascendc.py ${PYTHON_ARGS}
             )

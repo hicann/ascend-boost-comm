@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "mki/base/kernel_base.h"
+#include <acl/acl.h>
 #include <securec.h>
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/checktensor/check_tensor.h"
@@ -20,7 +21,16 @@
 namespace {
 constexpr uint32_t TILING_ADDR_NEG_IDX = 2;
 constexpr uint32_t OVERFLOW_ADDR_NEG_IDX = 1;
+#ifdef USE_ASCENDC_DUMP
+constexpr uint32_t ALL_DUMPSIZE = 75 * 1024 * 1024;
+#endif
 }
+#ifdef USE_ASCENDC_DUMP
+namespace Adx {
+    void AdumpPrintWorkSpace(const void *dumpBufferAddr, const size_t dumpBufferSize,
+                             aclrtStream stream, const char *opType);
+}
+#endif
 
 namespace Mki {
 class KernelParamBuilder {
@@ -281,6 +291,10 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     }
 
     auto status = InitImpl(launchParam);
+#ifdef USE_ASCENDC_DUMP
+    // 由于Adump 功能需要多分配75MB内存在workspace最后
+    kernelInfo_.GetScratchSizes().push_back(ALL_DUMPSIZE);
+#endif
     MKI_CHECK(status.Ok(), "Failed to init run info " << status.ToString(),
               return Status::FailStatus(ERROR_INVALID_VALUE));
 
@@ -330,7 +344,17 @@ Status KernelBase::Run(const LaunchParam &launchParam, RunInfo &runInfo)
 {
     Status st = BuildArgs(launchParam, runInfo, nullptr);
     MKI_CHECK(st.Ok(), "build args failed, abort running", return st);
-    return RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
+    st = RunWithArgs(kernelInfo_.GetArgs(), runInfo.GetStream(), false);
+#ifdef USE_ASCENDC_DUMP
+    // Adapt Dump tensor and printf
+    // 在原来的workspace后添加75MB
+    int ret = aclrtSynchronizeStream(runInfo.GetStream());
+    if (ret == 0) {
+        uint8_t *dumpWorkspaceAddr = runInfo.GetScratchDeviceAddr() + kernelInfo_.GetTotalScratchSize() - ALL_DUMPSIZE;
+        Adx::AdumpPrintWorkSpace(dumpWorkspaceAddr, ALL_DUMPSIZE, runInfo.GetStream(), "device_kernel");
+    }
+#endif
+    return st;
 }
 
 bool KernelBase::CanSupport(const LaunchParam &launchParam) const

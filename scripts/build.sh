@@ -25,11 +25,12 @@ COMPILE_OPTIONS=""
 DEVICE_CODE_PACK_SWITCH=ON
 USE_VERBOSE=OFF
 ENABLE_COVERAGE=OFF
+USE_ASCENDC_DUMP=OFF
 USE_CXX11_ABI=""
 IS_RELEASE=False
 BUILD_OPTION_LIST="testframework release example dev debug unittest clean help"
 BUILD_CONFIGURE_LIST=("--output=.*" "--use_cxx11_abi=0" "--use_cxx11_abi=1"
-                      "--verbose" "--no_werror" "--coverage" "--namespace=.*" "--msdebug")
+                      "--verbose" "--no_werror" "--coverage" "--namespace=.*" "--msdebug" "--ascendc_dump")
 
 # install cann
 function fn_install_cann_and_kernel()
@@ -369,6 +370,10 @@ function fn_main()
             CHIP_TYPE=$(npu-smi info -m | grep -oE 'Ascend\s*\S+' | head -n 1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
             COMPILE_OPTIONS="${COMPILE_OPTIONS} -DUSE_MSDEBUG=ON -DCHIP_TYPE=${CHIP_TYPE}"
             ;;
+        "--ascendc_dump")
+            USE_ASCENDC_DUMP=ON
+            COMPILE_OPTIONS="${COMPILE_OPTIONS} -DUSE_ASCENDC_DUMP=ON"
+            ;;
         esac
         shift
     }
@@ -415,7 +420,7 @@ function fn_main()
         *)
             echo "build.sh testframework|release|example|dev|debug|unittest|clean"\
             "--output=<dir>|--force_clean|--use_cxx11_abi=0|--use_cxx11_abi=1"\
-            "|--no_werror|--verbose|--coverage|--namespace=<namespace>|--msdebug"
+            "|--no_werror|--verbose|--coverage|--namespace=<namespace>|--msdebug|--ascendc_dump"
             ;;
     esac
 }

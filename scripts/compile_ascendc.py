@@ -28,6 +28,7 @@ def parse_args():
     parser.add_argument('--use_mssanitizer', type=str, required=True)
     parser.add_argument('--no_warning', action='store_true')
     parser.add_argument('--include_directories', type=str, required=False, nargs="+")
+    parser.add_argument('--use_ascendc_dump', action='store_true')
     return parser.parse_args()
 
 
@@ -49,6 +50,10 @@ def gen_compile_cmd(args, dst: str, sub_arch: str, compile_options):
                         "-mllvm", "-cce-aicore-jump-expand=true"]
     compile_cmd += ["-std=c++17"]
     compile_cmd += ["--cce-mask-opt"]
+    if (args.use_ascendc_dump):
+        compile_cmd += ["--cce-long-call=true"]
+        compile_cmd += ["-DASCENDC_DUMP=1"]
+        compile_cmd += ["-DASCENDC_DEBUG"]
     return compile_cmd
 
 
@@ -73,6 +78,10 @@ def gen_compile_cmd_v220(args, dst: str, sub_arch: str, compile_options):
                         "-mllvm", "-cce-aicore-long-call",
                         "-mllvm", "-cce-aicore-jump-expand=true"]
     compile_cmd += ["-std=c++17"]
+    if (args.use_ascendc_dump):
+        compile_cmd += ["--cce-long-call=true"]
+        compile_cmd += ["-DASCENDC_DUMP=1"]
+        compile_cmd += ["-DASCENDC_DEBUG"]
     return compile_cmd
 
 
@@ -94,6 +103,10 @@ def gen_compile_cmd_v300(args, dst: str, sub_arch: str, compile_options):
                     "-mllvm", "-cce-aicore-jump-expand=false",
                     "-mllvm", "-cce-aicore-mask-opt=false"]
     compile_cmd += ["-std=c++17"]
+    if (args.use_ascendc_dump):
+        compile_cmd += ["--cce-long-call=true"]
+        compile_cmd += ["-DASCENDC_DUMP=1"]
+        compile_cmd += ["-DASCENDC_DEBUG"]
     return compile_cmd
 
 
