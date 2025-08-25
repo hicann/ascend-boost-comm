@@ -14,6 +14,7 @@
 #include "mki/bin_handle.h"
 #include "mki/utils/assert/assert.h"
 #include "mki/utils/env/env.h"
+#include "mki/utils/file_system/file_system.h"
 #include "mki/utils/log/log.h"
 #include "mki/utils/platform/platform_info.h"
 #include "mki/utils/rt/rt.h"
@@ -104,6 +105,8 @@ bool Loader::GetAicpuDeviceKernelSo(uint32_t &fileSize)
     std::string searchPath = Mki::GetEnv("ATB_HOME_PATH");
     MKI_CHECK(!searchPath.empty(), "ATB_HOME_PATH not exists!", return false);
     searchPath += "/lib/libasdops_aicpu_kernels.so";
+    searchPath = FileSystem::PathCheckAndRegular(searchPath);
+    MKI_CHECK(!searchPath.empty(), "aicpu kernel so path is invalid", return false);
 
     // Open .so file
     std::ifstream istrm(searchPath, std::ios::in | std::ios::binary | std::ios::ate);

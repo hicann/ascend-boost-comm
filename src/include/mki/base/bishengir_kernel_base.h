@@ -40,7 +40,6 @@ public:
     std::string GetName() const override;
     const KernelInfo &GetKernelInfo() const override;
     KernelType GetType() const override;
-    void setNumPtr(const uint64_t numPtr);
     const uint64_t getNumPtr() const;
     void setStrideInOutput(const uint64_t numPtr);
     const uint64_t getStrideInOutput() const;
