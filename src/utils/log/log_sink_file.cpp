@@ -32,26 +32,9 @@
 
 namespace Mki {
 constexpr size_t MAX_LOG_FILE_COUNT = 50;                               // 50 回滚管理50个日志文件
-constexpr size_t MAX_FILE_NAME_LEN = 128;                                  // 128: max file length
+constexpr size_t MAX_FILE_NAME_LEN = 127;                               // 127: max file length without '\0' = 128 - 1
 constexpr uint64_t MAX_FILE_SIZE_THRESHOLD = 1073741824;                // 1073741824 当前单个日志文件最大1G
 constexpr uint64_t DISK_AVAILABEL_LIMIT = 10 * MAX_FILE_SIZE_THRESHOLD; // 磁盘剩余空间门限10G
-
-static bool IsValidFileName(const char *name)
-{
-    size_t len = strlen(name);
-    if (len == 0 || len > MAX_FILE_NAME_LEN) {
-        return false;
-    }
-
-    for (size_t i = 0; i < len; ++i) {
-        char c = name[i];
-        if (!isalnum(c) && c != '_' && c != '/') {
-            return false;
-        }
-    }
-
-    return true;
-}
 
 // A symlink with a trailing slash (/) is not recognized as a symlink, which is consistent with the operating system.
 static bool IsSymlink(const std::string &filePath)
@@ -139,20 +122,45 @@ void LogSinkFile::Log(const char *log, uint64_t logLen)
     currentFileSize_ += writeSize;
 }
 
+static bool IsValidFileName(const std::string &name)
+{
+    size_t len = name.size();
+    if (len == 0 || len > MAX_FILE_NAME_LEN) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; ++i) {
+        char c = name[i];
+        if (!isalnum(c) && c != '_' && c != '/') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void LogSinkFile::Init()
 {
-    const char *env = std::getenv("ASDOPS_LOG_TO_BOOST_TYPE");
-    boostType_ = env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : "mki";
+    boostType_ = "atb";
 
-    env = std::getenv("ASDOPS_LOG_PATH");
-    std::string logRootDir =
-        env && strlen(env) <= MAX_ENV_STRING_LEN && IsValidFileName(env) ? std::string(env) : GetHomeDir();
+    std::string logRootDir = GetHomeDir();
+
+    std::string env = std::string(std::getenv("HOME") != nullptr ? std::getenv("HOME") : "");
+    logRootDir = IsValidFileName(env) ? env + "/ascend/log" : logRootDir;
     logRootDir = PathCheckAndRegular(logRootDir);
 
-    logDir_ = logRootDir + "/" + boostType_ + "/log";
+    env = std::string(std::getenv("ASCEND_WORK_PATH") != nullptr ? std::getenv("ASCEND_WORK_PATH") : "");
+    logRootDir = IsValidFileName(env) ? env + "/ascend/log" : logRootDir;
+    logRootDir = PathCheckAndRegular(logRootDir);
 
-    env = std::getenv("ASDOPS_LOG_TO_FILE_FLUSH");
-    isFlush_ = env && strlen(env) <= MAX_ENV_STRING_LEN ? std::string(env) == "1" : false;
+    env = std::string(std::getenv("ASCEND_PROCESS_LOG_PATH") != nullptr ? std::getenv("ASCEND_PROCESS_LOG_PATH") : "");
+    logRootDir = IsValidFileName(env) ? env + "/ascend/log" : logRootDir;
+    logRootDir = PathCheckAndRegular(logRootDir);
+
+    logDir_ = logRootDir + "/" + boostType_;
+
+    env = std::string(std::getenv("ASCEND_LOG_SYNC_SAVE") != nullptr ? std::getenv("ASCEND_LOG_SYNC_SAVE") : "");
+    isFlush_ = env.size() > 0 && env.size() <= MAX_ENV_STRING_LEN - 1 ? env == "1" : false;
 }
 
 bool LogSinkFile::IsFileNameMatched(const std::string &fileName, std::string &createTime)

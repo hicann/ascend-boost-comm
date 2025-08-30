@@ -19,62 +19,99 @@
 namespace Mki {
 TEST(LogCore, InitTest1)
 {
-    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=0";
-    char envLogLevel[] = "ASDOPS_LOG_LEVEL=WARN";
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=4";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=0";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
     putenv(envLogToStdout);
-    putenv(envLogLevel);
     Mki::LogCore logCore;
     Mki::LogLevel logLevel = logCore.GetLogLevel();
     std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
-    EXPECT_EQ(logLevel, Mki::LogLevel::WARN);
+    EXPECT_EQ(logLevel, Mki::LogLevel::ERROR);
     EXPECT_EQ(sinks.size(), 0);
 }
 
 TEST(LogCore, InitTest2)
 {
-    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
-    char envLogLevel[] = "ASDOPS_LOG_LEVEL=ErRoR";
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=1";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=4:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=1";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
     putenv(envLogToStdout);
-    putenv(envLogLevel);
+    Mki::LogCore logCore;
+    Mki::LogLevel logLevel = logCore.GetLogLevel();
+    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
+    EXPECT_EQ(logLevel, Mki::LogLevel::ERROR);
+    EXPECT_EQ(sinks.size(), 0);
+}
+
+TEST(LogCore, InitTest3)
+{
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=1";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
+    putenv(envLogToStdout);
+    Mki::LogCore logCore;
+    Mki::LogLevel logLevel = logCore.GetLogLevel();
+    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
+    EXPECT_EQ(logLevel, Mki::LogLevel::ERROR);
+    EXPECT_EQ(sinks.size(), 2);
+}
+
+TEST(LogCore, InitTest4)
+{
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=1";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=2:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=0";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
+    putenv(envLogToStdout);
+    Mki::LogCore logCore;
+    Mki::LogLevel logLevel = logCore.GetLogLevel();
+    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
+    EXPECT_EQ(logLevel, Mki::LogLevel::WARN);
+    EXPECT_EQ(sinks.size(), 1);
+}
+
+TEST(LogCore, InitTest5)
+{
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=0";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=1";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
+    putenv(envLogToStdout);
+    Mki::LogCore logCore;
+    Mki::LogLevel logLevel = logCore.GetLogLevel();
+    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
+    EXPECT_EQ(logLevel, Mki::LogLevel::TRACE);
+    EXPECT_EQ(sinks.size(), 2);
+}
+
+TEST(LogCore, InitTest6)
+{
+    unsetenv("ASCEND_SLOG_PRINT_TO_STDOUT");
+    unsetenv("ASCEND_MODULE_LOG_LEVEL");
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     Mki::LogCore logCore;
     Mki::LogLevel logLevel = logCore.GetLogLevel();
     std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
     EXPECT_EQ(logLevel, Mki::LogLevel::ERROR);
     EXPECT_EQ(sinks.size(), 1);
-    MKI_LOG(INFO) << "dd";
-    MKI_LOG(WARN) << "dd";
-}
-
-TEST(LogCore, InitTest3)
-{
-    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=avc";
-    char envLogLevel[] = "ASDOPS_LOG_LEVEL=ERROT";
-    putenv(envLogToStdout);
-    putenv(envLogLevel);
-    Mki::LogCore logCore;
-    Mki::LogLevel logLevel = logCore.GetLogLevel();
-    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
-    EXPECT_EQ(logLevel, Mki::LogLevel::WARN);
-    EXPECT_EQ(sinks.size(), 0);
-}
-
-TEST(LogCore, InitTest4)
-{
-    unsetenv("ASDOPS_LOG_TO_STDOUT");
-    unsetenv("ASDOPS_LOG_LEVEL");
-    Mki::LogCore logCore;
-    Mki::LogLevel logLevel = logCore.GetLogLevel();
-    std::vector<std::shared_ptr<Mki::LogSink>> sinks = logCore.GetAllSinks();
-    EXPECT_EQ(logLevel, Mki::LogLevel::WARN);
-    EXPECT_EQ(sinks.size(), 0);
 }
 
 TEST(LogCore, LogTest1)
 {
-    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
-    char envLogLevel[] = "ASDOPS_LOG_LEVEL=INFO";
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=1";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=1";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
     putenv(envLogToStdout);
-    putenv(envLogLevel);
     Mki::LogCore logCore;
     Mki::LogLevel logLevel = logCore.GetLogLevel();
     EXPECT_EQ(logLevel, Mki::LogLevel::INFO);
@@ -86,12 +123,12 @@ TEST(LogCore, LogTest1)
 
 TEST(LogCore, LogTest2)
 {
-    char envLogToStdout[] = "ASDOPS_LOG_TO_STDOUT=1";
-    char envLogToFile[] = "ASDOPS_LOG_TO_FILE=1";
-    char envLogLevel[] = "ASDOPS_LOG_LEVEL=INFO";
+    char envGlobalLogLevel[] = "ASCEND_GLOBAL_LOG_LEVEL=1";
+    char envModuleLogLevel[] = "ASCEND_MODULE_LOG_LEVEL=ATB=:$ASCEND_MODULE_LOG_LEVEL";
+    char envLogToStdout[] = "ASCEND_SLOG_PRINT_TO_STDOUT=1";
+    putenv(envGlobalLogLevel);
+    putenv(envModuleLogLevel);
     putenv(envLogToStdout);
-    putenv(envLogLevel);
-    putenv(envLogToFile);
     Mki::LogCore logCore;
     Mki::LogLevel logLevel = logCore.GetLogLevel();
     EXPECT_EQ(logLevel, Mki::LogLevel::INFO);
