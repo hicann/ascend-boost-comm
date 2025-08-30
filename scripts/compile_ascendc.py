@@ -51,6 +51,7 @@ def gen_compile_cmd(args, dst: str, sub_arch: str, compile_options):
     compile_cmd += ["-std=c++17"]
     compile_cmd += ["--cce-mask-opt"]
     if (args.use_ascendc_dump):
+        compile_cmd += ["-mllvm", "-cce-aicore-function-stack-size=0x4000"]
         compile_cmd += ["--cce-long-call=true"]
         compile_cmd += ["-DASCENDC_DUMP=1"]
         compile_cmd += ["-DASCENDC_DEBUG"]
@@ -96,7 +97,7 @@ def gen_compile_cmd_v300(args, dst: str, sub_arch: str, compile_options):
     compile_cmd += compile_options
     compile_cmd += [args.srcs, "--cce-aicore-arch=%s" % sub_arch,
                     "--cce-aicore-only", "-o", dst,
-                    "-mllvm", "-cce-aicore-function-stack-size=16000",
+                    "-mllvm", "-cce-aicore-function-stack-size=0x4000",
                     "-mllvm", "-cce-aicore-addr-transform",
                     "-mllvm", "--cce-aicore-or-combine=false",
                     "-mllvm", "-instcombine-code-sinking=false",
