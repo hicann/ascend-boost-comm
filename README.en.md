@@ -1,4 +1,4 @@
-# Mind-KernelInfra
+# Ascend-KernelInfra
 
 #### Description
 算子公共平台，南向对接不同组织开发的算子库，北向支撑不同加速库应用，实现M x N算子能力复用

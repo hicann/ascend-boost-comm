@@ -1,7 +1,7 @@
-# Mind-KernelInfra
+# Ascend-KernelInfra
 
 #### 介绍
-算子公共平台，Mind-KernelInfra，缩写MKI。它统一定义了算子调用的L0级接口。南向对接不同组织开发的算子库，北向支撑不同加速库应用，实现M x N算子能力复用。 
+算子公共平台，Ascend-KernelInfra，缩写MKI。它统一定义了算子调用的L0级接口。南向对接不同组织开发的算子库，北向支撑不同加速库应用，实现M x N算子能力复用。 
 
 #### 软件架构
 软件架构说明
@@ -15,7 +15,7 @@
 三种典型使用场景：
 
 - 场景1. 与算子库、加速库一起编译出包使用
-下面假设 Mind-KernelInfra、算子库（本例中是ascend-op-common-lib）、加速库（本例中是ascend-transformer-boost）代码都已经准备好，且处于统一级目录下。
+下面假设 Ascend-KernelInfra、算子库（本例中是ascend-op-common-lib）、加速库（本例中是ascend-transformer-boost）代码都已经准备好，且处于统一级目录下。
 1.  使用算子命名空间作为参数， 编译MKI, 并将编译产物拷贝到算子库和加速库的3rdparty目录：在这里例子中， 命名空间参数是AtbOps
 
     ```shell
@@ -46,7 +46,7 @@
 5.  运行模型或算子测试用例
 
 - 场景2：仅与算子库一起编译后， 在算子层面进行调用
-下面假设 Mind-KernelInfra、算子库（本例中是ascend-op-common-lib）代码都已经准备好，且处于统一级目录下。
+下面假设 Ascend-KernelInfra、算子库（本例中是ascend-op-common-lib）代码都已经准备好，且处于统一级目录下。
 1.  使用算子命名空间作为参数， 编译MKI, 并将编译产物拷贝到算子库目录：在这里例子中， 命名空间参数是AtbOps 
 
     ```shell
