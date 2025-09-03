@@ -17,7 +17,6 @@ if [[ -f "$path" ]] && [[ "$path" =~ 'set_env.sh' ]];then
     export PYTORCH_INSTALL_PATH="$(python3 -c 'import importlib.util; SPEC=importlib.util.find_spec("torch"); \
                                                print(SPEC.submodule_search_locations[0])')"
     export LD_LIBRARY_PATH=$PYTORCH_INSTALL_PATH/lib:$LD_LIBRARY_PATH
-    export ASCEND_MODULE_LOG_LEVEL=ATB=3:$ASCEND_MODULE_LOG_LEVEL
 else
     echo "There is no 'set_env.sh' to import"
 fi
