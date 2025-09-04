@@ -77,7 +77,7 @@
 3. 测试算子 
 
 #### 参与贡献
-0. 申请权限， 在 https://onebox.huawei.com/v/ccd7a576641532864964b7d1ff3c7c15?type=1 中填写账号信息，通知何太航添加权限
+
 1.  Fork 本仓库
 - git clone https://gitee.com/ascend/Mind-KernelInfra.git
 2.  新建开发分支
