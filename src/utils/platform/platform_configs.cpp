@@ -9,8 +9,10 @@
  */
 
 #include "mki/utils/platform/platform_configs.h"
-#include <mutex>
 #include "mki/utils/log/log.h"
+
+#include <mutex>
+#include <acl/acl_rt.h>
 
 namespace Mki {
 constexpr uint32_t MAX_CORE_NUM = 128;
@@ -48,21 +50,28 @@ bool PlatformConfigs::GetPlatformSpec(const std::string &label, std::map<std::st
 
 uint32_t PlatformConfigs::GetCoreNumByType(const std::string &coreType)
 {
-    std::string coreNumStr;
-    std::string coreTypeStr = coreType == "VectorCore" ? "vector_core_cnt" : "ai_core_cnt";
-    (void)GetPlatformSpec("SoCInfo", coreTypeStr, coreNumStr);
-    MKI_LOG(DEBUG) << "Get PlatformConfigs::core_num_ to " << coreTypeStr << ": " << coreNumStr;
-    if (coreNumStr.empty()) {
-        MKI_LOG(ERROR) << "CoreNumStr is empty!";
-        return 1;
-    } else {
-        uint32_t coreTypeNum = std::strtoul(coreNumStr.c_str(), nullptr, 10); // 10 进制
-        if (coreTypeNum == 0 || coreTypeNum > MAX_CORE_NUM) {
-            MKI_LOG(ERROR) << "core_num is out of range : " << coreTypeNum;
+    uint32_t coreNum = 0;
+    aclrtDevResLimitType resType = coreType == "VectorCore" ? ACL_RT_DEV_RES_VECTOR_CORE : ACL_RT_DEV_RES_CUBE_CORE;
+    aclError getResRet = aclrtGetResInCurrentThread(resType, &coreNum);
+    if (getResRet != ACL_SUCCESS) {
+        std::string coreNumStr;
+        std::string coreTypeStr = coreType == "VectorCore" ? "vector_core_cnt" : "ai_core_cnt";
+        (void)GetPlatformSpec("SoCInfo", coreTypeStr, coreNumStr);
+        MKI_LOG(DEBUG) << "Get PlatformConfigs::core_num_ to " << coreTypeStr << ": " << coreNumStr;
+        if (coreNumStr.empty()) {
+            MKI_LOG(ERROR) << "CoreNumStr is empty!";
             return 1;
+        } else {
+            coreNum = std::strtoul(coreNumStr.c_str(), nullptr, 10); // 10 进制
         }
-        return coreTypeNum;
+    } else {
+        MKI_LOG(DEBUG) << "Get ThreadResource::core_num_ to " << coreType << ": " << coreNum;
     }
+    if (coreNum == 0 || coreNum > MAX_CORE_NUM) {
+        MKI_LOG(ERROR) << "core_num is out of range : " << coreNum;
+        return 1;
+    }
+    return coreNum;
 }
 
 void PlatformConfigs::SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipeDtypeMap)

@@ -11,6 +11,7 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/platform/platform_info.h"
 #include "mki/utils/platform/platform_manager.h"
+#include "acl/acl_rt.h"
 
 namespace Mki {
 TEST(PlatformTest, platformTest1)
@@ -64,4 +65,5 @@ TEST(PlatformManagerTest, Finalize)
     Mki::PlatformManager &platformManager = Mki::PlatformManager::Instance();
     EXPECT_EQ(platformManager.Finalize(), 0);
 }
+
 } // namespace Mki

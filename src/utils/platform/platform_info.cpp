@@ -14,8 +14,10 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/rt/rt.h"
 #include "mki/utils/platform/platform_manager.h"
+#include "acl/acl_rt.h"
 
 namespace Mki {
+constexpr uint32_t MAX_CORE_NUM = 128;
 PlatformInfo::PlatformInfo() { Init(); }
 
 PlatformInfo &PlatformInfo::Instance()
@@ -69,17 +71,31 @@ bool PlatformInfo::Inited() const { return inited_; }
 uint32_t PlatformInfo::GetCoreNum(CoreType type)
 {
     uint32_t coreNum = 0;
-    if (platformType_ == PlatformType::ASCEND_910B) {
-        switch (type) {
-            case CoreType::CORE_TYPE_VECTOR:
-                coreNum = platformConfigs_.GetCoreNumByType("VectorCore");
-                break;
-            default:
-                coreNum = platformConfigs_.GetCoreNumByType("AiCore");
-                break;
-        }
+    aclrtDevResLimitType resType;
+    if (type == CoreType::CORE_TYPE_VECTOR) {
+        resType = ACL_RT_DEV_RES_VECTOR_CORE;
     } else {
-        coreNum = platformConfigs_.GetCoreNumByType("AiCore");
+        resType = ACL_RT_DEV_RES_CUBE_CORE;
+    }
+    aclError getResRet = aclrtGetResInCurrentThread(resType, &coreNum);
+    if (getResRet != ACL_SUCCESS) {
+        if (platformType_ == PlatformType::ASCEND_910B) {
+            switch (type) {
+                case CoreType::CORE_TYPE_VECTOR:
+                    coreNum = platformConfigs_.GetCoreNumByType("VectorCore");
+                    break;
+                default:
+                    coreNum = platformConfigs_.GetCoreNumByType("AiCore");
+                    break;
+            }
+        } else {
+            coreNum = platformConfigs_.GetCoreNumByType("AiCore");
+        }
+        MKI_FLOG_WARN("Failed to get thread core number");
+    }
+    if (coreNum == 0 || coreNum > MAX_CORE_NUM) {
+        MKI_LOG(ERROR) << "core_num is out of range : " << coreNum;
+        return 1;
     }
     MKI_FLOG_INFO("Platform get core num %u, type %d", coreNum, type);
     return coreNum;
