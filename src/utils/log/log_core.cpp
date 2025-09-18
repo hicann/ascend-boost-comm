@@ -141,8 +141,8 @@ LogCore::LogCore()
 
 LogCore &LogCore::Instance()
 {
-    static LogCore logCore;
-    return logCore;
+    static LogCore *const logCore = new LogCore();
+    return *logCore;
 }
 
 LogLevel LogCore::GetLogLevel() const { return level_; }
