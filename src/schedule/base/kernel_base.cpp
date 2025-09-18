@@ -95,7 +95,8 @@ public:
         MKI_CHECK(status.Ok(), "failed to set overflow args", return status);
         // Memset
         const auto &memsetInfo = kernelInfo.GetMemsetInfo();
-        status = MemsetTensorArgs(args, argsNum, runInfo.GetStream(), memsetInfo);
+        void *tmpPtr = hostBuffer == nullptr ? nullptr : static_cast<void*>(hostBuffer + kernelInfo.GetArgsSize() - sizeof(MemsetArgs));
+        status = MemsetTensorArgs(args, argsNum, memsetInfo, tmpPtr);
         MKI_CHECK(status.Ok(), "failed to memset tensor args", return status);
 
         // launch
@@ -103,6 +104,9 @@ public:
         kernelParam_.blockDim = kernelInfo.GetBlockDim();
         kernelParam_.argsEx = &argsEx_;
         argsEx_.args = argsPtr;
+        for (int i = 0; i < argsSize / 8; ++i) {
+            std::cout << "kernel args " << i + 1 << ": " << *(void**)((char*)(argsEx_.args) + 8 * i) << std::endl;
+        }
         argsEx_.argsSize = argsSize;
         return status;
     }
@@ -173,11 +177,11 @@ private:
         return Status::OkStatus();
     }
 
-    Status MemsetTensorArgs(void **args, uint64_t argsNum, void *stream,
-                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo) const
+    Status MemsetTensorArgs(void **args, uint64_t argsNum,
+                            const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *memsetArgs) const
     {
         if (memsetInfo.size() != 0) {
-            Status status = ClearTensors(args, argsNum, memsetInfo, stream);
+            Status status = BuildMemsetArgs(args, argsNum, memsetInfo, memsetArgs);
             MKI_CHECK(status.Ok(), "failed to clear tensors", return status);
         }
         return Status::OkStatus();
@@ -301,6 +305,10 @@ Status KernelBase::Init(const LaunchParam &launchParam)
     auto kernelParamNum = GetKernelArgsNum(launchParam);
     uint64_t baseSize = kernelParamNum * sizeof(void *);
     uint64_t argsSize = baseSize;
+    const auto &memsetInfo = kernelInfo_.GetMemsetInfo();
+    if (!memsetInfo.empty()) {
+        argsSize += sizeof(MemsetArgs);
+    }
     if (!launchWithTiling) {
         return kernelInfo_.InitArgs(argsSize);
     }
@@ -408,6 +416,11 @@ Status KernelBase::RunWithArgs(void *args, void *stream, bool isDeviceAddr)
 {
     MKI_LOG(INFO) << "Ready to run, KernelInfo:\n" << kernelInfo_.ToString();
     MKI_CHECK(handle_ != nullptr, "handle is nullptr", return Status::FailStatus(ERROR_INVALID_VALUE));
+    const auto &memsetInfo = kernelInfo_.GetMemsetInfo();
+    if (!memsetInfo.empty()) {
+        Status st = DispatchMemsetKernel(static_cast<void*>(static_cast<char*>(args) + kernelInfo_.GetArgsSize() - sizeof(MemsetArgs)), stream, isDeviceAddr);
+        MKI_CHECK(st.Ok(), "dispatch memset failed", return st);
+    }
     const MkiRtKernelParam &kernelParam = builder_->GetKernelParam();
     MKI_CHECK(kernelParam.argsEx != nullptr, "kernelParam's argsEx is nullptr",
               return Status::FailStatus(ERROR_INVALID_VALUE));

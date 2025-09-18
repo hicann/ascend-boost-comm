@@ -13,9 +13,26 @@
 #include <cstdint>
 #include "mki/kernel_info.h"
 #include "mki/utils/status/status.h"
+#include "mki/utils/rt/base/types.h"
 
 namespace Mki {
-Status ClearTensors(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *stream);
+static constexpr int32_t MEMSET_MAX_TENSOR_NUM = 8;
+static constexpr size_t BLOCK_BYTES = 32;
+static constexpr size_t BLOCK_BYTES_ONCE = 32 * 8; // handle 256bytes at once
+struct MemsetTilingData {
+    uint32_t size[MEMSET_MAX_TENSOR_NUM] = {0};
+    uint32_t sizeBlock[MEMSET_MAX_TENSOR_NUM] = {0};
+    uint32_t sizeLoop[MEMSET_MAX_TENSOR_NUM] = {0};
+    uint32_t maxUb[MEMSET_MAX_TENSOR_NUM] = {0}; // align to block
+};
+
+struct MemsetArgs {
+    void *tensors[MEMSET_MAX_TENSOR_NUM];
+    void *tiling;
+    MemsetTilingData tilingData;
+};
+Status BuildMemsetArgs(void **args, uint64_t argsNum, const MiniVector<KernelInfo::MemsetInfo> &memsetInfo, void *memsetArgs);
+Status DispatchMemsetKernel(void *args, void *stream, bool isDeviceAddr);
 } // namespace Mki
 
 #endif // MKI_UTILS_MEMSET_CLEAR_TENSORS_H
