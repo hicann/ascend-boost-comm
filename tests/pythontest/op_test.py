@@ -88,7 +88,7 @@ class OpTest(unittest.TestCase):
         self.mki = torch.classes.MkiTorch.MkiTorch(json.dumps(
             self.op_desc))
 
-    def execute(self, in_tensors, out_tensors, envs=None):
+    def execute(self, in_tensors, out_tensors, envs=None, original_tensors = {}):
         npu_device = self.__get_npu_device()
         torch_npu.npu.set_device(npu_device)
 
@@ -101,10 +101,40 @@ class OpTest(unittest.TestCase):
                 logging.info("Current soc is %s is not supported for this case: %s",
                              soc_version, str(self.support_soc))
                 return
+        in_tensors_npu = []
+        out_tensors_npu = []
+        original_tensors_npu = {}
+        original_tensors_npu_id_map = {}
+        for idx, tensor in original_tensors.items():
+            if id(tensor) not in original_tensors_npu_id_map:
+                original_tensors_npu_id_map[id(tensor)] = tensor.npu()
+            original_tensors_npu[idx] = original_tensors_npu_id_map[id(tensor)]
+        for idx, tensor in enumerate(in_tensors):
+            if not tensor.is_contiguous():
+                original_tensor_npu = original_tensors_npu[idx]
+                actual_tensor_npu = original_tensor_npu.as_strided(
+                    tensor.shape,
+                    tensor.stride(),
+                    tensor.storage_offset()
+                )
+                in_tensors_npu.append(actual_tensor_npu)
+            else:
+                in_tensors_npu.append(tensor.npu())
 
-        in_tensors_npu = [tensor.npu() for tensor in in_tensors]
-        out_tensors_npu = [in_tensors_npu[i] if isinstance(i, int) else i.npu()
-                           for i in out_tensors]
+        for idx, tensor in enumerate(out_tensors):
+            idx+=len(in_tensors)
+            if isinstance(tensor, int):
+                out_tensors_npu.append(in_tensors_npu[tensor])
+            else if not tensor.is_contiguous():
+                original_tensor_npu = original_tensors_npu[idx]
+                actual_tensor_npu = original_tensor_npu.as_strided(
+                    tensor.shape,
+                    tensor.stride(),
+                    tensor.storage_offset()
+                )
+                out_tensors_npu.append(actual_tensor_npu)
+            else:
+                out_tensors_npu.append(tensor.npu())
 
         self.__set_envs(envs)
         if self.nct:
@@ -152,7 +182,7 @@ class OpTest(unittest.TestCase):
             self.run_result = self.mki.execute_nct(in_tensors_npu, out_tensors_npu)
         else:
             self.run_result = self.mki.execute(in_tensors_npu, out_tensors_npu)
-        self.__unset_envs(envs)
+          self.__unset_envs(envs)
 
         if out_tensors_npu:
             out_tensors = [tensor.cpu() for tensor in out_tensors_npu]
