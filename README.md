@@ -1,4 +1,4 @@
-# Ascend-KernelInfra
+# Ascend-KernelInfra ci
 
 #### 介绍
 算子公共平台，Ascend-KernelInfra，缩写MKI。它统一定义了算子调用的L0级接口。南向对接不同组织开发的算子库，北向支撑不同加速库应用，实现M x N算子能力复用。 
