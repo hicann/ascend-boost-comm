@@ -15,7 +15,7 @@
 namespace Mki {
 class Dl {
 public:
-    explicit Dl(const std::string &dlFilePath, bool checkSymlinks = true);
+    explicit Dl(const std::string &dlFilePath);
     ~Dl();
     Dl(const Dl &) = delete;
     Dl &operator=(const Dl &) = delete;
