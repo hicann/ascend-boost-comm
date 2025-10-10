@@ -14,8 +14,7 @@
 #include "mki/utils/log/log.h"
 #include "mki/utils/rt/rt.h"
 #include "mki/utils/platform/platform_manager.h"
-#include "mki/utils/dl/dl.h"
-#include "mki/utils/env/env.h"
+#include "acl/acl_rt.h"
 
 namespace Mki {
 constexpr uint32_t MAX_CORE_NUM = 128;
@@ -69,42 +68,30 @@ void PlatformInfo::Init()
 
 bool PlatformInfo::Inited() const { return inited_; }
 
-using AclrtGetResInCurrentThreadFunc = int(*)(int, uint32_t*);
-
 uint32_t PlatformInfo::GetCoreNum(CoreType type)
 {
     uint32_t coreNum = 0;
-    Dl dl = Dl(std::string(GetEnv("ASCEND_HOME_PATH")) + "/runtime/lib64/libascendcl.so", false);
-    AclrtGetResInCurrentThreadFunc aclrtGetResInCurrentThread =
-        (AclrtGetResInCurrentThreadFunc)dl.GetSymbol("aclrtGetResInCurrentThread");
-    MKI_LOG(INFO) << "ASCEND_HOME_PATH: " << std::string(GetEnv("ASCEND_HOME_PATH"));
-    if (aclrtGetResInCurrentThread != nullptr) {
-        int8_t resType = type == CoreType::CORE_TYPE_VECTOR ? 1 : 0;
-        int getResRet = aclrtGetResInCurrentThread(resType, &coreNum);
-        if (getResRet == 0) {
-            if (coreNum == 0 || coreNum > MAX_CORE_NUM) {
-                MKI_LOG(ERROR) << "core_num is out of range : " << coreNum;
-                return 1;
-            } else {
-                return coreNum;
+    aclrtDevResLimitType resType;
+    if (type == CoreType::CORE_TYPE_VECTOR) {
+        resType = ACL_RT_DEV_RES_VECTOR_CORE;
+    } else {
+        resType = ACL_RT_DEV_RES_CUBE_CORE;
+    }
+    aclError getResRet = aclrtGetResInCurrentThread(resType, &coreNum);
+    if (getResRet != ACL_SUCCESS) {
+        if (platformType_ == PlatformType::ASCEND_910B) {
+            switch (type) {
+                case CoreType::CORE_TYPE_VECTOR:
+                    coreNum = platformConfigs_.GetCoreNumByType("VectorCore");
+                    break;
+                default:
+                    coreNum = platformConfigs_.GetCoreNumByType("AiCore");
+                    break;
             }
         } else {
-            MKI_LOG(WARN) << "Failed to get thread core num!";
+            coreNum = platformConfigs_.GetCoreNumByType("AiCore");
         }
-    } else {
-        MKI_LOG(WARN) << "Failed to load acl function!";
-    }
-    if (platformType_ == PlatformType::ASCEND_910B) {
-        switch (type) {
-            case CoreType::CORE_TYPE_VECTOR:
-                coreNum = platformConfigs_.GetCoreNumByType("VectorCore");
-                break;
-            default:
-                coreNum = platformConfigs_.GetCoreNumByType("AiCore");
-                break;
-        }
-    } else {
-        coreNum = platformConfigs_.GetCoreNumByType("AiCore");
+        MKI_FLOG_WARN("Failed to get thread core number");
     }
     if (coreNum == 0 || coreNum > MAX_CORE_NUM) {
         MKI_LOG(ERROR) << "core_num is out of range : " << coreNum;
