@@ -17,10 +17,10 @@
 namespace Mki {
 std::atomic_int g_memfdNextId(0);
 
-Dl::Dl(const std::string &dlFilePath) : memFd_(0), dlHandle_(nullptr)
+Dl::Dl(const std::string &dlFilePath, bool checkSymlinks) : memFd_(0), dlHandle_(nullptr)
 {
     dlSuccess_ = false;
-    std::string realPath = FileSystem::PathCheckAndRegular(dlFilePath);
+    std::string realPath = FileSystem::PathCheckAndRegular(dlFilePath, checkSymlinks);
     MKI_CHECK(!realPath.empty(), "file path is invalid", return);
     MKI_CHECK((FileSystem::FileSize(realPath) > 0 && FileSystem::FileSize(realPath) <= MAX_FILE_SIZE / 10),
         "File size is invalid", return);   // MAX_FILE_SIZE / 10 = 1GB
