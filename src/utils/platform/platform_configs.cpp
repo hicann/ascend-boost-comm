@@ -8,13 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "mki/utils/platform/platform_configs.h"
 #include <mutex>
-
 #include "mki/utils/dl/dl.h"
 #include "mki/utils/env/env.h"
 #include "mki/utils/log/log.h"
 #include "mki/types.h"
-#include "mki/utils/platform/platform_configs.h"
 #include "mki/utils/rt/resource/resource.h"
 
 namespace Mki {
