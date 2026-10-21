@@ -34,7 +34,7 @@ ascend-boost-comm
 
 ## 2. Product Support
 
-The following table lists the Ascend hardware architectures supported by this repository.
+The following table lists the Huawei Ascend hardware architectures supported by this repository.
 
 | Hardware Model| Supported| Description|
 |---|---|---|
@@ -93,7 +93,7 @@ pip3 install attrs cython 'numpy>=1.19.2,<=1.24.0' decorator sympy cffi pyyaml p
 ```
 
 ### Detailed CANN Installation Guide
-You can refer to the [Ascend documentation](https://www.hiascend.com/document) > CANN Community Edition > Software Installation to view the CANN software installation guide. Select according to the machine, operating system, and use case, and then read the detailed installation steps.
+You can refer to the [Huawei Ascend documentation](https://www.hiascend.com/document) > CANN Community Edition > Software Installation to view the CANN software installation guide. Select according to the machine, operating system, and use case, and then read the detailed installation steps.
 
 ### Tool Version Requirements and Installation
 
