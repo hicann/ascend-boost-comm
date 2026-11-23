@@ -1,31 +1,27 @@
-# Single Operator Example Using the Ascend Boost Comm Library
+# Ascend Boost Comm 库开发单算子示例
+本教程以add算子为例，提供能够基于Ascend Boost Comm运行的算子编写教程.
 
-This tutorial uses the add operator as an example to provide a guide for writing operators that run on Ascend Boost Comm.
-
-### Operator Function
-
-Add corresponding elements of two input tensors to produce one output tensor:
-`z[i] = x[i] + y[i]`. The test in this tutorial uses one-dimensional FP16 tensors
-with the same shape. `OpParam::Addcustom` has no dimension parameter, so the
-operator parameters in the test should be an empty dictionary `{}`.
+### 算子功能
+两个输入张量的对应元素相加，得到一个输出张量：`z[i] = x[i] + y[i]`。
+本教程测试使用相同形状的FP16一维张量。`OpParam::Addcustom` 不包含维度参数，
+测试中的算子参数应为空字典 `{}`。
 ![AddcustomOperation](images/addcustom_operation.png)
-### New Files
-
-- Create the `addcustom` directory under `example/ops`. This directory primarily stores the operator implementation code. See the following sections for the specific file contents. The directory structure is as follows:
+### 新增文件
+- 在`example/ops`下新增`addcustom`目录，该目录下主要存放算子实现部分的代码，文件具体内容见后文，目录结构如下：
     ```
     addcustom
-    ├── op_kernel                       // Device-side implementation files (including kernel entry and implementation files)
+    ├── op_kernel			        // device侧实现文件(包括核函数入口、以及实现文件)
     │   └── addcustom.cpp
-    ├── tiling                          // New operator tiling
-    │   ├── addcustom_tiling.cpp        // Core tiling implementation algorithm
-    │   ├── addcustom_tiling.h          // Operator tiling interface
-    │   └── tiling_data.h              // Definition of the tiling_data structure passed between tiling and kernel
-    ├── CMakeLists.txt                  // CMake file for the new operator build
-    ├── addcustom_kernel.cpp            // Validation
-    └── addcustom_operation.cpp         // Shape validation
+    ├── tiling			            // 新增算子tiling
+    │   ├── addcustom_tiling.cpp	// tiling实现核心算法
+    │   ├── addcustom_tiling.h		// 算子tiling接口
+    │   └── tiling_data.h			// tiling和kernel传递结构体tiling_data的定义
+    ├── CMakeLists.txt			    // 新增算子编译CMake
+    ├── addcustom_kernel.cpp		// 校验
+    └── addcustom_operation.cpp		// shape验证
     ```
 
-- Create the `example/include/atbops/params/addcustom.h` file to define the parameter structure for the `Addcustom` operation. The content is as follows:
+- 新增`example/include/atbops/params/addcustom.h`文件定义 `Addcustom` 操作的参数结构体，内容如下：
     ```c++
     #ifndef ATBOPS_PARAMS_ADDCUSTOM_H
     #define ATBOPS_PARAMS_ADDCUSTOM_H
@@ -51,26 +47,23 @@ operator parameters in the test should be an empty dictionary `{}`.
 
     #endif
     ```
-### Modified Files
-
-- Include the new header file `example/include/atbops/params/addcustom.h` in `example/include/atbops/params/params.h`:
+### 修改文件
+- 在`example/include/atbops/params/params.h`中包含新增的头文件`example/include/atbops/params/addcustom.h`:
     ```c++
     #include "atbops/params/addcustom.h"
     ```
-## Environment Preparation
+## 环境准备
 
-Refer to [Environment Preparation](../README_en.md#environment-setup) to set up the build and test environment. Once the environment is ready, you can begin developing the operator.
-## Operator Implementation
-
-Operator implementation mainly includes device-side operator implementation and host-side tiling implementation.
-### Tiling Development
-
-Core concepts of tiling development include `TilingData`, `Workspace`, `TilingKey`, `BlockDim`, and more. For details, see [Glossary - Ascend Community](https://www.hiascend.com/document/detail/en/canncommercial/82RC1/opdevg/Ascendcopdevg/atlas_ascendc_10_00013.html).
+您可参考[环境准备](../README.md#环境构建)进行编译和测试环境搭建，环境准备好之后，就可以开始算子开发之旅。
+## 算子实现
+算子实现主要包括：device侧算子实现和host侧tiling实现。
+### tiling开发
+tiling开发的核心概念：`TilingData`、`Workspace`、`TilingKey`、`BlockDim`等，可访问[术语表-昇腾社区](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/opdevg/Ascendcopdevg/atlas_ascendc_10_00013.html)查看。
 
 #### tiling_data.h
 
-File path: `example/ops/addcustom/tiling/tiling_data.h`
-Main function: Describes the structured data definitions required for tiling computation.
+文件路径：`example/ops/addcustom/tiling/tiling_data.h`
+主要功能：描述执行tiling计算所需的结构化数据定义。
 
 ```c++
 #ifndef ATBOPS_ADDCUSTOM_TILING_DATA
@@ -79,45 +72,43 @@ Main function: Describes the structured data definitions required for tiling com
 #include <cstdint>
 
 namespace Mki {
-// Minimum element count per core. For half this is 16 elements on a 32B boundary;
-// a larger split granularity is used here.
+// 每个核至少处理的元素数。half 按 32 字节对齐时为 16 个元素，这里取更大的切分粒度。
 constexpr uint32_t ADDCUSTOM_MIN_BLOCK_LENGTH = 32;
-// DataCopy requires the half element count to be 32-byte aligned.
+// DataCopy 搬运 half 时，元素个数需要 32 字节对齐。
 constexpr uint32_t ADDCUSTOM_ELEM_ALIGN = 16;
-// Inter-core splits are aligned to a 64B cache line (32 half elements) so that
-// different cores never write the same cache line.
+// 核间切分按 64B cache line 对齐（32 个 half），保证不同核不会写同一条 cache line。
 constexpr uint32_t ADDCUSTOM_BLOCK_ALIGN = 32;
-// The three half UB buffers (x/y/z) take about 96KB, so one tile is 16384 aligned elements.
+// 三块 half UB（x/y/z）共用约 96KB，单 tile 取 16384 个元素并保持对齐。
 constexpr uint32_t ADDCUSTOM_MAX_TILE_LENGTH = 16384;
 
 struct AddcustomTilingData {
-    uint32_t totalLength;   // Total data length
-    uint32_t formerNum;     // Number of front cores with aligned splits (blockDim-1 when blockDim>1)
-    uint32_t formerLength;  // Element count on each front core, a multiple of ADDCUSTOM_BLOCK_ALIGN
-    uint32_t tailLength;    // Element count on the last core, which takes the remainder
+    uint32_t totalLength;   // 总数据长度
+    uint32_t formerNum;     // 前 formerNum 个核对齐切分核数（blockDim>1 时为 blockDim-1）
+    uint32_t formerLength;  // 前 formerNum 个核各自的元素个数，为 ADDCUSTOM_BLOCK_ALIGN 的倍数
+    uint32_t tailLength;    // 最后一个核的元素个数，承接剩余尾部
 };
 
-// Element range handled by a single core.
+// 单个核负责的区间范围。
 struct AddcustomBlockRange {
     uint32_t start;
     uint32_t length;
 };
 
-// Per-core tiling plan: alignLength goes through DataCopy, the remaining tail goes through UB.
+// 单核内的分块计划：alignLength 走 DataCopy，剩余尾元素走 UB 尾块搬运。
 struct AddcustomTilePlan {
     uint32_t tileLength;
     uint32_t alignLength;
 };
 
-// Shared by host and kernel code, so it has to compile in both environments.
+// host 侧与 kernel 侧共用同一套实现，需同时支持两种编译环境。
 #if defined(__CCE_AICORE__) || defined(__CCE_KT_TEST__)
 #define ADDCUSTOM_FN __aicore__ inline
 #else
 #define ADDCUSTOM_FN inline
 #endif
 
-// The first formerNum cores each handle formerLength elements (start and length are 64B aligned),
-// the remaining cores handle tailLength elements.
+// 前 formerNum 个核各处理 formerLength 个元素（起点与长度均按 64B 对齐），其余核处理
+// tailLength 个元素。
 ADDCUSTOM_FN AddcustomBlockRange GetAddcustomBlockRange(const AddcustomTilingData &tiling, uint32_t blockIdx)
 {
     AddcustomBlockRange range{0, 0};
@@ -133,8 +124,8 @@ ADDCUSTOM_FN AddcustomBlockRange GetAddcustomBlockRange(const AddcustomTilingDat
     return range;
 }
 
-// The aligned part uses vector DataCopy; the non-aligned tail is moved through a UB block
-// (DataCopyPad on 910B) so it never shares a cache line with the scalar write-back of the aligned part.
+// 对齐部分走向量 DataCopy；不足对齐的尾元素由 kernel 经 UB 尾块搬运（910B 用
+// DataCopyPad），不与对齐段共用同一 cache line 标量写回。
 ADDCUSTOM_FN AddcustomTilePlan MakeAddcustomTilePlan(uint32_t blockLength)
 {
     AddcustomTilePlan plan{0, 0};
@@ -152,8 +143,8 @@ ADDCUSTOM_FN AddcustomTilePlan MakeAddcustomTilePlan(uint32_t blockLength)
 ```
 
 #### addcustom_tiling.h
-File path: `example/ops/addcustom/tiling/addcustom_tiling.h`
-Main function: The tiling process primarily performs data partitioning. This file contains function declarations.
+文件路径：`example/ops/addcustom/tiling/addcustom_tiling.h`
+主要功能：tiling过程主要是完成数据的切分，这里则是函数声明。
 ```c++
 #ifndef ATBOPS_ADDCUSTOM_TILING_H
 #define ATBOPS_ADDCUSTOM_TILING_H
@@ -167,7 +158,7 @@ Main function: The tiling process primarily performs data partitioning. This fil
 #include "tiling_data.h"
 
 namespace Mki {
-// Computes the per-core split from the total length and vector core count; host and kernel share the same offset math.
+// 按总长度与 vector 核数计算各核切分，host 与 kernel 共用同一套偏移计算。
 Status BuildAddcustomTiling(uint32_t totalLength, uint32_t coreNum, AddcustomTilingData &tilingData,
                             uint32_t &blockDim);
 Status AddcustomTiling(const LaunchParam &launchParam, KernelInfo &kernelInfo);
@@ -177,8 +168,8 @@ Status AddcustomTiling(const LaunchParam &launchParam, KernelInfo &kernelInfo);
 ```
 
 #### addcustom_tiling.cpp
-File path: `example/ops/addcustom/tiling/addcustom_tiling.cpp`
-Main function: Implements the main function for data partitioning. Refer to the content under the file paths above for specific function implementations.
+文件路径：`example/ops/addcustom/tiling/addcustom_tiling.cpp`
+主要功能：实现切分功能的主体函数(具体函数实现请参考上面文件路径下的内容)
 ```c++
 #include "addcustom_tiling.h"
 
@@ -193,30 +184,29 @@ Main function: Implements the main function for data partitioning. Refer to the 
 #include "atbops/params/addcustom.h"
 #include "tiling_data.h"
 
-// Splitting constants (ADDCUSTOM_MIN_BLOCK_LENGTH, ADDCUSTOM_ELEM_ALIGN,
-// ADDCUSTOM_BLOCK_ALIGN, ADDCUSTOM_MAX_TILE_LENGTH) are defined in tiling_data.h.
+// 切分相关常量（ADDCUSTOM_MIN_BLOCK_LENGTH、ADDCUSTOM_ELEM_ALIGN、
+// ADDCUSTOM_BLOCK_ALIGN、ADDCUSTOM_MAX_TILE_LENGTH）定义在 tiling_data.h 中。
 
 namespace Mki {
-// Computes the per-core split from the total length and vector core count; host and kernel share the same offset math.
+// 按总长度与 vector 核数计算各核切分，host 与 kernel 共用同一套偏移计算。
 Status BuildAddcustomTiling(uint32_t totalLength, uint32_t coreNum, AddcustomTilingData &tilingData,
                             uint32_t &blockDim)
 {
-    // Refer to the content under the file paths above for specific function implementations
+    // 具体函数实现请参考上面文件路径下的内容
 }
 
 Status AddcustomTiling(const LaunchParam &launchParam, KernelInfo &kernelInfo)
 {
-    // Refer to the content under the file paths above for specific function implementations
+    // 具体函数实现请参考上面文件路径下的内容
 }
 } // namespace Mki
 ```
 
-### Kernel Development
-
-For kernel-related concepts such as `Compute`, `CopyIn`, and `CopyOut`, see [Glossary - Ascend Community](https://www.hiascend.com/document/detail/en/canncommercial/82RC1/opdevg/Ascendcopdevg/atlas_ascendc_10_00013.html).
+### kernel开发
+kernel相关的`Compute`、`CopyIn`、`CopyOut`等概念，可访问[术语表-昇腾社区](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/opdevg/Ascendcopdevg/atlas_ascendc_10_00013.html)查看。
 #### addcustom.cpp
-File path: `example/ops/addcustom/op_kernel/addcustom.cpp`
-Main function: Handles all data movement and computation based on the tiling information.
+文件路径：`example/ops/addcustom/op_kernel/addcustom.cpp`
+主要功能：根据tiling信息完成所有数据的搬运和计算。
 ```c++
 #include "kernel_operator.h"
 #include "ops/utils/common/kernel/kernel_utils.h"
@@ -229,40 +219,40 @@ public:
     __aicore__ inline Addcustom() {}
     __aicore__ inline void Init(GM_ADDR x, GM_ADDR y, GM_ADDR z, const Mki::AddcustomTilingData &tiling)
     {
-        // Process by block start and actual length, and cover the tail elements. See the file path above.
+        // 按 block 起始和实际长度处理，尾块元素单独补齐。具体实现请参考上面文件路径下的内容
     }
     __aicore__ inline void Process()
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
 private:
-    // Aligned range: GM -> UB -> vector Add -> GM, lengths are ADDCUSTOM_ELEM_ALIGN aligned.
+    // 对齐段：GM -> UB -> 向量 Add -> GM，长度均按 ADDCUSTOM_ELEM_ALIGN 对齐。
     __aicore__ inline void ProcessVector()
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
-    // Ascend910B: the tail block is moved through UB with DataCopyPad so it never shares a cache line with DataCopy.
+    // Ascend910B：尾块经 UB + DataCopyPad 搬运，避免与对齐段共用同一 cache line。
     __aicore__ inline void ProcessTailPad()
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
-    // Ascend910 has no DataCopyPad; a non-aligned tail makes the whole block run scalar.
+    // Ascend910 不支持 DataCopyPad，存在非对齐尾元素时整段走标量计算。
     __aicore__ inline void ProcessScalar(uint32_t offset, uint32_t len)
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
     __aicore__ inline void CopyIn(uint32_t offset, uint32_t len)
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
     __aicore__ inline void Compute(uint32_t len)
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
     __aicore__ inline void CopyOut(uint32_t offset, uint32_t len)
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
 private:
@@ -279,18 +269,18 @@ private:
 
 inline __aicore__ void InitTilingData(const __gm__ uint8_t *p_tilingdata, Mki::AddcustomTilingData *tilingdata)
 {
-    // Refer to the content under the file paths above for specific function implementations
+    // 具体函数实现请参考上面文件路径下的内容
 }
 
 extern "C" __global__ __aicore__ void addcustom(GM_ADDR x, GM_ADDR y, GM_ADDR z, GM_ADDR tiling)
 {
-    // Refer to the content under the file paths above for specific function implementations
+    // 具体函数实现请参考上面文件路径下的内容
 }
 ```
 
 #### addcustom_kernel.cpp
-File path: `example/ops/addcustom/addcustom_kernel.cpp`
-Main function: Performs input and output checks and initializes the device side before launching the device-side implementation.
+文件路径：`example/ops/addcustom/addcustom_kernel.cpp`
+主要功能：启动device侧实现前，对输入和输出进行了检查，以及进行device侧的初始化。
 ```c++
 #include <mki/base/kernel_base.h>
 #include <mki_loader/op_register.h>
@@ -309,32 +299,32 @@ public:
     {
     }
 
-    /* ---------- Framework Callbacks ---------- */
+    /* --------- 框架回调 --------- */
     bool CanSupport(const LaunchParam &launchParam) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
     uint64_t GetTilingSize(const LaunchParam &launchParam) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
     Status InitImpl(const LaunchParam &launchParam) override
     {
-       // Refer to the content under the file paths above for specific function implementations
+       // 具体函数实现请参考上面文件路径下的内容
     }
 };
 
-/* ---------- Register with the Framework ---------- */
+/* ---------- 注册到框架 ---------- */
 REG_KERNEL_BASE(AddcustomKernel);
 
 }   // namespace Mki
 ```
 #### addcustom_operation.cpp
 
-File path: `example/ops/addcustom/addcustom_operation.cpp`
-Main function: Defines the behaviors of the Operation, which is the highest level of abstraction for an op under the Ascend Boost Comm framework, including the strategy for selecting the best kernel.
+文件路径：`example/ops/addcustom/addcustom_operation.cpp`
+主要功能：定义 Operation 行为（Operation 是 Ascend Boost Comm 框架下 op 的最高程度抽象），包括选择最佳 kernel 的策略。
 
 ```c++
 #include <mki/base/operation_base.h>
@@ -352,43 +342,43 @@ class AddcustomOperation : public OperationBase {
 public:
     explicit AddcustomOperation(const std::string &opName) noexcept : OperationBase(opName) {}
 
-    /* ---------- Select the Best Kernel Strategy ---------- */
+    /* ---------- 选择最佳kernel策略 ---------- */
     Kernel *GetBestKernel(const LaunchParam &launchParam) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
-    /* ---------- Number of Tensors ---------- */
+    /* ---------- 张量数量 ---------- */
     int64_t GetInputNum(const Any &specificParam) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
     int64_t GetOutputNum(const Any &specificParam) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 
 protected:
-    /* ---------- Shape Inference ---------- */
+    /* ---------- 形状推导 ---------- */
     Status InferShapeImpl(const LaunchParam &launchParam,
                           SVector<Tensor> &outTensors) const override
     {
-        // Refer to the content under the file paths above for specific function implementations
+        // 具体函数实现请参考上面文件路径下的内容
     }
 };
 
-/* ---------- Registration ---------- */
+/* ---------- 注册 ---------- */
 REG_OPERATION(AddcustomOperation);
 
 }  // namespace Mki
 ```
 
-## Build and Test
+## 构建与测试
 
 ### CMakeLists.txt
-File path: `example/ops/addcustom/CMakeLists.txt`
-Main function: File compilation.
+文件路径：`example/ops/addcustom/CMakeLists.txt`
+主要功能：文件编译。
 ```
 set(addcustom_srcs
     ${CMAKE_CURRENT_LIST_DIR}/addcustom_operation.cpp
@@ -407,35 +397,36 @@ add_kernel(addcustom ascend910b vector
     AddcustomKernel)
 ```
 
-### Operator Build and Environment Variable Setup
-The build script for the Ascend Boost Comm repository is `scripts/build.sh`. Before running operator tests for the first time, you need to build the test framework (testframework). If your local environment has **GCC ≥ 12**, append `--no_werror` to the command. For details, see [README Build Instructions](../README_en.md#compilation):
+### 算子编译与环境变量设置
+Ascend Boost Comm仓的构建脚本文件为`scripts/build.sh`，初次执行算子测试需要先编译测试框架testframework。若本机 **GCC ≥ 12**，请在命令后追加 `--no_werror`（详见 [README 编译说明](../README.md#编译说明)）：
 ```shell
 bash scripts/build.sh testframework
 ```
-Then build the operators in the example directory:
+随后编译example中的算子：
 ```shell
 bash scripts/build.sh example
 ```
-After building, set the environment variables:
+编译后需要设置环境变量：
+
 ```shell
 source output/mki/set_env.sh
 ```
 
-### Debug Logging
+### 调试日志
 
-Use `MKI_LOG(INFO) << "..."` in operator code to print debug information. See `example/ops/addcustom/tiling/addcustom_tiling.cpp` for usage.
+算子代码中可用 `MKI_LOG(INFO) << "..."` 输出调试信息，写法可参考 `example/ops/addcustom/tiling/addcustom_tiling.cpp`。
 
-**Note**: MKI logs output only ERROR and above by default, and are not printed to the terminal by default. When you run the sample as described above, a newly added `MKI_LOG(INFO)` line produces no visible output even though the code does run.
+**注意**：MKI 日志默认只输出 ERROR 及以上级别，且默认不打印到终端。因此按上文步骤直接运行示例时，新增的 `MKI_LOG(INFO)` 不会产生任何可见输出，并非代码未执行。
 
-The related environment variables are described below:
+相关环境变量说明如下：
 
-| Environment Variable | Value | Description |
+| 环境变量 | 取值 | 说明 |
 |---|---|---|
-| `ASCEND_GLOBAL_LOG_LEVEL` | `0`=TRACE (including DEBUG), `1`=INFO, `2`=WARN, `3`=ERROR (default), `4`=logging disabled | Global log level. Only logs at or above this level are output. |
-| `ASCEND_SLOG_PRINT_TO_STDOUT` | `1` | Also print logs to the terminal. If not set, logs are written to a file only. |
-| `ASCEND_MODULE_LOG_LEVEL` | For example, `OP=1` | Overrides the global log level when set. The key must be `OP`; other keys have no effect. Note that it applies to the whole process, not only to logs emitted inside the OP module. |
+| `ASCEND_GLOBAL_LOG_LEVEL` | `0`=TRACE（含 DEBUG）、`1`=INFO、`2`=WARN、`3`=ERROR（默认）、`4`=关闭日志 | 全局日志级别，只输出不低于该级别的日志 |
+| `ASCEND_SLOG_PRINT_TO_STDOUT` | `1` | 将日志输出到终端；不设置时只写入日志文件 |
+| `ASCEND_MODULE_LOG_LEVEL` | 例如 `OP=1` | 覆盖全局级别的开关，设置后优先于 `ASCEND_GLOBAL_LOG_LEVEL`；键名须为 `OP`，其他键名不生效。注意其作用范围为整个进程，并非仅限 OP 模块内的日志 |
 
-To print INFO-level logs to the terminal:
+使 INFO 级别日志输出到终端：
 
 ```shell
 export ASCEND_GLOBAL_LOG_LEVEL=1
@@ -443,22 +434,22 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=1
 python example/tests/pythontest/optest/test_addcustom.py
 ```
 
-If you set only `ASCEND_GLOBAL_LOG_LEVEL=1` without `ASCEND_SLOG_PRINT_TO_STDOUT`, logs are not printed to the terminal. They are written to a log file instead.
+若仅设置 `ASCEND_GLOBAL_LOG_LEVEL=1` 而未设置 `ASCEND_SLOG_PRINT_TO_STDOUT`，日志不会出现在终端，而是写入日志文件。
 
-The log directory is resolved in the following order of precedence:
+日志目录按以下优先级确定：
 
-| Environment Variable (highest to lowest) | Log Directory |
+| 环境变量（优先级从高到低） | 日志目录 |
 |---|---|
 | `ASCEND_PROCESS_LOG_PATH` | `$ASCEND_PROCESS_LOG_PATH/atb/` |
 | `ASCEND_WORK_PATH` | `$ASCEND_WORK_PATH/log/atb/` |
-| Neither is set | `$HOME/ascend/log/atb/` |
+| 均未设置 | `$HOME/ascend/log/atb/` |
 
-Log file names use the format `atb_<pid>_<timestamp>.log`, for example `$HOME/ascend/log/atb/atb_12345_20261113170000.log`.
+日志文件名格式为 `atb_<进程号>_<日期时间>.log`，例如 `$HOME/ascend/log/atb/atb_12345_20261113170000.log`。
 
-> **Troubleshooting**: If no logs appear even after you set the log level, verify that the disk holding the log directory has more than 10 GB free (if less than 10 GB is available, file logging is skipped). Also note that if the code emits only logs below the current level (for example, only one `MKI_LOG(INFO)` at the default level), no log file is created at all.
+> **排查提示**：若已设置日志级别仍看不到日志，请确认日志目录所在磁盘剩余空间大于 10 GB（剩余空间不足 10 GB 时文件日志会被跳过）。另外，若代码中只有低于当前级别的日志（例如默认级别下仅有一条 `MKI_LOG(INFO)`），则不会产生任何日志文件。
 
-### Testing
-To test the operator you have written, create `test_addcustom.py` under the `example/tests/pythontest/optest/` directory:
+### 测试
+为了对所编写的算子进行测试，可在`example/tests/pythontest/optest/`目录下新增test_addcustom.py：
 ```python
 import os
 import unittest
@@ -498,7 +489,7 @@ if __name__ == '__main__':
     unittest.main()
 
 ```
-Run the test script with the following command:
+通过以下命令执行测试脚本：
 ```shell
 python example/tests/pythontest/optest/test_addcustom.py
 ```

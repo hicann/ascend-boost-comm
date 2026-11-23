@@ -1,84 +1,84 @@
-## Understanding Code of Conduct
-Ascend Boost Comm is a CANN open project. Before contributing, please read the [CANN Open Project Code of Conduct](contributors/code_of_conduct_en.md). All your activities in the Ascend Boost Comm project (including but not limited to posting comments, submitting issues, and publishing wikis) must comply with this code of conduct.
+## 了解行为准则
+Ascend Boost Comm属于CANN开放项目，在参与贡献前，请了解[CANN开放项目行为准则](contributors/code_of_conduct.md)，后续您在Ascend Boost Comm项目的活动（包括但不限于发表评论、提交Issue、发表wiki等）都请遵循此行为准则。
 
-## Signing CLA
+## 签署CLA
 
-You must sign a Contributor License Agreement (CLA) before you can contribute to the community.
+在参与项目贡献前，您需要签署CANN开放项目贡献者许可协议（CLA）。
 
-Please choose the appropriate CLA based on your participation status: Corporate, Corporate Contributor, Individual, or Enterprise Admin. Click [here](https://clasign.osinfra.cn/sign/68cbd4a3dbabc050b436cdd4) to sign.
+请根据您的参与身份，选择签署法人CLA、法人贡献者CLA、个人CLA 或企业管理员CLA，请点击[这里](https://clasign.osinfra.cn/sign/68cbd4a3dbabc050b436cdd4)签署。
 
-- Corporate CLA: For contributions made on behalf of a corporate. A representative of the corporate should sign this CLA, typically an administrator.
-- Corporate Contributor CLA: If you are an employee of a corporate that has already signed a Corporate CLA, apply to sign this Corporate Contributor CLA. Select your corporate on the application page. The application will be reviewed and approved by the enterprise administrator, after which you can participate in contributions.
-- Individual CLA: For contributions made as an individual who is not a corporate employee.
-- Enterprise Administrator CLA: If you are an enterprise administrator, sign this CLA. Enterprise administrators have the authority to review and approve applications for signing the Corporate Contributor CLA and manage personnel.
+- 法人CLA：以企业身份参与贡献，代表企业签署CLA，一般由企业管理人员进行签署。
+- 法人贡献者CLA：如果您属于签署了法人CAL的企业员工，请申请签署法人贡献者CLA，在申请页面选择您所属的企业，申请后将由企业管理员进行审批，审批完成即可参与贡献。
+- 个人CLA：以非企业员工的个人身份参与贡献，请签署个人CLA。
+- 企业管理员：以企业管理员的身份参与贡献，请签署企业管理员CLA，企业管理员有权对签署法人贡献者CLA的申请进行审批和人员管理。
 
 
-## Contributing
+## 参与贡献
 
-After signing the CLA, you can begin your contribution journey. Your contribution can be in many ways and will be highly valued.
+在签署了CLA协议之后，就可以开始您的贡献之旅啦！贡献的方式有很多种，每一种贡献都将受到欢迎和重视。
 
-All discovered issues or new ideas you wish to contribute can be discussed and tracked through [Issues](#submitting-and-handling-issues), and can be closed after you [contribute code](#contributing-code) via pull requests.
+所有您发现的问题或想贡献的新想法都可以通过[Issue](#提交issue处理issue任务)进行反馈、讨论和跟踪，并在后续[贡献编码](#贡献编码) PR 合入后关闭关联Issue。
 
-> 📝 **Note**
+> 📝 **提示**
 >
-> - For details about the GitCode workflow, see [Gitcode Workflow Description](contributors/gitcode_workflow_en.md).
-> - If you encounter any problems when submitting a PR, refer to [FAQ](contributors/infra_faqs_en.md).
+> - 关于Gitcode工作流的详细操作可参见[Gitcode工作流说明](contributors/gitcode_workflow.md)。
+> - 当您在提交PR过程中遇到问题，常见问题的解决方法可参见[FAQs](contributors/infra_faqs.md)。
 
-### Contribution Categories
+### 贡献分类
 
-- Code bug fixing
+- 代码bug修复
 
-  If you discover a bug within this repository and wish to fix it, create a new issue in the repository for feedback and tracking.
+  如果您在本仓库中发现了某些Bug，并想对其进行修复，欢迎您在仓库中新建Issue进行反馈和跟踪处理。
 
-  You can follow the instructions in [Submitting and Handling Issues](#submitting-and-handling-issues) to create a `Bug-Report` type issue describing the bug.
-  Enter `/assign` or `/assign @yourself` in the comment box to assign the issue to you for processing.
+  您可以按照下方[提交Issue/处理Issue任务](#提交issue处理issue任务)指引新建 `Bug-Report|缺陷反馈` 类Issue对Bug进行描述，
+  然后在评论框中输入“/assign”或“/assign @yourself”将该Issue分配给您进行处理。
 
-- Document correction
+- 文档纠错
 
-  If you discover errors in operator documentation within the repository, create a new issue in the repository for feedback and correction.
+  如果您在仓库中发现某些算子文档描述错误，欢迎您在仓库中新建Issue进行反馈和修复。
 
-  You can follow the instructions in [Submitting and Handling Issues](#submitting-and-handling-issues) to create a `Documentation` type issue to point out the errors.
-  Enter `/assign` or `/assign @yourself` in the comment box to assign the issue to you for correcting the documentation.
+  您可以按照下方[提交Issue/处理Issue任务](#提交issue处理issue任务)指引新建 `Documentation|文档反馈` 类Issue指出对应文档中的问题，
+  然后在评论框中输入“/assign”或“/assign @yourself”将该Issue分配给您纠正对应文档描述。
 
-- Resolving Issues
+- 帮助解决他人Issue
 
-  If you have a solution for someone else's Issue, please share it in the comments to help the community.
+  如果社区中他人遇到的问题您有合适的解决方法，欢迎您在Issue中发表评论交流，帮助他人解决问题和痛点，共同优化易用性。
 
-  If the issue requires code modification, you can enter `/assign` or `/assign @yourself` in the comment box to assign the issue to yourself for assisted handling.
+  如果对应Issue需要进行代码修改，您可以在Issue评论框中输入“/assign”或“/assign @yourself”将该Issue分配给您，跟踪协助解决问题。
 
-### Submitting and Handling Issues
+### 提交Issue/处理Issue任务
 
-- Finding the issue list
+- 找到Issue列表：
 
-  In the [Ascend Boost Comm](https://gitcode.com/cann/ascend-boost-comm) project homepage on GitCode, click `Issues` to find the issue list.
+  在[Ascend Boost Comm](https://gitcode.com/cann/ascend-boost-comm)项目Gitcode主页内，点击“Issues”，即可找到 Issue 列表。
 
-- Submitting an issue
+- 提交Issue
 
-  If you want to report a bug, submit a requirement, or send your feedback to the community, please submit an issue.
+  如果您准备向社区上报Bug或者提交需求，或者为社区贡献自己的意见或建议，请提交Issue。
 
-  For details, see [Issue Submission Guide](contributors/issue_submit_en.md).
+  提交Issue请参考 [Issue 提交指南](contributors/issue_submit.md)。
 
-- Participating in issue discussions
+- 参与Issue讨论
 
-  Each issue is open for developers to communicate and discuss. If you are interested, you can share your thoughts in comments.
+  每个Issue下面都支持开发者们交流讨论，如果您感兴趣，可以在评论区中发表自己的意见。
 
-- Finding an issue you want to handle
+- 找到愿意处理的Issue
 
-  If you want to handle one of the issues, you can assign it to yourself. You only need to enter `/assign` or `/assign @yourself` in the comment box. The bot will assign the issue to you and your name will be displayed in the assignee list.
+  如果您愿意处理其中的一个 Issue，可以将它分配给自己。只需要在评论框内输入“/assign”或 “/assign @yourself”，机器人就会将问题分配给您，您的名字将显示在负责人列表里。
 
-### Contributing Code
+### 贡献编码
 
-1. CANN Development Environment Setup
+1. 准备CANN开发环境
 
-   If you want to contribute code, you need to set up the CANN development environment. For details, see [Environment Setup](../README_en.md#environment-setup).
+   如果您想参与编码贡献，需要准备CANN开发环境，请参考[环境准备](../README.md#环境构建)。
 
-2. Ascend Boost Comm Development Precautions
+2. 了解Ascend Boost Comm的开发注意事项
 
-   (1) For details about the environment and tool requirements for code contribution, see [Tool Version Requirements and Installation](../README_en.md#tool-version-requirements-and-installation).
+   1）请参考[工具版本要求与安装](../README.md#基础工具版本要求与安装)，了解编码贡献的一些环境和工具要求。
 
-   (2) The Ascend Boost Comm software code complies with the CANN Open Software License Agreement Version 2.0. For details about the agreement, see [LICENSE](../LICENSE). If you contribute code to the Ascend Boost Comm source code repository, comply with this agreement.
+   2）Ascend Boost Comm软件编码遵循许可协议：CANN Open Software License Agreement Version 2.0，详细的协议说明请参见[LICENSE](../LICENSE)文件，如果您贡献代码到Ascend Boost Comm源码仓，请遵循此协议。
 
-     Add the following statement to the header of the new source code files such as `.cpp`, `.cc`, and `.h`:
+     请在新建的cpp、cc、h等源码文件头部增加如下声明：
 
      ```
      /**
@@ -92,7 +92,7 @@ All discovered issues or new ideas you wish to contribute can be discussed and t
       */
      ```
 
-     Add the following statement to the header of the new files such as `.py` and `.sh`:
+     请在新建的py、sh等文件头部增加如下声明：
 
      ```
      # Copyright (c) [Name of the copyright owner]. 2025. All rights reserved.
@@ -105,16 +105,16 @@ All discovered issues or new ideas you wish to contribute can be discussed and t
      # ================================================================================================================
      ```
 
-    - If you are contributing as an individual and you own the copyright to the contributed content, replace [Name of the copyright owner] in the first line with your name.
-    - If you are contributing on behalf of your employer, or if your employer owns the copyright to your contributed content, replace [Name of the copyright owner] in the first line with your employer's name.
+    - 如果您仅代表个人贡献，并且您个人拥有贡献内容的版权，请将第一行中的 `[Name of the copyright owner]` 替换为您的署名。
+    - 如果您代表您的雇主贡献，或者您的雇主拥有您贡献内容的版权，请将第一行中的 `[Name of the copyright owner]` 替换为您的雇主的名称。
 
-      If you have any doubts about the copyright ownership of your contribution, please consult your legal advisor or your employer's legal team.
+      如果您对于贡献内容的版权归属存在任何疑问，请您咨询法律顾问或您雇主的法律团队。
 
-    - The year `2025` in the first line is the year you created or modified the file. Modify it according to the actual year.
+    - 第一行中`2025`为您创建或修改该文件的年份，请根据实际时间修改。
 
-3. Understand the code download and contribution process.
-   (1) Before developing code, fork the Ascend Boost Comm repository to your own repository and then download the repository to your local computer. Then, modify, build, and verify the code in the local branch.
-   (2) After the code meets the contribution requirements, submit a PR to contribute the code to the Ascend Boost Comm. You can find the submitted pull request in the [PR List](https://gitcode.com/cann/ascend-boost-comm/pulls).
-   (3) In the comment area of a submitted pull request, comment `compile` to trigger the build.
-   (4) Monitor the CI test result. If the test fails, modify the local code as prompted. If the test is passed, the PR will be assigned to a committer for review. Pay attention to the committer's review comments.
-   (5) If your PR is approved, the code will be merged into the Ascend Boost Comm source code repository.
+3. 代码下载与贡献流程
+   (1) 进行代码开发前，请先将需要Ascend Boost Comm仓库fork到个人仓，然后将个人仓下载到本地。并在本地分支进行代码修改、构建与验证。
+   (2) 代码验证满足贡献要求后，提交Pull-Request，将代码贡献到Ascend Boost Comm，在[Pull-Request列表](https://gitcode.com/cann/ascend-boost-comm/pulls)，可以找到提交的Pull-Request。
+   (3) 在提交的Pull-Request的评论区，评论`compile`触发编译。
+   (4) 请注意查看门禁测试结果，若未通过，请根据问题提示进行本地代码修改；若通过，此PR会被分配给commiter检视，请关注commiter的检视意见。
+   (5) 当您的PR检视通过后，代码会合入Ascend Boost Comm源码仓。

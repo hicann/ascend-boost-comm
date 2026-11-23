@@ -1,21 +1,21 @@
-# Code Commit Specifications
+# 代码提交规范
 
-## Programming Specifications
-Comply with the C++ programming specifications of the CANN open repository: [C++ Programming Specifications of the CANN Community Open Repository](https://gitcode.com/cann/community/blob/master/contributor/coding-standards/C++%20Coding%20standards.md)
-For items that are not included in some specifications, keep them consistent with the existing code style in the repository, including:
-1. Operator code naming style: Use the camel case style for AscendC-related code. For CCE intrinsic-related variables, use lowercase letters and underscores (_). For classes, use the upper camel case style.
-2. Operator host code naming style: camel case style.
-3. Use lowercase letters and underscores (_) for directory and file names. The content must be consistent with the main classes or main interfaces in the file.
+## 编程规范
+遵守CANN开放仓C++编程规范：[CANN社区开放仓C++编程规范](https://gitcode.com/cann/community/blob/master/contributor/coding-standards/C++%20Coding%20standards.md)
+部分规范未规定的事项，保持与库上现有代码风格一致，包含：
+1、算子代码命名风格：AscendC相关的使用驼峰风格；cce intrinsic相关的变量使用小写+下划线，类使用大驼峰。
+2、算子host代码命名风格：驼峰风格；
+3、目录、文件名使用小写+下划线，内容与文件中主要类/主要接口一致；
 
-## MR Format
-1. The commit format will be supplemented later. There is no requirement for now.
-2. When submitting each MR, use the template and add the [WIP] label. After completing code check, pipeline compilation, pipeline DT, and clean code (excluding masked items), the code review conditions are met and the [WIP] label can be removed.
-3. Unified title format: [bug/feature/task] Fix XX issue/Add XX feature/Rectify XX issue. For details, see the template.
-4. The MR description should briefly describe the MR (requirement source, modified content, etc.). If interface changes are involved, the description must be emphasized and the changes must be synchronized with the upstream components.
-5. Perform self-checks carefully according to the checklist.
+## MR格式
+1、commit格式后续补充，暂时不做要求；
+2、每个MR提交时使用模板填写，需添加[WIP]标签，完成代码自检、流水线编译、流水线DT、CleanCode清理（不包含屏蔽项）四步以后具备代码检视条件，去除[WIP]标签；
+3、标题统一格式：【bug/feature/task】修复XX问题/新增XX特性/整改XX问题，参考模板；
+4、MR描述处需要对该MR进行简单描述（需求来源、修改内容等），涉及接口变更的，必须重点描述，且和上游组件做好同步合入的工作；
+5、认真做好checklist自检；
 
-## Code Review Merging
-1. Enter two to four developers responsible for the code involved in the MR in the required field. Do not enter a large number of reviewers.
-2. Contact the reviewer to review the MR. The reviewer needs to review each modification and cannot directly approve the MR.
-3. The committer should centrally process MRs in two fixed time periods every day to ensure that all MRs are processed in time.
-4. Unnecessary MRs should be closed in time. If a conflict occurs, handle it in the original MR. If a new MR needs to be created, close the original MR, and attach the link of the original MR to the description of the new MR and briefly explain the reason.
+## 代码检视合入
+1、MR检视人处填写MR涉及代码责任田相关的开发人员2-4位，最好不要填写一堆人；
+2、主动联系检视人进行检视，检视人需要检视每处修改，不可直接点通过；
+3、Committer每天固定2个时间段集中处理MR，保证所有MR的及时推进；
+4、无用MR及时关闭；碰到冲突等情况，在原MR处理；若不得已需要新建MR的，关闭原MR后在新的MR描述处附上原MR的链接并简单解释原因；

@@ -261,9 +261,9 @@ This scenario is for users who want to simply test a newly written single operat
 
     Before running the code, ensure that the `source output/mki/set_env.sh` command has been executed and the CANN/NPU driver environment is available.
 
-    To view `MKI_LOG` debug output from your operator, set the log level and output switch first. For details, see [Debug Logging](docs/custom_operator_example.md#debug-logging).
+    To view `MKI_LOG` debug output from your operator, set the log level and output switch first. For details, see [Debug Logging](docs/custom_operator_example_en.md#debug-logging).
 
-You can refer to this document to develop custom operators: [Example of Developing a Custom Operator](docs/custom_operator_example.md).
+You can refer to this document to develop custom operators: [Example of Developing a Custom Operator](docs/custom_operator_example_en.md).
 
 ## Contributing
 
@@ -271,7 +271,7 @@ You can refer to this document to develop custom operators: [Example of Developi
 2.  Modify and commit code.
 3.  Create a pull request (PR).
 
-For details, see [Contribution Guide](docs/contribution_guide.md).
+For details, see [Contribution Guide](docs/contribution_guide_en.md).
 
 ## Reference Document
 [CANN Community Edition Documentation](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/83RC1alpha002/index/index.html)

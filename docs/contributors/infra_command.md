@@ -59,7 +59,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                仓库管理员
             </td>
             <td>
-                所有仓库  
+                所有仓库
             </td>
         </tr>
         <tr>
@@ -94,7 +94,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                 <strong>Pull Request</strong>
             </td>
             <td>
-                添加用于代表代码已经评审过的标签 <strong>lgtm</strong>。      
+                添加用于代表代码已经评审过的标签 <strong>lgtm</strong>。
             </td>
             <td>
               仓库所属sig组的reviewers
@@ -134,7 +134,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                 <strong>Pull Request</strong>
             </td>
             <td>
-                添加用于代表committers同意合并的标签 <strong>approved</strong>。      
+                添加用于代表committers同意合并的标签 <strong>approved</strong>。
             </td>
             <td>
               仓库所属sig组的committers
@@ -208,7 +208,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                 /kind **
             </td>
             <td style="white-space:nowrap;">
-                /kind bug, 
+                /kind bug,
                 </br>**可接受大小写字母、数字、中划线、下划线，
                 </br>对于下面的**规则通用
             </td>
@@ -336,7 +336,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                 /assign [[@]...]
             </td>
             <td style="white-space:nowrap;">
-                /assign 
+                /assign
                 </br>/assign @cann-robot
             </td>
             <td>
@@ -357,7 +357,7 @@ CANN社区中所有项目均由Bot维护，这意味着开发人员可以在每�
                 /unassign [[@]...]
             </td>
             <td style="white-space:nowrap;">
-                /unassign 
+                /unassign
                 </br>/unassign @cann-robot
             </td>
             <td>
