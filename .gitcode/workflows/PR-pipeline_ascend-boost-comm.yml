@@ -98,50 +98,14 @@ stages:
         uses: .gitcode/workflows/llt_action.yml
         with:
           image_version: ${{ jobs.JOB_image.outputs.UT }}
-      JOB_staticcheck_markdown:
+      JOB_staticcheck_md_check:
         permissions:
           repository: read
           id-token: write
-        name: staticcheck_markdown
+        name: staticcheck_md_check
         uses: .gitcode/workflows/staticcheck_action.yml
         with:
-          check_type: 'markdown'
-          image_version: ${{ jobs.JOB_image.outputs.staticcheck }}
-      JOB_staticcheck_codespell_check:
-        permissions:
-          repository: read
-          id-token: write
-        name: staticcheck_codespell_check
-        uses: .gitcode/workflows/staticcheck_action.yml
-        with:
-          check_type: 'codespell_check'
-          image_version: ${{ jobs.JOB_image.outputs.staticcheck }}
-      JOB_staticcheck_tag_closed_check:
-        permissions:
-          repository: read
-          id-token: write
-        name: staticcheck_tag_closed_check
-        uses: .gitcode/workflows/staticcheck_action.yml
-        with:
-          check_type: 'tag_closed_check'
-          image_version: ${{ jobs.JOB_image.outputs.staticcheck }}
-      JOB_staticcheck_resource_existence_check:
-        permissions:
-          repository: read
-          id-token: write
-        name: staticcheck_resource_existence_check
-        uses: .gitcode/workflows/staticcheck_action.yml
-        with:
-          check_type: 'resource_existence_check'
-          image_version: ${{ jobs.JOB_image.outputs.staticcheck }}
-      JOB_staticcheck_link_validity_check:
-        permissions:
-          repository: read
-          id-token: write
-        name: staticcheck_link_validity_check
-        uses: .gitcode/workflows/staticcheck_action.yml
-        with:
-          check_type: 'link_validity_check'
+          check_type: 'md_check'
           image_version: ${{ jobs.JOB_image.outputs.staticcheck }}
     pre:
     - type: auto

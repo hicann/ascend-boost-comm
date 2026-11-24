@@ -1,4 +1,4 @@
-name: staticcheck_action
+name: staticheck_action
 
 on:
   workflow_call:
@@ -12,14 +12,14 @@ on:
 
 jobs:
   JOB_staticcheck:
-    name: staticcheck
+    name: CodeCheck_staticcheck
     steps:
       -
         name: Checkout
         identifier: process_checkout
         uses: checkout
         with:
-          ref: ${{ atomgit.event.pull_request.merge_commit_sha || atomgit.sha }}
+          ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
           allow-unsafe-pr-checkout: true
       -
         name: oidc_auth
@@ -40,6 +40,7 @@ jobs:
             ${{ env.obs_path }}/pr_filelist.txt
             ${{ env.obs_path }}/pr_filelist_mod.txt
             ${{ env.obs_path }}/update_file_detail.txt
+            ${{ env.obs_path }}/gitdiff.txt
           path: ${{ steps.process_checkout.outputs.path }}
       -
         name: staticcheck
@@ -52,9 +53,11 @@ jobs:
           merge_id: ${{ env.MERGE_ID }}
           commit_id: '0'
           workspace: ${{ steps.process_checkout.outputs.path }}
+          org_name: ${{ env.org_name }}
       -
         name: upload
         uses: obs-upload
+        if: ${{ always() }}
         with:
           endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
           bucket: "ascend-ci"
